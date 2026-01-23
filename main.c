@@ -24,6 +24,12 @@ typedef struct Lstring {
     char *str;
 } Lstring;
 
+typedef struct Lsystem {
+    uint nrules;
+    Lstring init;
+    Rule *ruleset;
+} Lsystem;
+
 Lstring applyRules( Rule rules[], uint n_rules, Lstring input){
     uint output_len = input.length << 1;
     uint output_pos = 0;
@@ -55,6 +61,66 @@ Lstring applyRules( Rule rules[], uint n_rules, Lstring input){
     /* THIS IS THE WRONG LENGTH */
     Lstring res = {output_len, the_output};
     return res;
+}
+
+enum RULE_STATE {
+    RS_INIT
+  , RS_RULES
+};
+
+enum PARSE_STATE {
+    PS_PREMISE
+  , PS_EQ
+  , PS_RESULT
+  , PS_FIN
+};
+
+Lsystem readRuleFile(char * fname){
+    enum RULE_STATE state = RS_INIT;
+    enum PARSE_STATE pstate = PS_PREMISE;
+    FILE* rulefile = fopen(fname, "r");
+    if (rulefile == NULL) return (Lsystem){NULL, NULL, NULL};
+    char line[512];
+    uint nrules = 0;
+    uint maxrules = 0;
+    Rule * rules = malloc(8 * sizeof(Rule));
+    Lstring init;
+
+    while (fgets(line, sizeof(line), rulefile)) {
+        switch (state) {
+            case RS_INIT: ;
+                uint l = 0;
+                for (int i = 0; i < 512; i++){
+                    if (strcmp(&line[i], "-")) {
+                        state = RS_RULES;
+                        goto reiterate;
+                    }
+                    if (strcmp(&line[i], "\n")) {
+                        init.length = i;
+                        init.str = malloc(sizeof(char) * i);
+                        memcpy(init.str, line, sizeof(char) * (i-1));
+                        init.str[i] = '\0';
+                    }
+                }
+                break;
+            case RS_RULES:
+                pstate = PS_PREMISE;
+                while (pstate != PS_FIN) {
+                    switch (pstate) {
+                        case PS_PREMISE: 
+                            break;
+                        case PS_EQ:
+                            break;
+                        case PS_RESULT:
+                            break;
+                        default: 
+                            goto reiterate;
+                }
+                break;
+        }
+        reiterate: ;
+    }
+    fclose(rulefile);
 }
 
 typedef struct Turtle {
