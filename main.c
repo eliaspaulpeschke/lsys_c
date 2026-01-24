@@ -1,3 +1,4 @@
+
 #include "raylib.h"
 #include "raymath.h"
 #include <math.h>
@@ -5,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define STB_C_LEXER_IMPLEMENTATION
+#include "lib/stb_c_lexer.h"
 
 typedef struct Rule {
     char premise;
@@ -62,7 +65,7 @@ Lstring applyRules( Rule rules[], uint n_rules, Lstring input){
     Lstring res = {output_len, the_output};
     return res;
 }
-
+/*
 enum RULE_STATE {
     RS_INIT
   , RS_RULES
@@ -122,7 +125,7 @@ Lsystem readRuleFile(char * fname){
     }
     fclose(rulefile);
 }
-
+*/
 typedef struct Turtle {
     Vector2 pos;
     Vector2 heading;
