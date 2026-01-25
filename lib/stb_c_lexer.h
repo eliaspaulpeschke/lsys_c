@@ -73,7 +73,7 @@
 #define STB_C_LEX_C_SHIFTS          Y   //  "<<"  CLEX_shl      ">>"  CLEX_shr
 #define STB_C_LEX_C_INCREMENTS      Y   //  "++"  CLEX_plusplus "--"  CLEX_minusminus
 #define STB_C_LEX_C_ARROW           Y   //  "->"  CLEX_arrow
-#define STB_C_LEX_EQUAL_ARROW       N   //  "=>"  CLEX_eqarrow
+#define STB_C_LEX_EQUAL_ARROW       Y   //  "=>"  CLEX_eqarrow
 #define STB_C_LEX_C_BITWISEEQ       Y   //  "&="  CLEX_andeq    "|="  CLEX_oreq     "^="  CLEX_xoreq
 #define STB_C_LEX_C_ARITHEQ         Y   //  "+="  CLEX_pluseq   "-="  CLEX_minuseq
                                         //  "*="  CLEX_muleq    "/="  CLEX_diveq    "%=" CLEX_modeq

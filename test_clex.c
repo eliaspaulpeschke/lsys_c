@@ -76,18 +76,49 @@ char * untoken(int token){
     }
 }
 
-int main() {
-    FILE *the_file = fopen("test", "r");
+typedef struct {
+    char * cnt;
+    uint size;
+} Filecontent;
+
+Filecontent file_to_mem(char * fpath){
+    FILE *file = fopen("test", "r");
     struct stat sb;
     stat("test", &sb);
-    char *the_content = malloc(sb.st_size);
-    fread(the_content, 1, sb.st_size, the_file);
+    char *content = malloc(sb.st_size);
+    fread(content, 1, sb.st_size, file);
+    fclose(file);
+    Filecontent res = {content, sb.st_size};
+    return res;
+}
+
+
+int main() {
+    Filecontent file = file_to_mem("test");
     char *chrstore = malloc(256);
     stb_lexer the_lexer;
-    stb_c_lexer_init(&the_lexer, the_content, the_content + (sb.st_size -1), chrstore, 256);
-
-    while(stb_c_lexer_get_token(&the_lexer) != 0){
-        printf("%s ", untoken(the_lexer.token));
+    stb_c_lexer_init(&the_lexer, file.cnt, file.cnt + (file.size - 1), chrstore, 256);
+    int res = stb_c_lexer_get_token(&the_lexer);
+    while(res != 0){
+        printf("%s", untoken(the_lexer.token));
+        switch(the_lexer.token){
+            case CLEX_id:
+                printf(":%s ",the_lexer.string);
+                break;
+            case CLEX_dqstring:
+                printf(":\"%s\" ",the_lexer.string);
+                break;
+            case CLEX_sqstring:
+                printf(":\'%s\' ",the_lexer.string);
+                break;
+            default:
+                printf(" ");
+        }
+        res = stb_c_lexer_get_token(&the_lexer);
+        if (res <= 0) {
+            printf("ERROR %d", res);
+            break;
+        }
     } 
 }
 
