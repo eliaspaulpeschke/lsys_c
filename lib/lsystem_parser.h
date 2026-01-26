@@ -16,7 +16,10 @@ char * file_to_mem(char * fpath){
     struct stat sb;
     stat("test", &sb);
     char *content = malloc(sb.st_size);
-    fread(content, 1, sb.st_size, file);
+    ulong r = fread(content, 1, sb.st_size, file);
+    if (r < sb.st_size) {
+        printf("Warning in file_to_mem, fread read less than the file");
+    }
     fclose(file);
     return content;
 }
@@ -167,6 +170,7 @@ Lsystem lsystem_from_file(char * filename){
     char * data = file_to_mem(filename);
     char * lines[64];
     uint line_num = line_list(lines, 64, data);
+    printf("line num: %d", line_num);
     return parse_lsystem(lines, line_num);
 }
 

@@ -20,12 +20,12 @@ typedef struct Lsystem {
     Rule *ruleset;
 } Lsystem;
 
-Rule mkRule (char * premise, char * result) {
+/*Rule mkRule (char * premise, char * result) {
     char *the_res = malloc(strlen(result) + 1);
     Rule the_rule = {premise, the_res, NULL, NULL};
     strcpy(the_rule.result, result);
     return the_rule;
-}
+}*/
 
 char * applyRules( Rule rules[], uint n_rules, char * input){
     uint output_len = strlen(input) << 1;
