@@ -52,6 +52,7 @@ int main(void)
     res = applyRules(sys.ruleset, sys.nrules, res, true);
     res = applyRules(sys.ruleset, sys.nrules, res, true);
     res = applyRules(sys.ruleset, sys.nrules, res, true);
+
     for (int i = 0; i < sys.nrules; i++){
         print_rule(&sys.ruleset[i], "  ");
     }
@@ -61,6 +62,7 @@ int main(void)
     test(res);
 
     printf("\n\"%s\"\n", res);
+
 
     const int screenWidth = 600;
     const int screenHeight = 600;

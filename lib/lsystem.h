@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,8 +29,8 @@ typedef struct Lsystem {
 }*/
 
 char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
-    uint output_len = strlen(input) << 1;
-    uint output_pos = 0;
+    ulong output_len = strlen(input) << 1;
+    ulong output_pos = 0;
     char * the_output = malloc(output_len);
     for(uint i = 0; i < strlen(input); i++){
         char prem = input[i];
@@ -38,10 +39,22 @@ char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
             Rule current_rule = rules[j];
             size_t reslen = strlen(current_rule.result);
             if (prem == *current_rule.premise) {
-                while (output_len <= 
-                        output_pos + reslen) {
-                    output_len = output_len << 1;
+                if (output_len <= output_pos + reslen + 1) {
+
+                    printf("ol %ld op %ld rl %d", output_len, output_pos, (int)reslen);
+                    ulong old = output_len;
+                    while (output_len <= 
+                            output_pos + reslen + 1) {
+                        if (output_len > (ULONG_MAX / 2)) return NULL;
+                        output_len = output_len << 1;
+                    }
+                  //  char * new_output = malloc(output_len);
+                  //  memcpy(new_output, the_output, old);
+                  //  free(the_output);
+                   // the_output = new_output;
+
                     the_output = realloc(the_output, output_len);
+                    if (the_output == NULL) return NULL;
                 }
                 // copy with the \0 and add only one less to pos, 
                 // subsequently overwriting the \0 
