@@ -25,15 +25,42 @@ Color getCol(int i){
     }
 }
 
+void test(char * str){
+    int open = 0;
+    for(int i = 0; i < strlen(str); i++){
+        switch (str[i]) {
+            case '[':
+                open++;
+                break;
+            case ']':
+                open--;
+                break;
+            default:
+                break;
+        }
+        if (open < 0) printf("unbalanced: %d of %lu \n",i, strlen(str));
+    }
+}
+
 
 int main(void)
 {
 
     Lsystem sys = lsystem_from_file("test");
 
-    char * res = applyRules(sys.ruleset, sys.nrules, sys.axiom);
-    res = applyRules(sys.ruleset, sys.nrules, res);
-    res = applyRules(sys.ruleset, sys.nrules, res);
+    char * res = applyRules(sys.ruleset, sys.nrules, sys.axiom, false);
+    res = applyRules(sys.ruleset, sys.nrules, res, true);
+    res = applyRules(sys.ruleset, sys.nrules, res, true);
+    res = applyRules(sys.ruleset, sys.nrules, res, true);
+    for (int i = 0; i < sys.nrules; i++){
+        print_rule(&sys.ruleset[i], "  ");
+    }
+
+    printf("%lu \n", strlen(res));
+
+    test(res);
+
+    printf("\n\"%s\"\n", res);
 
     const int screenWidth = 600;
     const int screenHeight = 600;
@@ -56,7 +83,6 @@ int main(void)
                 , (Vector2){10.0f, 0.0f}
                 , 1.0f
                 , PI / 3.0f };    
-    printf("%s", res);
 
     while (!WindowShouldClose())    
     {
@@ -82,10 +108,10 @@ int main(void)
                 camera.zoom /= delta_zoom;
         }
         if (IsKeyDown(KEY_W)) {
-            turtle->rads *= 1.001f;
+            turtle->rads += 0.1f;
         }
         if (IsKeyDown(KEY_Q)) {
-            turtle->rads /= 1.001f;
+            turtle->rads -= 0.1f;
         }
 
         turtle->pos = (Vector2){300.0f, 300.0f};
@@ -122,6 +148,6 @@ int main(void)
         EndDrawing();
     }
     CloseWindow();   
-    return 0;
+    return 0; 
 }
 

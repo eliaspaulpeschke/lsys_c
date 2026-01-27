@@ -64,7 +64,7 @@ char * parse_axiom(char * line){
     if (start == NULL) {
         printf("Warning in parse_axiom: unnamed axiom \n");
     }
-    start = trim(start);
+    start = trim(start + 1);
     return start;
 }
 
@@ -122,7 +122,7 @@ Rule parse_rule(char * line){
     if (arrow == NULL){
         printf("Error in parse_rule: no -> found \n");
     }
-    result = arrow + 2;
+    result = trim(arrow + 2);
     *arrow = '\0';
     char * res = strtok(line, ":");
     enum rule_state state = RS_NAME;

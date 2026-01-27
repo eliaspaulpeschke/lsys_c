@@ -1,6 +1,7 @@
 #include "string.h"
 #include <raylib.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <raymath.h>
 
 #define TURTLE_H
@@ -40,5 +41,10 @@ Turtle * pushTurtle(Turtle * turtle){
 }
 
 Turtle * popTurtle(Turtle * turtle){
-    return turtle->prev;
+    if (turtle->prev == NULL) {
+        return turtle;
+    }
+    Turtle * prev = turtle->prev;
+    free(turtle);
+    return prev;
 }

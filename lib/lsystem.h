@@ -27,7 +27,7 @@ typedef struct Lsystem {
     return the_rule;
 }*/
 
-char * applyRules( Rule rules[], uint n_rules, char * input){
+char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
     uint output_len = strlen(input) << 1;
     uint output_pos = 0;
     char * the_output = malloc(output_len);
@@ -55,9 +55,12 @@ char * applyRules( Rule rules[], uint n_rules, char * input){
             if (output_pos < output_len) {
               the_output[output_pos] = prem;
               output_pos += 1;
+              the_output[output_pos] = '\0';
             }
         }
     }
+    the_output = realloc(the_output, output_pos+1);
+    if (freeInput) free(input);
     return the_output;
 }
 
