@@ -15,11 +15,12 @@ char * file_to_mem(char * fpath){
     FILE *file = fopen("test", "r");
     struct stat sb;
     stat("test", &sb);
-    char *content = malloc(sb.st_size);
+    char *content = malloc(sb.st_size + 1);
     ulong r = fread(content, 1, sb.st_size, file);
     if (r < sb.st_size) {
         printf("Warning in file_to_mem, fread read less than the file");
     }
+    content[sb.st_size] = '\0';
     fclose(file);
     return content;
 }

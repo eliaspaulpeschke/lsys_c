@@ -149,6 +149,14 @@ int main(void)
         EndMode2D();
         EndDrawing();
     }
+    for (int i = 0; i < sys.nrules; i++){
+        free(&(sys.ruleset[i]));
+    }
+    while (turtle->prev != NULL) {
+        turtle = popTurtle(turtle);
+    }
+    free(turtle);
+    free(res);
     CloseWindow();   
     return 0; 
 }
