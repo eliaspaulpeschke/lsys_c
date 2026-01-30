@@ -16,6 +16,7 @@ char * file_to_mem(char * fpath){
     struct stat sb;
     stat("test", &sb);
     char *content = malloc(sb.st_size + 1);
+    if (content == NULL) return NULL;
     ulong r = fread(content, 1, sb.st_size, file);
     if (r < sb.st_size) {
         printf("Warning in file_to_mem, fread read less than the file");
@@ -157,22 +158,45 @@ Rule parse_rule(char * line){
                  }; 
 }
 
-Lsystem parse_lsystem(char * lines[], uint line_num){
-    char * axiom = parse_axiom(lines[0]);
+Lsystem parse_lsystem(char * lines[], uint line_num, bool with_axiom, char * free_me){
+    char * axiom = NULL;
+    if (with_axiom){
+      axiom = parse_axiom(lines[0]);
+      line_num -= 1;
+    }
     char * name = "not implemented";
     Rule * ruleset = malloc(sizeof(Rule) * (line_num -1)); 
-    for (int i = 1; i < line_num; i++){
-        ruleset[i - 1] = parse_rule(lines[i]);
+    if (ruleset == NULL) return (Lsystem){-1, NULL, NULL, NULL, free_me};
+    int start = 0;
+    if (with_axiom) start = 1;
+    for (int i = start; i < line_num; i++){
+      ruleset[i - 1] = parse_rule(lines[i]);
     }
-    return (Lsystem){line_num -1, name, axiom, ruleset};
+    return (Lsystem){line_num -1, name, axiom, ruleset, free_me};
 }
 
-Lsystem lsystem_from_file(char * filename){
+Lsystem lsystem_from_file(char * filename, bool with_axiom){
     char * data = file_to_mem(filename);
+    if (data == NULL) return (Lsystem){-1, NULL, NULL, NULL, NULL};
     char * lines[64];
     uint line_num = line_list(lines, 64, data);
     printf("line num: %d", line_num);
-    return parse_lsystem(lines, line_num);
+    return parse_lsystem(lines, line_num, with_axiom, data);
+}
+
+Lsystem lsystem_from_string(char * text, bool with_axiom){
+    char * data = strdup(text);
+    if (data == NULL) return (Lsystem){-1, NULL, NULL, NULL, NULL};
+    char * lines[64];
+    uint line_num = line_list(lines, 64, data);
+    printf("line num: %d", line_num);
+    return parse_lsystem(lines, line_num, with_axiom, data);
+}
+
+void free_lsystem(Lsystem sys){
+    if (sys.free_me != NULL){
+        free(sys.free_me);
+    }
 }
 
 

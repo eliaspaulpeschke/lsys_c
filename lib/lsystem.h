@@ -19,6 +19,7 @@ typedef struct Lsystem {
     char *name;
     char *axiom;
     Rule *ruleset;
+    char *free_me;
 } Lsystem;
 
 /*Rule mkRule (char * premise, char * result) {
@@ -29,9 +30,10 @@ typedef struct Lsystem {
 }*/
 
 char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
-    ulong output_len = strlen(input) << 1;
+    ulong output_len = strlen(input) << 3;
     ulong output_pos = 0;
     char * the_output = malloc(output_len);
+    if (the_output == NULL) return NULL;
     for(uint i = 0; i < strlen(input); i++){
         char prem = input[i];
         bool copyflag = true;
@@ -40,21 +42,19 @@ char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
             size_t reslen = strlen(current_rule.result);
             if (prem == *current_rule.premise) {
                 if (output_len <= output_pos + reslen + 1) {
-
-                    printf("ol %ld op %ld rl %d", output_len, output_pos, (int)reslen);
                     ulong old = output_len;
                     while (output_len <= 
                             output_pos + reslen + 1) {
                         if (output_len > (ULONG_MAX / 2)) return NULL;
                         output_len = output_len << 1;
                     }
-                  //  char * new_output = malloc(output_len);
-                  //  memcpy(new_output, the_output, old);
-                  //  free(the_output);
-                   // the_output = new_output;
 
-                    the_output = realloc(the_output, output_len);
-                    if (the_output == NULL) return NULL;
+                    char * tmp = realloc(the_output, output_len);
+                    if (tmp == NULL) {
+                        free(the_output);
+                        return NULL;
+                    }
+                    the_output = tmp;
                 }
                 // copy with the \0 and add only one less to pos, 
                 // subsequently overwriting the \0 
@@ -78,14 +78,30 @@ char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
 }
 
 
-void print_rule(Rule * rule, char * offset){
-    printf("%sName: %s\n", offset, rule->name);
-    printf("%s  %s < %s > %s -> %s \n", offset
+char * str_rule(Rule * rule, char * offset){
+    char * str = malloc(128);
+    if (str == NULL) return NULL;
+    snprintf("%sName: %s\n %s  %s < %s > %s -> %s \n"
+                                   , 128
+                                   , offset 
+                                   , rule->name
+                                   , offset
                                    , rule->lcont
                                    , rule->premise
                                    , rule->rcont
                                    , rule->result
                                    );
+    return str;
+}
+
+void print_rule(Rule * rule, char * offset){
+    char * x;
+    if ((x = str_rule(rule, offset)) != NULL) {
+        printf("%s",x);
+    } else {
+        return;
+    }
+    free(x);
 }
 
 
