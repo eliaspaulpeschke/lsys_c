@@ -12,9 +12,9 @@
 #define LSYSTEM_PARSER_H
 
 char * file_to_mem(char * fpath){
-    FILE *file = fopen("test", "r");
+    FILE *file = fopen(fpath, "r");
     struct stat sb;
-    stat("test", &sb);
+    stat(fpath, &sb);
     char *content = malloc(sb.st_size + 1);
     if (content == NULL) return NULL;
     ulong r = fread(content, 1, sb.st_size, file);
@@ -45,7 +45,7 @@ char *trim(char *s)
     return rtrim(ltrim(s)); 
 }
 
-int line_list(char* result[],  uint line_num, char * text) {
+int line_list(char* result[], uint line_num, char * text) {
     char * res = strtok(text, "\n");
     uint i = 0;
     while((res != NULL) && (i < line_num)){
@@ -59,7 +59,6 @@ int line_list(char* result[],  uint line_num, char * text) {
     }
     return i;
 }
-
 
 char * parse_axiom(char * line){
     char * start = strpbrk(line, ":");
@@ -160,17 +159,18 @@ Rule parse_rule(char * line){
 
 Lsystem parse_lsystem(char * lines[], uint line_num, bool with_axiom, char * free_me){
     char * axiom = NULL;
+    uint rule_num = line_num;
     if (with_axiom){
       axiom = parse_axiom(lines[0]);
-      line_num -= 1;
+      rule_num -= 1;
     }
     char * name = "not implemented";
-    Rule * ruleset = malloc(sizeof(Rule) * (line_num -1)); 
+    Rule * ruleset = malloc(sizeof(Rule) * (rule_num)); 
     if (ruleset == NULL) return (Lsystem){-1, NULL, NULL, NULL, free_me};
     int start = 0;
     if (with_axiom) start = 1;
     for (int i = start; i < line_num; i++){
-      ruleset[i - 1] = parse_rule(lines[i]);
+      ruleset[i - start] = parse_rule(lines[i]);
     }
     return (Lsystem){line_num -1, name, axiom, ruleset, free_me};
 }
@@ -180,7 +180,6 @@ Lsystem lsystem_from_file(char * filename, bool with_axiom){
     if (data == NULL) return (Lsystem){-1, NULL, NULL, NULL, NULL};
     char * lines[64];
     uint line_num = line_list(lines, 64, data);
-    printf("line num: %d", line_num);
     return parse_lsystem(lines, line_num, with_axiom, data);
 }
 
@@ -189,7 +188,6 @@ Lsystem lsystem_from_string(char * text, bool with_axiom){
     if (data == NULL) return (Lsystem){-1, NULL, NULL, NULL, NULL};
     char * lines[64];
     uint line_num = line_list(lines, 64, data);
-    printf("line num: %d", line_num);
     return parse_lsystem(lines, line_num, with_axiom, data);
 }
 
