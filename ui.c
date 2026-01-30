@@ -8,8 +8,17 @@
 
 typedef struct {
     Clay_Context * ctx;
+    uint font_num;
+    Font * fonts;
 } clay_ctx;
 
+typedef struct {
+    char * text;
+} textbox;
+
+textbox update_textbox(textbox box){
+    return box;
+}
 
 const Clay_Color CLAY_LIGHT = (Clay_Color) {224, 215, 210, 255};
 const Clay_Color CLAY_RED = (Clay_Color) {168, 66, 28, 255};
@@ -21,6 +30,11 @@ void HandleClayErrs(Clay_ErrorData errorData) {
 }
 
 clay_ctx init_clay(){
+    Font * fonts = malloc(sizeof(Font));
+    fonts[0]  = LoadFontEx("resources/fonts/roboto_mono/static/RobotoMono-Bold.ttf",48,NULL,0);
+    SetTextureFilter(fonts[0].texture, TEXTURE_FILTER_BILINEAR);
+
+
     uint64_t clayReqMem = Clay_MinMemorySize();
     Clay_Arena clayMem = 
         Clay_CreateArenaWithCapacityAndMemory(clayReqMem, malloc(clayReqMem));
@@ -33,9 +47,12 @@ clay_ctx init_clay(){
             , (Clay_ErrorHandler) {HandleClayErrs} 
             );
 
+    Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
 
     return (clay_ctx){
           .ctx = ctx
+        , .font_num = 1
+        , .fonts = fonts
     };
 }
 

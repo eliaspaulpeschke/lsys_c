@@ -23,20 +23,26 @@ int main(void)
     Clay_Raylib_Initialize(screenWidth, screenHeight, "Aristid", FLAG_WINDOW_HIGHDPI | FLAG_VSYNC_HINT);
 //
     SetTargetFPS(60);
+
+    int pressed_chars[16];
+    int num_pressed_chars;
     
     clay_ctx clay_context = init_clay();
-    Font fonts[1];
-
-    fonts[0]  = LoadFontEx("resources/fonts/roboto_mono/static/RobotoMono-Bold.ttf",48,NULL,0);
-    SetTextureFilter(fonts[0].texture, TEXTURE_FILTER_BILINEAR);
-
-    Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
     while (!WindowShouldClose())    
     {
+        for (int i = 0; i < 16; i++){
+            pressed_chars[i] = GetCharPressed();
+            if (pressed_chars[i] == 0) {
+                num_pressed_chars = i;
+                break;
+            }
+        }
+
         Clay_RenderCommandArray layout = mk_layout(clay_context);
+        
         BeginDrawing();
         ClearBackground(BLACK);
-        Clay_Raylib_Render(layout, fonts);
+        Clay_Raylib_Render(layout, clay_context.fonts);
         EndDrawing();
     }
     Clay_Raylib_Close();
