@@ -79,18 +79,19 @@ char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
 
 
 char * str_rule(Rule * rule, char * offset){
-    char * str = malloc(128);
+    char * str = malloc(256);
     if (str == NULL) return NULL;
-    snprintf("%sName: %s\n %s  %s < %s > %s -> %s \n"
-                                   , 128
-                                   , offset 
-                                   , rule->name
-                                   , offset
-                                   , rule->lcont
-                                   , rule->premise
-                                   , rule->rcont
-                                   , rule->result
-                                   );
+    snprintf( str
+            , 256
+            , "%sName: %s\n %s  %s < %s > %s -> %s \n"
+            , offset 
+            , rule->name
+            , offset
+            , rule->lcont
+            , rule->premise
+            , rule->rcont
+            , rule->result
+            );
     return str;
 }
 
