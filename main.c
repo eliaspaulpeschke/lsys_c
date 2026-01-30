@@ -46,7 +46,7 @@ void test(char * str){
 int main(void)
 {
 
-    Lsystem sys = lsystem_from_file("test");
+    Lsystem sys = lsystem_from_file("test", true);
 
     char * res = applyRules(sys.ruleset, sys.nrules, sys.axiom, false);
     res = applyRules(sys.ruleset, sys.nrules, res, true);
@@ -57,12 +57,11 @@ int main(void)
         print_rule(&sys.ruleset[i], "  ");
     }
 
-    printf("%lu \n", strlen(res));
+    printf("string length: %lu \n", strlen(res));
 
     test(res);
 
     printf("\n\"%s\"\n", res);
-
 
     const int screenWidth = 600;
     const int screenHeight = 600;
@@ -149,9 +148,7 @@ int main(void)
         EndMode2D();
         EndDrawing();
     }
-    for (int i = 0; i < sys.nrules; i++){
-        free(&(sys.ruleset[i]));
-    }
+    free_lsystem(sys);
     while (turtle->prev != NULL) {
         turtle = popTurtle(turtle);
     }
