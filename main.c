@@ -24,20 +24,9 @@ int main(void)
 //
     SetTargetFPS(60);
 
-    int pressed_chars[16];
-    int num_pressed_chars;
-    
     clay_ctx clay_context = init_clay();
     while (!WindowShouldClose())    
     {
-        for (int i = 0; i < 16; i++){
-            pressed_chars[i] = GetCharPressed();
-            if (pressed_chars[i] == 0) {
-                num_pressed_chars = i;
-                break;
-            }
-        }
-
         Clay_RenderCommandArray layout = mk_layout(clay_context);
         
         BeginDrawing();

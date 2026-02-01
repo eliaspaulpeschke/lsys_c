@@ -2,22 +2,127 @@
 
 #include "raylib.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #define CLAY_IMPLEMENTATION
 #include "lib/clay.h"
 #include "lib/clay_renderer_raylib.c"
 
 typedef struct {
-    Clay_Context * ctx;
-    uint font_num;
-    Font * fonts;
-} clay_ctx;
-
-typedef struct {
-    char * text;
+    char * bufA;
+    char * bufB;
+    uint lenA;
+    uint lenB;
+    uint posA;
+    uint posB; //used backwards, start at lenB
+    uint max_len;
 } textbox;
 
-textbox update_textbox(textbox box){
-    return box;
+typedef struct {
+    Clay_Context * ctx;
+    uint font_num;
+    Font * fonts; 
+    textbox * tb;
+} clay_ctx;
+
+bool realloc_bufA(textbox * tb){
+  TraceLog(LOG_DEBUG, "realloc a");
+  if ((tb->lenA << 1) + tb->lenB >= tb->max_len) return false;
+  char * temp = realloc(tb->bufA, tb->lenA << 1);
+  bool success = false;
+  if (temp != NULL) {
+      memset(tb->bufA + tb->lenA, '\0', tb->lenA);
+      tb->bufA = temp;
+      tb->lenA <<= 1;
+      success = true;
+  } 
+  return success;
+} 
+
+bool realloc_bufB(textbox * tb){
+  TraceLog(LOG_DEBUG, "realloc b");
+  if ((tb->lenB << 1) + tb->lenA >= tb->max_len) return false;
+  char * temp = malloc(tb->lenB << 1);
+  bool success = false;
+  if (temp != NULL) {
+     memset(temp + tb->lenB, '\0', tb->lenB);
+     memcpy(temp + tb->lenB, tb->bufB, tb->lenB);
+     free(tb->bufB);
+     tb->bufB = temp;
+     tb->posB = tb->lenB;
+     tb->lenB <<= 1;
+     success = true;
+  }
+  return success;
+}
+
+void print_tb(textbox * tb){
+    uint lb = tb->lenB - tb->posB;
+    char * testA = malloc(tb->posA + 1);
+    char * testB = malloc(lb);
+    memcpy(testA, tb->bufA, tb->posA);
+    memcpy(testB, tb->bufB + tb->posB + 1, lb - 1);
+    testA[tb->posA] = '\0';
+    testB[lb - 1] = '\0';
+    TraceLog(LOG_DEBUG, "A: %s", testA); 
+    TraceLog(LOG_DEBUG, "B: %s", testB); 
+    free(testA);
+    free(testB);
+}
+
+void update_textbox(textbox * tb){
+    char chr = GetCharPressed();
+    KeyboardKey key = GetKeyPressed();
+    if (chr != 0){
+        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb)) return; 
+        tb->bufA[tb->posA] = chr;
+        tb->posA += 1;
+        TraceLog(LOG_DEBUG,"charring %d", tb->posA); 
+        print_tb(tb);
+    } else if (key != KEY_NULL) {
+        TraceLog(LOG_DEBUG,"keying"); 
+        switch (key) {
+            case KEY_BACKSPACE:
+                if (tb->posA >= 0){
+                    TraceLog(LOG_DEBUG,"backspace"); 
+                    if (tb->posA > 0) tb->posA -= 1;
+                    tb->bufA[tb->posA] = '\0';
+                    // shrink buffer?
+                }
+                break;
+            case KEY_LEFT:
+                if (tb->posA > 0){
+                    if (tb->posB == 0) if (!realloc_bufB(tb)) return;
+                    tb->posA -= 1;
+                    tb->bufB[tb->posB] = tb->bufA[tb->posA];
+                    tb->bufA[tb->posA] = '\0';
+                    tb->posB -= 1;
+                    TraceLog(LOG_DEBUG,"left %d", tb->posB);
+                }
+                break;
+            case KEY_RIGHT:
+                if (tb->posB < (tb->lenB - 1)) {
+                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb)) return; 
+                    TraceLog(LOG_DEBUG,"right"); 
+                    tb->bufA[tb->posA] = tb->bufB[tb->posB + 1];
+                    tb->posB++;
+                    tb->posA++;
+                }
+                break;
+            default:
+                TraceLog(LOG_DEBUG,"your car"); 
+                return;
+            }
+        }
+}
+
+void layout_textbox(textbox * tb){
+  char * text = malloc(tb->posA + (tb->lenB - tb->posB));
+  memcpy(text,tb->bufA,tb->posA);
+  memcpy(text+tb->posA,tb->bufB + tb->posB + 1, tb->lenB - tb->posB - 1);
+  Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb->posA + (tb->lenB - tb->posB) - 1, .chars = text};
+  CLAY_TEXT( str 
+           , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {255, 255, 255, 255} }));
 }
 
 const Clay_Color CLAY_LIGHT = (Clay_Color) {224, 215, 210, 255};
@@ -49,10 +154,24 @@ clay_ctx init_clay(){
 
     Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
 
+    textbox * tb = malloc(sizeof(textbox));
+    *tb = (textbox){ .bufA = malloc(1024)
+                          , .bufB = malloc(1024)
+                          , .lenA = 1024
+                          , .lenB = 1024
+                          , .posA = 0
+                          , .posB = 1023
+                          , .max_len = 2048
+                          };
+
+    memset(tb->bufA, '\0', tb->lenA);
+    memset(tb->bufB, '\0', tb->lenB);
+
     return (clay_ctx){
           .ctx = ctx
         , .font_num = 1
         , .fonts = fonts
+        , .tb = tb
     };
 }
 
@@ -72,6 +191,7 @@ void SidebarItemComponent(Clay_ElementId id) {
 }
 
 Clay_RenderCommandArray mk_layout(clay_ctx ctx){
+    update_textbox(ctx.tb);
     Clay_SetCurrentContext(ctx.ctx);
     Clay_SetDebugModeEnabled(true);
     Vector2 mouse = GetMousePosition();
@@ -117,7 +237,9 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                        SidebarItemComponent(CLAY_IDI("hi", i));
                    }
 
-                   CLAY(CLAY_ID("MainContent"), { .layout = { .sizing = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) } }, .backgroundColor = CLAY_LIGHT}) {}
+                   CLAY(CLAY_ID("MainContent"), { .layout = { .sizing = { .width = CLAY_SIZING_GROW(0), .height = CLAY_SIZING_GROW(0) } }, .backgroundColor = CLAY_LIGHT}) {
+                       layout_textbox(ctx.tb);
+                   }
             }
         }
     return Clay_EndLayout();
