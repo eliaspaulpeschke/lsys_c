@@ -11,7 +11,7 @@
 #include "lib/lsystem_parser.h"
 #include "lib/turtle.h"*/
 
-#include "ui.c"
+#include "lib/ui/ui.h"
 
 int main(void)
 {

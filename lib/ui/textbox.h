@@ -1,4 +1,7 @@
-#include <stdio.h>
+#ifndef TEXTBOX_H
+#define TEXTBOX_H
+#include <stdbool.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,25 +20,6 @@ typedef struct {
     uint posB; //used backwards, start at lenB-1
     uint max_len;
 } textbox;
-
-textbox * mk_textbox(uint max_len){
-    textbox * tb = malloc(sizeof(textbox));
-    *tb = (textbox){ .text = malloc(2048) 
-                   , .changed = false
-                   , .lenText = 2048
-                   , .bufA = malloc(1024)
-                   , .bufB = malloc(1024)
-                   , .lenA = 1024
-                   , .lenB = 1024
-                   , .posA = 0
-                   , .posB = 1023
-                   , .max_len = max_len
-                   };
-    memset(tb->bufA, '\0', tb->lenA);
-    memset(tb->bufB, '\0', tb->lenB);
-    memset(tb->text, '\0', tb->lenText);
-    return tb;
-}
 
 void free_textbox(textbox * tb){
     free(tb->bufA);
@@ -155,5 +139,4 @@ void layout_textbox(textbox * tb){
   CLAY_TEXT( str 
            , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {255, 255, 255, 255} }));
 }
-
-
+#endif

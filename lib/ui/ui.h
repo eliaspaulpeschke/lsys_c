@@ -1,21 +1,24 @@
+#ifndef UI_H
+#define UI_H
 #include "raylib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define CLAY_IMPLEMENTATION
-#include "lib/clay.h"
-#include "lib/clay_renderer_raylib.c"
-#include "lib/ui/textbox.c"
+#include "../clay.h"
+#include "custom.h"
+#include "../clay_renderer_raylib.c"
+
 typedef struct {
     Clay_Context * ctx;
     uint font_num;
     Font * fonts; 
-    textbox * tb;
+    CustomElementData * ced;
 } clay_ctx;
+
 const Clay_Color CLAY_LIGHT = (Clay_Color) {224, 215, 210, 255};
 const Clay_Color CLAY_RED = (Clay_Color) {168, 66, 28, 255};
 const Clay_Color CLAY_ORANGE = (Clay_Color) {225, 138, 50, 255};
-
 
 void HandleClayErrs(Clay_ErrorData errorData) {
         printf("CLAY ERROR: %s \n", errorData.errorText.chars);
@@ -39,12 +42,14 @@ clay_ctx init_clay(){
             , (Clay_ErrorHandler) {HandleClayErrs} 
             );
 
+    CustomElementData * ced = mk_textbox(2048);
+
     Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
     return (clay_ctx){
           .ctx = ctx
         , .font_num = 1
         , .fonts = fonts
-        , .tb = tb
+        , .ced = ced
     };
 }
 
@@ -64,7 +69,7 @@ void SidebarItemComponent(Clay_ElementId id) {
 }
 
 Clay_RenderCommandArray mk_layout(clay_ctx ctx){
-    update_textbox(ctx.tb);
+    update_textbox(&(ctx.ced->textbox));
     Clay_SetCurrentContext(ctx.ctx);
     Clay_SetDebugModeEnabled(true);
     Vector2 mouse = GetMousePosition();
@@ -111,7 +116,7 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                    }
 
                    CLAY(CLAY_ID("MainContent"), { .layout = { .sizing = { .width = CLAY_SIZING_FIXED(400), .height = CLAY_SIZING_FIXED(400)} }, .backgroundColor = CLAY_LIGHT}) {
-                       layout_textbox(ctx.tb);
+                       layout_textbox(&(ctx.ced->textbox));
                    }
             }
         }
@@ -119,3 +124,4 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
 }
 
 
+#endif
