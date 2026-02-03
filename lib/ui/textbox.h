@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include "../clay.h"
+#include "colors.h"
 
 typedef struct {
     char * text;
@@ -136,7 +137,10 @@ void layout_textbox(textbox * tb){
   memcpy(text,tb->bufA,tb->posA);
   memcpy(text+tb->posA,tb->bufB + tb->posB + 1, tb->lenB - tb->posB - 1);
   Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb->posA + (tb->lenB - tb->posB) - 1, .chars = text};
-  CLAY_TEXT( str 
-           , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {255, 255, 255, 255} }));
+  CLAY_AUTO_ID({ .layout = { .sizing = { .width = CLAY_SIZING_FIXED(400), .height = CLAY_SIZING_FIXED(400)} }
+                                  , .backgroundColor = COL_LIGHT
+                                  , .clip = { .horizontal = true, .vertical = true, .childOffset = Clay_GetScrollOffset() }}) {
+          CLAY_TEXT( str , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255} }));
+  }
 }
 #endif
