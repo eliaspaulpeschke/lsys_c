@@ -1,15 +1,12 @@
+#ifndef LSYSTEM_PARSER_H
+#define LSYSTEM_PARSER_H
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
-
-#ifndef LSYSTEM_H
 #include "lsystem.h"
-#endif
-
-#define LSYSTEM_PARSER_H
 
 char * file_to_mem(char * fpath){
     FILE *file = fopen(fpath, "r");
@@ -196,9 +193,4 @@ void free_lsystem(Lsystem sys){
         free(sys.free_me);
     }
 }
-
-
-
-
-
-
+#endif

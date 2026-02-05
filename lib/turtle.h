@@ -1,10 +1,10 @@
+#ifndef TURTLE_H
+#define TURTLE_H
 #include "string.h"
 #include <raylib.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <raymath.h>
-
-#define TURTLE_H
 
 typedef struct Turtle {
     Vector2 pos;
@@ -48,3 +48,4 @@ Turtle * popTurtle(Turtle * turtle){
     free(turtle);
     return prev;
 }
+#endif

@@ -1,10 +1,11 @@
+#ifndef LSYSTEM_H
+#define LSYSTEM_H
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
-#define LSYSTEM_H
 
 typedef struct Rule {
     char *name;
@@ -104,6 +105,4 @@ void print_rule(Rule * rule, char * offset){
     }
     free(x);
 }
-
-
-
+#endif

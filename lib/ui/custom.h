@@ -2,6 +2,8 @@
 #define CUSTOM_H
 #include "../clay.h"
 #include "./textbox.h"
+#include "raylib.h"
+#include <stdlib.h>
 #include <string.h>
 
 typedef enum {
@@ -15,7 +17,14 @@ typedef struct {
     };
 } CustomElementData;
 
-CustomElementData * mk_textbox(uint max_len){
+CustomElementData * mk_textbox(uint max_len, char * id){
+    char * sizer_id = malloc(strlen(id) + 7);
+    strcpy(sizer_id, id);
+    strcpy(sizer_id + strlen(id), "-sizer");
+    char * button_id = malloc(strlen(id) + 9);
+    strcpy(button_id, id);
+    strcpy(button_id + strlen(id), "-button1");
+
     CustomElementData * ced = 
         malloc(sizeof(CustomElementData));
     *ced = (CustomElementData) {
@@ -31,6 +40,12 @@ CustomElementData * mk_textbox(uint max_len){
                        , .posA = 0
                        , .posB = 1023
                        , .max_len = max_len
+                       , .size = (Vector2){250, 250}
+                       , .pos = (Vector2){300, 200}
+                       , .clay_id = (Clay_String){.isStaticallyAllocated = false, .length=strlen(id)-1, .chars=id}
+                       , .sizer_id = (Clay_String){.isStaticallyAllocated = false, .length=strlen(sizer_id) -1, .chars=sizer_id}
+                       , .button_ids = { (Clay_String){.isStaticallyAllocated = false, .length=strlen(button_id) -1, .chars=button_id} }
+                       , .lsystem = NULL
                        }
                    };
     memset(ced->textbox.bufA, '\0', ced->textbox.lenA);

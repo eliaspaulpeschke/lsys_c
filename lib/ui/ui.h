@@ -26,7 +26,6 @@ clay_ctx init_clay(){
     fonts[0]  = LoadFontEx("resources/fonts/roboto_mono/static/RobotoMono-Bold.ttf",48,NULL,0);
     SetTextureFilter(fonts[0].texture, TEXTURE_FILTER_BILINEAR);
 
-
     uint64_t clayReqMem = Clay_MinMemorySize();
     Clay_Arena clayMem = 
         Clay_CreateArenaWithCapacityAndMemory(clayReqMem, malloc(clayReqMem));
@@ -39,7 +38,7 @@ clay_ctx init_clay(){
             , (Clay_ErrorHandler) {HandleClayErrs} 
             );
 
-    CustomElementData * ced = mk_textbox(2048);
+    CustomElementData * ced = mk_textbox(2048, "testbox");
 
     Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
     return (clay_ctx){
@@ -53,7 +52,7 @@ clay_ctx init_clay(){
 Clay_RenderCommandArray mk_layout(clay_ctx ctx){
     update_textbox(&(ctx.ced->textbox));
     Clay_SetCurrentContext(ctx.ctx);
-    Clay_SetDebugModeEnabled(true);
+//    Clay_SetDebugModeEnabled(true);
     float width = (float)GetScreenWidth();
     float height = (float)GetScreenHeight();
     Vector2 mouse = GetMousePosition();
@@ -74,16 +73,8 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
     CLAY(CLAY_ID("SpacingContainer"), { .layout = { .sizing = {CLAY_SIZING_FIXED(width), CLAY_SIZING_FIXED(height)}
                                                   , .layoutDirection = CLAY_TOP_TO_BOTTOM }
                                       , .backgroundColor = COL_TRANSPARENT }) {
-       CLAY(CLAY_ID("Spacer")
-            , { .layout = { .sizing = {CLAY_SIZING_FIXED(width), CLAY_SIZING_FIXED(height/2)}}}) {}
 
-        CLAY(CLAY_ID("MainContainer")
-            , { .layout = { .sizing = {CLAY_SIZING_FIXED(width), CLAY_SIZING_FIXED(height/2)}
-                          , .padding = CLAY_PADDING_ALL(16)
-                          , .childGap = 16 } 
-            , .backgroundColor = COL_DARK }) {
-                           layout_textbox(&(ctx.ced->textbox));
-               }
+                           layout_textbox(&(ctx.ced->textbox), &ctx.fonts[0]);
         }
     return Clay_EndLayout();
 }
