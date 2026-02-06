@@ -1,4 +1,3 @@
-
 #include "lib/ui/custom.h"
 #include "raylib.h"
 #include "raymath.h"
@@ -31,10 +30,7 @@ int main(void)
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
-
-    float rads = PI/3;
-    Vector2 pos = (Vector2){0.0f, 0.0f};
-
+    int len = 0;
     while (!WindowShouldClose())    
     {
         
@@ -42,7 +38,7 @@ int main(void)
         if (!update_ui(&clay_context)) {
             if (IsKeyDown(KEY_RIGHT)) {
                  camera.target.x += 3.0f;
-            } else if (IsKeyDown(KEY_LEFT)) {
+            }else if (IsKeyDown(KEY_LEFT)) {
                 camera.target.x -= 3.0f;
             }else if (IsKeyDown(KEY_DOWN)) {
                 camera.target.y += 3.0f;
@@ -52,10 +48,6 @@ int main(void)
                 camera.zoom += 0.2f;
             }else if (IsKeyDown(KEY_M)){
                 camera.zoom -= 0.2f;
-            }else if (IsKeyDown(KEY_Q)){
-                rads += 0.2f;
-            }else if (IsKeyDown(KEY_W)){
-                rads -= 0.2f;
             }
         }
         BeginDrawing();
@@ -65,7 +57,9 @@ int main(void)
         for(int i = 0; i < clay_context.num_custom_elems; i++){
             if (clay_context.ced[i]->type != CUSTOM_ELEM_T_textbox) continue; 
             if (clay_context.ced[i]->textbox.generated == NULL) continue;
-            standard_turtle_draw(clay_context.ced[i]->textbox.generated, WHITE, rads, pos);
+            if (len > strlen(clay_context.ced[i]->textbox.generated)) len = 1;
+            turtle_draw(clay_context.ced[i]->textbox.generated,len, clay_context.ced[i]->textbox.init_turtle);
+            len += 10;
         }
         EndMode2D();
         EndDrawing();

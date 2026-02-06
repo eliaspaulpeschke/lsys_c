@@ -38,8 +38,10 @@ CustomElementData * mk_textbox(uint max_len, uint id){
                        , .clay_id_num = id
                        , .lsystem = NULL
                        , .generated = NULL
+                       , .init_turtle = NULL 
                        }
                    };
+    ced->textbox.init_turtle = mk_base_turtle();
     memset(ced->textbox.bufA, '\0', ced->textbox.lenA);
     memset(ced->textbox.bufB, '\0', ced->textbox.lenB);
     memset(ced->textbox.text, '\0', ced->textbox.lenText);

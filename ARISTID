@@ -1,0 +1,16 @@
+w   : ARISTID
+p1  : p -> ++
+p2  : m -> --
+p3  : P -> +
+p4  : M -> -
+p5  : f -> FFFFFF
+p6  : g -> FF
+p7  : G -> F
+p8  : h -> FFFFF
+p8  : A -> [g[pg]ggpppf]
+p9  : R -> [pfmmhppPGPGPGppgmmMgG]
+p10 : I -> [pfggmmh][pfffGmmh]
+p10 : S -> [pffGmGmGmGmGpGpGpGPGpG]
+p11 : T -> [pffggmmh[ppg][mmg]]
+p12 : D -> [pf+f--f+gggmGMGMgMGmGGmmMhg]
+p13 : F -> rgFF[+gF[-gF][+F]]

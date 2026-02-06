@@ -31,7 +31,7 @@ typedef struct {
     uint clay_id_num;
     Lsystem * lsystem;
     char * generated;
-    Turtle * turtle;
+    Turtle * init_turtle;
 } textbox;
 
 void free_textbox(textbox * tb){
@@ -124,6 +124,7 @@ void textbox_update_lsystem(textbox * tb){
     char * lsys_text = malloc(tb->lenText);
     strlcpy(lsys_text, tb->text, tb->lenText);
     *lsys = lsystem_from_string(lsys_text, true);
+    if (lsys->nrules <= 0 || lsys == NULL) return;
     tb->lsystem = lsys;
     TraceLog(LOG_DEBUG, "%s", lsys->axiom); 
     for (int i = 0; i < lsys->nrules; i++){
@@ -140,6 +141,23 @@ void textbox_update_lsystem(textbox * tb){
 void textbox_generate(textbox * tb){
     if (tb->generated == NULL || tb->lsystem == NULL) return;
     tb->generated = applyRules(tb->lsystem->ruleset, tb->lsystem->nrules, tb->generated, true);
+}
+
+void textbox_paste(textbox * tb){
+    const char * clip = GetClipboardText();
+    if (clip == NULL) return;
+    uint len = strlen(clip);
+    TraceLog(LOG_DEBUG, "paste \"%s\": %d", clip, len); 
+    if (tb->lenA - tb->posA - 1< len) if (!realloc_bufA(tb, len)) return;
+    memcpy(tb->bufA + tb->posA, clip, len);
+    tb->posA += len;
+    tb->bufA[tb->posA] = '\0';
+    tb->changed = true;
+}
+
+void textbox_copy(textbox * tb){
+    if (tb->changed) textbox_update_text(tb);
+    SetClipboardText(tb->text);
 }
 
 bool update_textbox(textbox * tb){
@@ -169,8 +187,9 @@ bool update_textbox(textbox * tb){
     }
 
     char chr = GetCharPressed();
+    bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
     KeyboardKey key = GetKeyPressed();
-    if (chr != 0){
+    if (chr != 0 && !ctrl){
         if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return true; 
         tb->bufA[tb->posA] = chr;
         tb->posA += 1;
@@ -284,6 +303,18 @@ bool update_textbox(textbox * tb){
                 tb->posA += 1;
                 tb->changed = true;
 
+                break;
+            case KEY_C:
+                if (ctrl) {
+                    textbox_copy(tb);
+                    return true;
+                }
+                break;
+            case KEY_V:
+                if (ctrl) {
+                    textbox_paste(tb);
+                    return true;
+                }
                 break;
             default:
                 TraceLog(LOG_DEBUG,"your car"); 

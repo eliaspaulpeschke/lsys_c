@@ -101,6 +101,7 @@ Prem_and_ctx parse_prem_and_ctx (char * line) {
     }
     if (strlen(premise) != 1) {
         printf("Error in parse_prem_and_ctx: malformed premise \" %s \" \n", premise);
+        return (Prem_and_ctx){NULL, NULL, NULL};
     }
     return (Prem_and_ctx){premise, lt, gt};
 }
@@ -119,6 +120,7 @@ Rule parse_rule(char * line){
     char * arrow = strstr(line, "->");
     if (arrow == NULL){
         printf("Error in parse_rule: no -> found \n");
+        return (Rule){NULL, NULL, NULL, NULL, NULL};
     }
     result = trim(arrow + 2);
     *arrow = '\0';
@@ -131,20 +133,25 @@ Rule parse_rule(char * line){
                 break;
             case RS_PREMISE:
                 prem_and_ctx = parse_prem_and_ctx(trim(res));
+                if (prem_and_ctx.premise == NULL) {
+                    return (Rule){NULL, NULL, NULL, NULL, NULL};
+                }
                 break;
             case RS_QUALIFIER:
                 printf("Warning: qualifiers not yet implemented \n");
                 break;
             default:
                 printf("Error in parse_rule: unforseen state\n");
+                return (Rule){NULL, NULL, NULL, NULL, NULL};
+
         }
         res = strtok(NULL, ":");
         state++;
     }
     if (res != NULL || state < RS_PREMISE) {
         printf("Error in parse_rule: to less or too many colons \n");
+        return (Rule){NULL, NULL, NULL, NULL, NULL};
     }
-//    return (Rule){NULL, NULL, NULL, NULL, NULL};
 
     return (Rule){ name
                  , prem_and_ctx.premise
@@ -168,6 +175,7 @@ Lsystem parse_lsystem(char * lines[], uint line_num, bool with_axiom, char * fre
     if (with_axiom) start = 1;
     for (int i = start; i < line_num; i++){
       ruleset[i - start] = parse_rule(lines[i]);
+      if (ruleset[i - start].premise == NULL) return (Lsystem){-1, NULL, NULL, NULL, free_me};
     }
     return (Lsystem){line_num -1, name, axiom, ruleset, free_me};
 }

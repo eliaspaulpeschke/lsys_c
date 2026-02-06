@@ -18,12 +18,13 @@ typedef struct {
     uint font_num;
     Font * fonts; 
     CustomElementData * ced[64];
-    CustomElementData * focused;
+    int focus_index;
     uint num_custom_elems;
 } clay_ctx;
 
 void HandleClayErrs(Clay_ErrorData errorData) {
         printf("CLAY ERROR: %s \n", errorData.errorText.chars);
+        Clay_ResetMeasureTextCache();
 }
 
 clay_ctx init_clay(){
@@ -51,8 +52,8 @@ clay_ctx init_clay(){
         , .font_num = 1
         , .fonts = fonts
         , .ced = {0}
-        , .focused = NULL
         , .num_custom_elems = 0
+        , .focus_index = -1
     };
 }
 
@@ -60,6 +61,14 @@ void add_textbox(clay_ctx * ctx){
     if (ctx->num_custom_elems >= CED_MAX_LEN) return;
     ctx->ced[ctx->num_custom_elems] = mk_textbox(8192, ctx->num_custom_elems);
     ctx->num_custom_elems += 1;
+}
+
+bool focus_has_valid_turtle(clay_ctx * ctx){
+    if (ctx->focus_index < 0) return false;
+    if (ctx->ced[ctx->focus_index]->type 
+            != CUSTOM_ELEM_T_textbox) return false;
+    if (ctx->ced[ctx->focus_index]->textbox.init_turtle == NULL) return false;
+    return true;
 }
 
 bool update_ui(clay_ctx * ctx){
@@ -79,30 +88,41 @@ bool update_ui(clay_ctx * ctx){
         }
     } 
     KeyboardKey pressed[3] = {GetKeyPressed(), GetKeyPressed(), GetKeyPressed()};
-    for (int i = 0; i < 3; i++){
-        if (pressed[i] != 0){
-        TraceLog(LOG_DEBUG, "key: %s", kc_to_rep(pressed[i])); 
-        }
+    
+    if (!IsKeyDown(KEY_LEFT_CONTROL)) return false;
+    uint switch_idx = 0;
+    bool shift = false;
+    if (pressed[0] == KEY_LEFT_SHIFT 
+        || pressed[0] == KEY_RIGHT_SHIFT) {
+        switch_idx = 1;
+        shift = true;
+    } shift = shift 
+             || IsKeyDown(KEY_LEFT_SHIFT) 
+             || IsKeyDown(KEY_RIGHT_SHIFT);
+    if (pressed[0] != 0){
+        TraceLog(LOG_DEBUG, "key: %s %s %s %d %b", kc_to_rep(pressed[0]),  kc_to_rep(pressed[1]),  kc_to_rep(pressed[2]), switch_idx, shift); 
     }
-    if ( IsKeyDown(KEY_LEFT_CONTROL) && pressed[0] == KEY_ENTER && pressed[1] == 0){
-        if (ctx->focused == NULL && ctx->num_custom_elems > 0) {
-            ctx->focused = ctx->ced[0];
-            return true;
-        }
-        uint foc_idx;
-        for (int i = 0; i < ctx->num_custom_elems; i++){
-            if (ctx->ced[i] == ctx->focused){
-                foc_idx = i;
-                break;
+    switch (pressed[switch_idx]){
+        case KEY_ENTER:
+            if (ctx->focus_index < ((int)ctx->num_custom_elems - 1)
+                && (!shift)){
+                ctx->focus_index += 1;
+            }else{
+                ctx->focus_index = -1;
             }
-        }
-        if (foc_idx >= ctx->num_custom_elems -1) {
-            ctx->focused = NULL;
             return true;
-        }
-        foc_idx++;
-        ctx->focused = ctx->ced[foc_idx];
-        return true;
+        case KEY_A:  
+            if (!focus_has_valid_turtle(ctx)) return false;
+            if (shift) {
+                ctx->ced[ctx->focus_index]
+                    ->textbox.init_turtle->rads += 0.1f;
+            }else{
+                ctx->ced[ctx->focus_index]
+                    ->textbox.init_turtle->rads -= 0.1f;
+            }
+            return true;
+        default: 
+            return false;
     }
     return false;
 }
@@ -143,8 +163,7 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
                 case CUSTOM_ELEM_T_textbox:
-                    bool focused = ctx.ced[i] == ctx.focused;
-                    layout_textbox(&(ctx.ced[i]->textbox), &ctx.fonts[0], focused);
+                    layout_textbox(&(ctx.ced[i]->textbox), &ctx.fonts[0], i == ctx.focus_index);
                     break;
                 default:
                     break;
