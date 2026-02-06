@@ -1,4 +1,5 @@
 
+#include "lib/ui/custom.h"
 #include "raylib.h"
 #include "raymath.h"
 //#include <math.h>
@@ -20,7 +21,7 @@ int main(void)
     const int screenHeight = 1080;
 
 //    InitWindow(screenWidth, screenHeight, "testing");
-    Clay_Raylib_Initialize(screenWidth, screenHeight, "Aristid", FLAG_WINDOW_HIGHDPI | FLAG_VSYNC_HINT);
+    Clay_Raylib_Initialize(screenWidth, screenHeight, "Aristid", FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT);
 //
     SetTargetFPS(60);
 
@@ -31,66 +32,40 @@ int main(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
-    char * generated = malloc(4096);
-
-    Turtle * turtle = malloc(sizeof(Turtle));
-
-    *turtle = (Turtle){ .heading = (Vector2){ 5.0f, 0.0f }
-                      , .length = 5.0f
-                      , .pos = (Vector2){ 0.0f, 0.0f }
-                      , .prev = NULL
-                      , .rads = PI/3 
-                      };
+    float rads = PI/3;
+    Vector2 pos = (Vector2){0.0f, 0.0f};
 
     while (!WindowShouldClose())    
     {
-        if (IsKeyDown(KEY_RIGHT)) {
-             camera.target.x += 1.0f;
-        } else if (IsKeyDown(KEY_LEFT)) {
-            camera.target.x -= 1.0f;
-        }else if (IsKeyDown(KEY_DOWN)) {
-            camera.target.y += 1.0f;
-        }else if (IsKeyDown(KEY_UP)) {
-            camera.target.y -= 1.0f;
-        }
-        Clay_RenderCommandArray layout = mk_layout(clay_context);
         
+        Clay_RenderCommandArray layout = mk_layout(clay_context);
+        if (!update_ui(&clay_context)) {
+            if (IsKeyDown(KEY_RIGHT)) {
+                 camera.target.x += 3.0f;
+            } else if (IsKeyDown(KEY_LEFT)) {
+                camera.target.x -= 3.0f;
+            }else if (IsKeyDown(KEY_DOWN)) {
+                camera.target.y += 3.0f;
+            }else if (IsKeyDown(KEY_UP)) {
+                camera.target.y -= 3.0f;
+            }else if (IsKeyDown(KEY_P)) {
+                camera.zoom += 0.2f;
+            }else if (IsKeyDown(KEY_M)){
+                camera.zoom -= 0.2f;
+            }else if (IsKeyDown(KEY_Q)){
+                rads += 0.2f;
+            }else if (IsKeyDown(KEY_W)){
+                rads -= 0.2f;
+            }
+        }
         BeginDrawing();
         ClearBackground(BLACK);
         Clay_Raylib_Render(layout, clay_context.fonts, NULL);
         BeginMode2D(camera);
-        if (clay_context.ced->textbox.lsystem != NULL) {
-            //TODO: update this only if the underlying lsystem changed
-            Lsystem * sys = clay_context.ced->textbox.lsystem;
-            generated = applyRules(sys->ruleset, sys->nrules, sys->axiom, false);
-            generated = applyRules(sys->ruleset, sys->nrules, generated, true);
-            *turtle = (Turtle){ .heading = (Vector2){ 5.0f, 0.0f }
-                      , .length = 5.0f
-                      , .pos = (Vector2){ 0.0f, 0.0f }
-                      , .prev = NULL
-                      , .rads = PI/3 
-                      };
-            for (int i = 0; i < strlen(generated); i++) {
-                switch (generated[i]) {
-                    case 'F':
-                        moveTurtle(turtle);
-                        break;
-                    case '+':
-                        rotateTurtle(turtle, true);
-                        break;
-                    case '-':
-                        rotateTurtle(turtle, false);
-                        break;
-                    case '[':
-                        turtle = pushTurtle(turtle); 
-                        break;
-                    case ']':
-                        turtle = popTurtle(turtle);
-                        break;
-                    default: 
-                        break;
-                }
-            }
+        for(int i = 0; i < clay_context.num_custom_elems; i++){
+            if (clay_context.ced[i]->type != CUSTOM_ELEM_T_textbox) continue; 
+            if (clay_context.ced[i]->textbox.generated == NULL) continue;
+            standard_turtle_draw(clay_context.ced[i]->textbox.generated, WHITE, rads, pos);
         }
         EndMode2D();
         EndDrawing();

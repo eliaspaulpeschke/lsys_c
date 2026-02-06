@@ -11,6 +11,7 @@
 #include "colors.h"
 #include "../lsystem.h"
 #include "../lsystem_parser.h"
+#include "../turtle.h"
 
 
 typedef struct {
@@ -27,10 +28,10 @@ typedef struct {
     uint max_len;
     Vector2 size;
     Vector2 pos;
-    Clay_String clay_id;
-    Clay_String sizer_id;
-    Clay_String button_ids[1];
+    uint clay_id_num;
     Lsystem * lsystem;
+    char * generated;
+    Turtle * turtle;
 } textbox;
 
 void free_textbox(textbox * tb){
@@ -39,6 +40,7 @@ void free_textbox(textbox * tb){
     free(tb->text);
     free_lsystem(*tb->lsystem);
     free(tb->lsystem);
+    free(tb->generated);
     free(tb);
 }
 
@@ -127,30 +129,49 @@ void textbox_update_lsystem(textbox * tb){
     for (int i = 0; i < lsys->nrules; i++){
        TraceLog(LOG_DEBUG, "%s", str_rule(lsys->ruleset + i, "   "));
     }
+    if (lsys->axiom != NULL) {
+        if (tb->generated != NULL) {
+            free(tb->generated);
+        }
+        tb->generated = strdup(lsys->axiom);
+    }
 }
 
-void update_textbox(textbox * tb){
-    bool ptr =Clay_PointerOver(Clay_GetElementId(tb->clay_id));
-    bool sizer=Clay_PointerOver(Clay_GetElementId(tb->sizer_id));
-    bool button=Clay_PointerOver(Clay_GetElementId(tb->button_ids[0]));
-    if (!(ptr || sizer || button)) return;
+void textbox_generate(textbox * tb){
+    if (tb->generated == NULL || tb->lsystem == NULL) return;
+    tb->generated = applyRules(tb->lsystem->ruleset, tb->lsystem->nrules, tb->generated, true);
+}
 
-    if (IsMouseButtonDown(0)) {
-        Vector2 mouse = GetMouseDelta();
-        if (button) {
+bool update_textbox(textbox * tb){
+    bool ptr =Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox"), tb->clay_id_num));
+    bool sizer=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-sizer"), tb->clay_id_num));
+    bool button_lsys=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-lsys"), tb->clay_id_num));
+    bool button_gen=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-gen"), tb->clay_id_num));
+    
+    if (!(ptr || sizer || button_lsys || button_gen)) return false;
+
+    if (IsMouseButtonReleased(0)) {
+        if (button_lsys) {
            textbox_update_lsystem(tb);
-        } else if (sizer) {
+        } else if (button_gen) {
+            textbox_generate(tb);
+        }    
+        return true;
+    }
+    if (IsMouseButtonDown(0)){
+        Vector2 mouse = GetMouseDelta();
+        if (sizer) {
             tb->size = Vector2Add(mouse, tb->size);
         } else {
             tb->pos = Vector2Add(mouse, tb->pos);
         }
-        TraceLog(LOG_DEBUG, "Buttoning %f %f", tb->pos.x, tb->pos.y);
+        return true;
     }
 
     char chr = GetCharPressed();
     KeyboardKey key = GetKeyPressed();
     if (chr != 0){
-        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return; 
+        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return true; 
         tb->bufA[tb->posA] = chr;
         tb->posA += 1;
         tb->changed = true;
@@ -172,7 +193,7 @@ void update_textbox(textbox * tb){
                 break;
             case KEY_LEFT:
                 if (tb->posA > 0){
-                    if (tb->posB == 0) if (!realloc_bufB(tb, 1)) return;
+                    if (tb->posB == 0) if (!realloc_bufB(tb, 1)) return true;
                     tb->posA -= 1;
                     tb->bufB[tb->posB] = tb->bufA[tb->posA];
                     tb->bufA[tb->posA] = '\0';
@@ -184,7 +205,7 @@ void update_textbox(textbox * tb){
                 break;
             case KEY_RIGHT:
                 if (tb->posB < (tb->lenB - 1)) {
-                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return; 
+                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return true; 
                     TraceLog(LOG_DEBUG,"right"); 
                     tb->bufA[tb->posA] = tb->bufB[tb->posB + 1];
                     tb->posB++;
@@ -206,10 +227,10 @@ void update_textbox(textbox * tb){
                         } 
                     }
                 }
-                if (len_til_newline < 0) return;
+                if (len_til_newline < 0) return true;
                 if (len_til_next_newline < 0) len_til_next_newline = tb->posA - len_til_newline + 1;
                 dist = len_til_newline >= len_til_next_newline ? len_til_newline : len_til_next_newline;
-                if (tb->posB < dist) if (!realloc_bufB(tb, dist)) return;
+                if (tb->posB < dist) if (!realloc_bufB(tb, dist)) return true;
                 //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
                 memcpy(tb->bufB + (tb->posB - dist), tb->bufA + (tb->posA - dist)-1, dist+1); 
                 memset(tb->bufA + (tb->posA - dist), '\0', dist);
@@ -243,11 +264,11 @@ void update_textbox(textbox * tb){
                 // 1234\n123456\n1234\n123456
                 // 12
                 //
-                if (len_til_newline < 0) return;
+                if (len_til_newline < 0) return true;
                 if (len_til_next_newline < 0) len_til_next_newline = (tb->lenB - tb->posB) - len_til_newline;
                 dist = len_til_prev_newline > len_til_next_newline ? len_til_newline + len_til_next_newline -1 : line_len -1;
                 TraceLog(LOG_DEBUG, "dist %u %d %d", dist, len_til_newline, len_til_next_newline); 
-                if ((tb->lenA - tb->posA) < dist) if (!realloc_bufA(tb, dist)) return;
+                if ((tb->lenA - tb->posA) < dist) if (!realloc_bufA(tb, dist)) return true;
                 //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
                 memcpy(tb->bufA + tb->posA, tb->bufB + tb->posB + 1, dist); 
                 memset(tb->bufB + tb->posB + 1, '\0', dist);
@@ -258,7 +279,7 @@ void update_textbox(textbox * tb){
                 break;
 
             case KEY_ENTER:
-                if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return; 
+                if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return true; 
                 tb->bufA[tb->posA] = '\n';
                 tb->posA += 1;
                 tb->changed = true;
@@ -266,9 +287,10 @@ void update_textbox(textbox * tb){
                 break;
             default:
                 TraceLog(LOG_DEBUG,"your car"); 
-                return;
+                return false;
             }
         }
+    return true;
 }
 
 Vector2 get_cursor_offset(char * text, Font *font, float font_size, float letter_spacing, float line_height) {
@@ -300,18 +322,21 @@ Vector2 get_cursor_offset(char * text, Font *font, float font_size, float letter
     return textSize;
 }
 
-void layout_textbox(textbox * tb, Font * font){
+void layout_textbox(textbox * tb, Font * font, bool focused){
   textbox_update_text(tb);
+  Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {2,2,2,2,0}, .color = COL_ACCENT};
+  Clay_BorderElementConfig border_normal = (Clay_BorderElementConfig){.width = {0,0,0,0,0}, .color = {0,0,0,0}};
   Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb->lenText - 1, .chars = tb->text};
   Vector2 cursorPos = get_cursor_offset(tb->bufA, font, 16,0, 1.0);
-  CLAY(CLAY_SID(tb->clay_id), { .floating = { //.expand = { .width = tb->size.x, .height = tb->size.y}
+  CLAY(CLAY_IDI("textbox", tb->clay_id_num), { .floating = { //.expand = { .width = tb->size.x, .height = tb->size.y}
                                              .offset = (Clay_Vector2){tb->pos.x, tb->pos.y}
                                             , .attachTo = CLAY_ATTACH_TO_PARENT
                                             , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT}
                               , .layout = { .layoutDirection = CLAY_LEFT_TO_RIGHT }
                               , .backgroundColor = COL_LIGHT
+                              , .border = focused ? border_focused : border_normal 
                               , .cornerRadius = CLAY_CORNER_RADIUS(8)}) {
-          CLAY(CLAY_SID(tb->sizer_id),{.floating = { .offset = (Clay_Vector2){tb->size.x, tb->size.y-16}
+          CLAY(CLAY_IDI("textbox-sizer", tb->clay_id_num), {.floating = { .offset = (Clay_Vector2){tb->size.x, tb->size.y-16}
                                     , .attachTo = CLAY_ATTACH_TO_PARENT
                                     , .expand = { .width=32, .height=32 } }
                        , .backgroundColor = COL_TRANSPARENT
@@ -319,18 +344,21 @@ void layout_textbox(textbox * tb, Font * font){
               CLAY_AUTO_ID({.layout={ .sizing = { .width = CLAY_SIZING_FIXED(8), .height = CLAY_SIZING_FIXED(8)}}
                            ,.backgroundColor = COL_DARK
                            ,.cornerRadius=8}){};
-
           };
-          CLAY_AUTO_ID({ .layout = { .sizing = {.width = CLAY_SIZING_FIXED(16), .height = CLAY_SIZING_GROW(0)}
+          CLAY_AUTO_ID({ .layout = { .sizing = {.width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_GROW(0)}
                                    , .layoutDirection = CLAY_TOP_TO_BOTTOM }
-                       , .border = {.width = {0,0,0,0,1}, .color = COL_DARK}
+                       , .border = {.width = {0,1,0,0,1}, .color = COL_DARK}
                        , .backgroundColor = COL_TRANSPARENT}){
-              CLAY(CLAY_SID(tb->button_ids[0]), { .layout = { .sizing = { .width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_FIXED(24)}
+              CLAY(CLAY_IDI("textbox-btn-lsys", tb->clay_id_num), { .layout = { .sizing = { .width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_FIXED(24)}
                                                             , .childAlignment = {.x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER} }
-                                                , .cornerRadius = 8
                                                 , .backgroundColor = (Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT) 
                                                 }){ CLAY_TEXT(CLAY_STRING(">"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 })); };
+              CLAY(CLAY_IDI("textbox-btn-gen", tb->clay_id_num), { .layout = { .sizing = { .width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_FIXED(24)}
+                                                            , .childAlignment = {.x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER} }
+                                                , .backgroundColor = (Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT) 
+                                                }){ CLAY_TEXT(CLAY_STRING("gen"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 })); };
           };
+
           CLAY_AUTO_ID({.layout = { .sizing = { .width = CLAY_SIZING_FIXED(tb->size.x)
                                               , .height = CLAY_SIZING_FIXED(tb->size.y) }
                                   , .padding = CLAY_PADDING_ALL(16)}
@@ -341,7 +369,7 @@ void layout_textbox(textbox * tb, Font * font){
                                     , .attachTo = CLAY_ATTACH_TO_PARENT
                                     , .expand = { .width=1, .height=8 }
                                     , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT }
-                        , .backgroundColor = {255,0,0,255}});
+                        , .backgroundColor = COL_ACCENT});
               CLAY_TEXT( str , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
           };
   }
