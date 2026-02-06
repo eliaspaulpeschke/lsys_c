@@ -38,7 +38,7 @@ clay_ctx init_clay(){
             , (Clay_ErrorHandler) {HandleClayErrs} 
             );
 
-    CustomElementData * ced = mk_textbox(2048, "testbox");
+    CustomElementData * ced = mk_textbox(8192, "testbox");
 
     Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
     return (clay_ctx){

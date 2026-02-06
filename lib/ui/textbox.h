@@ -42,34 +42,40 @@ void free_textbox(textbox * tb){
     free(tb);
 }
 
-bool realloc_bufA(textbox * tb){
-  TraceLog(LOG_DEBUG, "realloc a");
-  if ((tb->lenA << 1) + tb->lenB >= tb->max_len) return false;
-  char * temp = realloc(tb->bufA, tb->lenA << 1);
+bool realloc_bufA(textbox * tb, uint extra){
+  uint newlen = tb->lenA << 1;
+  if (newlen < (tb->lenA + extra)) newlen += extra;  
+  if (newlen + tb->lenB >= tb->max_len) return false;
+  char * temp = realloc(tb->bufA, newlen);
   bool success = false;
   if (temp != NULL) {
       memset(tb->bufA + tb->lenA, '\0', tb->lenA);
       tb->bufA = temp;
-      tb->lenA <<= 1;
+      tb->lenA = newlen;
       success = true;
   } 
+  TraceLog(LOG_DEBUG, "realloc a %b", success);
   return success;
 } 
 
-bool realloc_bufB(textbox * tb){
-  TraceLog(LOG_DEBUG, "realloc b");
-  if ((tb->lenB << 1) + tb->lenA >= tb->max_len) return false;
-  char * temp = malloc(tb->lenB << 1);
+bool realloc_bufB(textbox * tb, uint extra){
+  uint newlen = tb->lenB << 1;
+  if (newlen < (tb->lenB + extra)) newlen += extra;  
+  TraceLog(LOG_DEBUG, "%u %u %u", tb->lenB, newlen, extra); 
+  if (newlen + tb->lenA >= tb->max_len) return false;
+  char * temp = malloc(newlen);
   bool success = false;
   if (temp != NULL) {
-     memset(temp + tb->lenB, '\0', tb->lenB);
-     memcpy(temp + tb->lenB, tb->bufB, tb->lenB);
+     uint pos = newlen - (tb->lenB - tb->posB);
+     memset(temp, '\0', newlen);
+     memcpy(temp + pos, tb->bufB+tb->posB, tb->lenB - tb->posB);
      free(tb->bufB);
      tb->bufB = temp;
-     tb->posB = tb->lenB;
-     tb->lenB <<= 1;
+     tb->posB = pos;
+     tb->lenB = newlen;
      success = true;
   }
+  TraceLog(LOG_DEBUG, "realloc b %b", success);
   return success;
 }
 
@@ -144,13 +150,16 @@ void update_textbox(textbox * tb){
     char chr = GetCharPressed();
     KeyboardKey key = GetKeyPressed();
     if (chr != 0){
-        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb)) return; 
+        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return; 
         tb->bufA[tb->posA] = chr;
         tb->posA += 1;
         tb->changed = true;
         TraceLog(LOG_DEBUG,"charring %d", tb->posA); 
     } else if (key != KEY_NULL) {
         TraceLog(LOG_DEBUG,"keying"); 
+        int len_til_newline;
+        int len_til_next_newline;
+        uint dist;
         switch (key) {
             case KEY_BACKSPACE:
                 if (tb->posA >= 0){
@@ -163,7 +172,7 @@ void update_textbox(textbox * tb){
                 break;
             case KEY_LEFT:
                 if (tb->posA > 0){
-                    if (tb->posB == 0) if (!realloc_bufB(tb)) return;
+                    if (tb->posB == 0) if (!realloc_bufB(tb, 1)) return;
                     tb->posA -= 1;
                     tb->bufB[tb->posB] = tb->bufA[tb->posA];
                     tb->bufA[tb->posA] = '\0';
@@ -175,7 +184,7 @@ void update_textbox(textbox * tb){
                 break;
             case KEY_RIGHT:
                 if (tb->posB < (tb->lenB - 1)) {
-                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb)) return; 
+                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return; 
                     TraceLog(LOG_DEBUG,"right"); 
                     tb->bufA[tb->posA] = tb->bufB[tb->posB + 1];
                     tb->posB++;
@@ -183,28 +192,73 @@ void update_textbox(textbox * tb){
                     tb->changed = true;
 
                 }
-                break;
-            case KEY_UP: ;
-                int len_til_newline = -1;
-                int len_til_next_newline = -1;
-                for (uint i = tb->posA; i > 0; i--){
+                break; 
+             case KEY_UP: ;
+                len_til_newline = -1;
+                len_til_next_newline = -1;
+                for (int i = tb->posA - 1; i >= 0; i--){
                     if (tb->bufA[i] == '\n') {
                         if (len_til_newline < 0){
                           len_til_newline = tb->posA - i;
                         } else if (len_til_next_newline < 0){
-                          len_til_next_newline = tb->posA - i;
+                          len_til_next_newline = (tb->posA - i) - len_til_newline;
                           break;
-                        }
+                        } 
                     }
                 }
                 if (len_til_newline < 0) return;
-                uint dist = len_til_newline >= len_til_next_newline ? len_til_newline : len_til_next_newline;
-                uint pos = tb->posA -  - 1;
-                TraceLog(LOG_DEBUG, "implement me!!! up!"); 
-                tb->posA = pos;
+                if (len_til_next_newline < 0) len_til_next_newline = tb->posA - len_til_newline + 1;
+                dist = len_til_newline >= len_til_next_newline ? len_til_newline : len_til_next_newline;
+                if (tb->posB < dist) if (!realloc_bufB(tb, dist)) return;
+                //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
+                memcpy(tb->bufB + (tb->posB - dist), tb->bufA + (tb->posA - dist)-1, dist+1); 
+                memset(tb->bufA + (tb->posA - dist), '\0', dist);
+                tb->posA -= dist;
+                tb->posB -= dist;
+                tb->changed = true;
+                TraceLog(LOG_DEBUG, "down"); 
                 break;
+            case KEY_DOWN: ;
+                uint len_til_prev_newline = -1;
+                for (int i = tb->posA-1; i >= 0; i--){
+                    if (tb->bufA[i] == '\n') {
+                        len_til_prev_newline = tb->posA - i;
+                        break;
+                    }
+                }
+                if (len_til_prev_newline == -1) len_til_prev_newline = tb->posA + 1;
+                len_til_newline = -1;
+                len_til_next_newline = -1;
+                for (int i = tb->posB + 1; i < tb->lenB; i++){
+                    if (tb->bufB[i] == '\n') {
+                        if (len_til_newline < 0){
+                          len_til_newline = i - tb->posB;
+                        } else if (len_til_next_newline < 0){
+                          len_til_next_newline = (i - tb->posB) - len_til_newline;
+                          break;
+                        } 
+                    }
+                } 
+                uint line_len = len_til_prev_newline + len_til_newline;
+                // 1234\n123456\n1234\n123456
+                // 12
+                //
+                if (len_til_newline < 0) return;
+                if (len_til_next_newline < 0) len_til_next_newline = (tb->lenB - tb->posB) - len_til_newline;
+                dist = len_til_prev_newline > len_til_next_newline ? len_til_newline + len_til_next_newline -1 : line_len -1;
+                TraceLog(LOG_DEBUG, "dist %u %d %d", dist, len_til_newline, len_til_next_newline); 
+                if ((tb->lenA - tb->posA) < dist) if (!realloc_bufA(tb, dist)) return;
+                //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
+                memcpy(tb->bufA + tb->posA, tb->bufB + tb->posB + 1, dist); 
+                memset(tb->bufB + tb->posB + 1, '\0', dist);
+                tb->posA += dist;
+                tb->posB += dist;
+                tb->changed = true;
+                TraceLog(LOG_DEBUG, "check me!!! up!"); 
+                break;
+
             case KEY_ENTER:
-                if (tb->posA >= tb->lenA) if (!realloc_bufA(tb)) return; 
+                if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return; 
                 tb->bufA[tb->posA] = '\n';
                 tb->posA += 1;
                 tb->changed = true;
