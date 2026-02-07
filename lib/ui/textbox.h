@@ -8,10 +8,11 @@
 #include <raylib.h>
 #include <raymath.h>
 #include "../clay.h"
-#include "colors.h"
+#include "common.h"
 #include "../lsystem.h"
 #include "../lsystem_parser.h"
 #include "../turtle.h"
+#include "inputbox.h"
 
 
 typedef struct {
@@ -32,6 +33,7 @@ typedef struct {
     Lsystem * lsystem;
     char * generated;
     Turtle * init_turtle;
+    inputbox * title;
 } textbox;
 
 void free_textbox(textbox * tb){
@@ -41,6 +43,7 @@ void free_textbox(textbox * tb){
     free_lsystem(*tb->lsystem);
     free(tb->lsystem);
     free(tb->generated);
+    free_inputbox(tb->title);
     free(tb);
 }
 
@@ -161,6 +164,7 @@ void textbox_copy(textbox * tb){
 }
 
 bool update_textbox(textbox * tb){
+    if (update_inputbox(tb->title)) return true;
     bool ptr =Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox"), tb->clay_id_num));
     bool sizer=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-sizer"), tb->clay_id_num));
     bool button_lsys=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-lsys"), tb->clay_id_num));
@@ -324,41 +328,14 @@ bool update_textbox(textbox * tb){
     return true;
 }
 
-Vector2 get_cursor_offset(char * text, Font *font, float font_size, float letter_spacing, float line_height) {
-    // Measure string size for Font
-    Vector2 textSize = { 0 };
 
-    float lineTextWidth = 0;
-    int lineCharCount = 0;
-
-    float textHeight = font_size;
-    float scaleFactor = font_size/(float)font->baseSize;
-
-    for (int i = 0; i < strlen(text); ++i, lineCharCount++)
-    {
-        if (text[i] == '\n') {
-            textHeight += line_height * font_size;
-            lineTextWidth = 0;
-            lineCharCount = 0;
-            continue;
-        }
-        int index = text[i] - 32;
-        if (font->glyphs[index].advanceX != 0) lineTextWidth += font->glyphs[index].advanceX;
-        else lineTextWidth += (font->recs[index].width + font->glyphs[index].offsetX);
-    }
-
-    textSize.x = lineTextWidth * scaleFactor + (lineCharCount * letter_spacing);
-    textSize.y = textHeight;
-
-    return textSize;
-}
 
 void layout_textbox(textbox * tb, Font * font, bool focused){
   textbox_update_text(tb);
-  Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {2,2,2,2,0}, .color = COL_ACCENT};
+  Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {4,4,4,4,0}, .color = COL_ACCENT};
   Clay_BorderElementConfig border_normal = (Clay_BorderElementConfig){.width = {0,0,0,0,0}, .color = {0,0,0,0}};
   Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb->lenText - 1, .chars = tb->text};
-  Vector2 cursorPos = get_cursor_offset(tb->bufA, font, 16,0, 1.0);
+  Vector2 cursorPos = get_cursor_offset(tb->bufA, strlen(tb->bufA), font, 16,0, 1.0);
   CLAY(CLAY_IDI("textbox", tb->clay_id_num), { .floating = { //.expand = { .width = tb->size.x, .height = tb->size.y}
                                              .offset = (Clay_Vector2){tb->pos.x, tb->pos.y}
                                             , .attachTo = CLAY_ATTACH_TO_PARENT
@@ -367,6 +344,9 @@ void layout_textbox(textbox * tb, Font * font, bool focused){
                               , .backgroundColor = COL_LIGHT
                               , .border = focused ? border_focused : border_normal 
                               , .cornerRadius = CLAY_CORNER_RADIUS(8)}) {
+          CLAY_AUTO_ID({ .floating = { .offset = (Clay_Vector2){36, - 16} , .attachTo = CLAY_ATTACH_TO_PARENT}}){
+              layout_inputbox(tb->title, font, Clay_Hovered());
+          };
           CLAY(CLAY_IDI("textbox-sizer", tb->clay_id_num), {.floating = { .offset = (Clay_Vector2){tb->size.x, tb->size.y-16}
                                     , .attachTo = CLAY_ATTACH_TO_PARENT
                                     , .expand = { .width=32, .height=32 } }

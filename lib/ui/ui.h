@@ -1,7 +1,7 @@
 #ifndef UI_H
 #define UI_H
 #include "raylib.h"
-#include "colors.h"
+#include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

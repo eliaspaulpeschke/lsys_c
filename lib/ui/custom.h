@@ -2,6 +2,7 @@
 #define CUSTOM_H
 #include "../clay.h"
 #include "./textbox.h"
+#include "inputbox.h"
 #include "raylib.h"
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +40,7 @@ CustomElementData * mk_textbox(uint max_len, uint id){
                        , .lsystem = NULL
                        , .generated = NULL
                        , .init_turtle = NULL 
+                       , .title = mk_inputbox(256, 1000+id)
                        }
                    };
     ced->textbox.init_turtle = mk_base_turtle();
