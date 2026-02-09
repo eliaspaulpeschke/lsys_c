@@ -2,6 +2,7 @@
 #define CUSTOM_H
 #include "../clay.h"
 #include "./textbox.h"
+#include "common.h"
 #include "inputbox.h"
 #include "raylib.h"
 #include <stdlib.h>
@@ -18,35 +19,18 @@ typedef struct {
     };
 } CustomElementData;
 
-CustomElementData * mk_textbox(uint max_len, uint id){
+CustomElementData * mk_textbox_elem(uint max_len){
     CustomElementData * ced = 
         malloc(sizeof(CustomElementData));
+    if (!ced) return NULL;
     *ced = (CustomElementData) {
                    .type = CUSTOM_ELEM_T_textbox,
-                   .textbox =
-                       (textbox){ .text = malloc(2048) 
-                       , .changed = false
-                       , .lenText = 2048
-                       , .bufA = malloc(1024)
-                       , .bufB = malloc(1024)
-                       , .lenA = 1024
-                       , .lenB = 1024
-                       , .posA = 0
-                       , .posB = 1023
-                       , .max_len = max_len
-                       , .size = (Vector2){250, 250}
-                       , .pos = (Vector2){300, 200}
-                       , .clay_id_num = id
-                       , .lsystem = NULL
-                       , .generated = NULL
-                       , .init_turtle = NULL 
-                       , .title = mk_inputbox(256, 1000+id)
-                       }
+                   .textbox = mk_textbox(max_len)
                    };
-    ced->textbox.init_turtle = mk_base_turtle();
-    memset(ced->textbox.bufA, '\0', ced->textbox.lenA);
-    memset(ced->textbox.bufB, '\0', ced->textbox.lenB);
-    memset(ced->textbox.text, '\0', ced->textbox.lenText);
+    if (!ced->textbox.text) {
+        free(ced);
+        return NULL;
+    }
     return ced;
 }
 #endif

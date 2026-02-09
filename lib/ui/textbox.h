@@ -13,7 +13,9 @@
 #include "../lsystem_parser.h"
 #include "../turtle.h"
 #include "inputbox.h"
+#include "module.h"
 
+static uint NUM_TEXTBOX_IDS = 0;
 
 typedef struct {
     char * text;
@@ -34,7 +36,48 @@ typedef struct {
     char * generated;
     Turtle * init_turtle;
     inputbox * title;
+    Module module1;
+    Module module2;
 } textbox;
+
+textbox mk_textbox(uint max_len){
+    char * text = malloc(2048);
+    if (!text) return (textbox){NULL};
+    char * a = malloc(1024);
+    if (!a) { free(text); return (textbox){NULL}; }
+    char * b = malloc(1024);
+    if (!b) { free(text); free(b); return (textbox){NULL}; }
+    textbox tb = (textbox){ .text = malloc(2048) 
+                       , .changed = false
+                       , .lenText = 2048
+                       , .bufA = malloc(1024)
+                       , .bufB = malloc(1024)
+                       , .lenA = 1024
+                       , .lenB = 1024
+                       , .posA = 0
+                       , .posB = 1023
+                       , .max_len = max_len
+                       , .size = (Vector2){250, 250}
+                       , .pos = (Vector2){300, 200}
+                       , .clay_id_num = NUM_TEXTBOX_IDS 
+                           + NAMESPACE_TEXTBOX 
+                       , .lsystem = NULL
+                       , .generated = NULL
+                       , .init_turtle = NULL 
+                       , .title = mk_inputbox(0)
+                       , .module1 = mk_module(MODULE_INPUT, 
+                                              MODULE_INPUT_TYPE_turtle)
+                       , .module2 = mk_module(MODULE_OUTPUT, 
+                                              MODULE_INPUT_TYPE_turtle)
+
+                       };
+    tb.init_turtle = mk_base_turtle();
+    memset(tb.bufA, '\0', tb.lenA);
+    memset(tb.bufB, '\0', tb.lenB);
+    memset(tb.text, '\0', tb.lenText);
+    NUM_TEXTBOX_IDS += 1;
+    return tb;
+}
 
 void free_textbox(textbox * tb){
     free(tb->bufA);
@@ -170,6 +213,11 @@ bool update_textbox(textbox * tb){
     bool button_lsys=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-lsys"), tb->clay_id_num));
     bool button_gen=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-gen"), tb->clay_id_num));
     
+    bool mod1 = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("module"), tb->module1.clay_id_num));
+    bool mod2 = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("module"), tb->module1.clay_id_num));   
+
+    if (mod1 || mod2) return false;
+
     if (!(ptr || sizer || button_lsys || button_gen)) return false;
 
     if (IsMouseButtonReleased(0)) {
@@ -368,6 +416,8 @@ void layout_textbox(textbox * tb, Font * font, bool focused){
                                                             , .childAlignment = {.x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER} }
                                                 , .backgroundColor = (Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT) 
                                                 }){ CLAY_TEXT(CLAY_STRING("gen"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 })); };
+              layout_module(&tb->module1);
+              layout_module(&tb->module2);
           };
 
           CLAY_AUTO_ID({.layout = { .sizing = { .width = CLAY_SIZING_FIXED(tb->size.x)

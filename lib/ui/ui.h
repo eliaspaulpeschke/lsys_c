@@ -1,7 +1,10 @@
 #ifndef UI_H
 #define UI_H
+#include "module.h"
 #include "raylib.h"
 #include "common.h"
+#include "textbox.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +32,7 @@ void HandleClayErrs(Clay_ErrorData errorData) {
 
 clay_ctx init_clay(){
     Font * fonts = malloc(sizeof(Font));
+    setup_connection_drawdata();
     fonts[0]  = LoadFontEx("resources/fonts/roboto_mono/static/RobotoMono-Bold.ttf",48,NULL,0);
     SetTextureFilter(fonts[0].texture, TEXTURE_FILTER_BILINEAR);
 
@@ -59,7 +63,7 @@ clay_ctx init_clay(){
 
 void add_textbox(clay_ctx * ctx){
     if (ctx->num_custom_elems >= CED_MAX_LEN) return;
-    ctx->ced[ctx->num_custom_elems] = mk_textbox(8192, ctx->num_custom_elems);
+    ctx->ced[ctx->num_custom_elems] = mk_textbox_elem(8192);
     ctx->num_custom_elems += 1;
 }
 
@@ -72,6 +76,11 @@ bool focus_has_valid_turtle(clay_ctx * ctx){
 }
 
 bool update_ui(clay_ctx * ctx){
+    if (update_module_connections()) return true;
+    if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_CONNECTING) {
+        update_connection_status();
+        return false;
+    }
     if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_textbox")))) {
         if (IsMouseButtonReleased(0)){
             add_textbox(ctx);

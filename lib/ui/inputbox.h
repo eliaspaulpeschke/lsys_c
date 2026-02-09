@@ -8,6 +8,8 @@
 #include "sys/types.h"
 #include "common.h"
 
+static uint NUM_INPUT_IDS = 0;
+
 typedef struct {
     char * text;
     uint max_len;
@@ -17,19 +19,21 @@ typedef struct {
 } inputbox;
 
 
-inputbox * mk_inputbox(uint max_len, uint id_num){
+inputbox * mk_inputbox(uint max_len /*default 64*/){
     inputbox * ipb = malloc(sizeof(inputbox));
+    if (max_len == 0) max_len = 64;
     if (!ipb) return NULL;
     *ipb = (inputbox){ .text = malloc(max_len)
                      , .max_len = max_len
                      , .cursor = 0
-                     , .clay_id_num = id_num
+                     , .clay_id_num = NUM_INPUT_IDS + NAMESPACE_INPUTBOX 
                      , .changed = true
                      };
     if (!ipb->text) {
         free(ipb);
         return NULL;
     }
+    NUM_INPUT_IDS += 1;
     memset(ipb->text, '\0', ipb->max_len);
     return ipb;
 }

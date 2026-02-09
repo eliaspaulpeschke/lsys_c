@@ -10,6 +10,7 @@
 #include "lib/lsystem.h"
 #include "lib/lsystem_parser.h"
 #include "lib/turtle.h"
+#include "lib/ui/module.h"
 
 #include "lib/ui/ui.h"
 
@@ -53,6 +54,7 @@ int main(void)
         BeginDrawing();
         ClearBackground(BLACK);
         Clay_Raylib_Render(layout, clay_context.fonts, NULL);
+        draw_module_connections();
         BeginMode2D(camera);
         for(int i = 0; i < clay_context.num_custom_elems; i++){
             if (clay_context.ced[i]->type != CUSTOM_ELEM_T_textbox) continue; 

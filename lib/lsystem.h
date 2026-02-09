@@ -15,6 +15,11 @@ typedef struct Rule {
     char *result;
     } Rule;
 
+typedef struct { //TODO: use this everywhere
+    uint num_rules;
+    Rule *ruleset;
+} Ruleset;
+
 typedef struct Lsystem {
     uint nrules;
     char *name;

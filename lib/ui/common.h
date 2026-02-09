@@ -4,6 +4,9 @@
 #include <raylib.h>
 #include "string.h"
 
+#define NAMESPACE_TEXTBOX 1000
+#define NAMESPACE_INPUTBOX 2000
+#define NAMESPACE_MODULE 3000
 
 const Clay_Color COL_LIGHT = (Clay_Color) {220, 220, 230, 255};
 const Clay_Color COL_ACCENT = (Clay_Color) {90, 100, 230, 255};
