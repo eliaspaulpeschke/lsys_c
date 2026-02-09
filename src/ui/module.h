@@ -6,6 +6,7 @@
 #include "../lsystem/lsystem.h"
 
 #define MAX_MODULES 128
+#define MAX_CONN_POINTS 16
 
 typedef struct Module_input Module_input;
 typedef struct Module_output Module_output;
@@ -14,9 +15,8 @@ typedef struct Module Module;
 typedef struct {
     bool active;
     Vector2 start;
-    Vector2 p1;
-    Vector2 p2;
-    Vector2 end;
+    Vector2 points[MAX_CONN_POINTS];
+    unsigned int num_points;
 } Connection_drawdata; 
 
 typedef enum {

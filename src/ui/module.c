@@ -2,6 +2,7 @@
 #include "common.h"
 #include "raylib.h"
 #include "raymath.h"
+#include <stdlib.h>
 #include "module.h"
 
 static int NUM_MODULE_IDS = 0; // only count up
@@ -79,32 +80,43 @@ void handle_module_hover(Clay_ElementId id, Clay_PointerData ptr, void * userDat
                 if (MODULES_CONNECTION_STATUS.module->type != MODULE_OUTPUT) goto reset;
                 mod->input.connection = MODULES_CONNECTION_STATUS.module;
 
-                Clay_ElementData data = Clay_GetElementData(Clay_GetElementIdWithIndex(
+                Clay_ElementData end = Clay_GetElementData(Clay_GetElementIdWithIndex(
                     CLAY_STRING("module"), mod->clay_id_num));
-                Clay_ElementData data2 = Clay_GetElementData(Clay_GetElementIdWithIndex(
+                Clay_ElementData start = Clay_GetElementData(Clay_GetElementIdWithIndex(
                     CLAY_STRING("module"), mod->input.connection->clay_id_num));
                 Connection_drawdata * cdd = mod->input.connection_draw_data;
-                cdd->p1 = (Vector2){data2.boundingBox.x + data2.boundingBox.width / 2
-                , data2.boundingBox.y + data2.boundingBox.height / 2};
-                cdd->p2 = (Vector2){ data.boundingBox.x + data.boundingBox.width / 2
-                , data.boundingBox.y + data.boundingBox.height / 2};
+
+                cdd->start = (Vector2){start.boundingBox.x + start.boundingBox.width / 2
+                , start.boundingBox.y + start.boundingBox.height / 2};
+                cdd->num_points = 4;
+                cdd->points[1] = cdd->start;
+                cdd->points[0] = (Vector2){ cdd->start.x - 30.0f, cdd->start.y };
+                cdd->points[2] = (Vector2){ end.boundingBox.x + end.boundingBox.width / 2
+                , end.boundingBox.y + end.boundingBox.height / 2};
+                cdd->points[3] = (Vector2){ cdd->points[2].x - 30.0f, cdd->points[2].y };
+
+                TraceLog(LOG_DEBUG, "conn in->out"); 
 
                 goto reset;
             }else if (mod->type == MODULE_OUTPUT){
                 if (MODULES_CONNECTION_STATUS.module->type != MODULE_INPUT) goto reset;
                 MODULES_CONNECTION_STATUS.module->input.connection = mod;
 
-
-                Clay_ElementData data = Clay_GetElementData(Clay_GetElementIdWithIndex(
+                Clay_ElementData start = Clay_GetElementData(Clay_GetElementIdWithIndex(
                     CLAY_STRING("module"), mod->clay_id_num));
-                Clay_ElementData data2 = Clay_GetElementData(Clay_GetElementIdWithIndex(
+                Clay_ElementData end = Clay_GetElementData(Clay_GetElementIdWithIndex(
                     CLAY_STRING("module"), MODULES_CONNECTION_STATUS.module->clay_id_num));
+                Connection_drawdata * cdd = MODULES_CONNECTION_STATUS.module->input.connection_draw_data;
 
-                Connection_drawdata * cdd =MODULES_CONNECTION_STATUS.module->input.connection_draw_data;
-                cdd->p2 = (Vector2){data2.boundingBox.x + data2.boundingBox.width / 2
-                , data2.boundingBox.y + data2.boundingBox.height / 2};
-                cdd->p1 = (Vector2){ data.boundingBox.x + data.boundingBox.width / 2
-                , data.boundingBox.y + data.boundingBox.height / 2};
+                cdd->start = (Vector2){start.boundingBox.x + start.boundingBox.width / 2
+                , start.boundingBox.y + start.boundingBox.height / 2};
+                cdd->num_points = 4;
+                cdd->points[0] = cdd->start;
+                cdd->points[1] = (Vector2){ cdd->start.x - 30.0f, cdd->start.y };
+                cdd->points[3] = (Vector2){ end.boundingBox.x + end.boundingBox.width / 2
+                , end.boundingBox.y + end.boundingBox.height / 2};
+                cdd->points[2] = (Vector2){ cdd->points[3].x - 30.0f, cdd->points[3].y };                
+                TraceLog(LOG_DEBUG, "conn out->in"); 
 
 
                 goto reset;
@@ -142,18 +154,31 @@ Clay_String module_kind_name(Module mod){
 }
 
 bool update_module_connections(){
-    if (IsMouseButtonDown(0)) {
+    bool down = IsMouseButtonDown(0);
+    bool rel = IsMouseButtonReleased(0);
+    if (rel || down) {
         Vector2 mouse = GetMousePosition();
         Vector2 delta = GetMouseDelta();
         for (int i = 0; i < IDX_MOD_DRAWDATA; i++){
-          Connection_drawdata cdd = connection_drawdata[i];
-          if (!cdd.active) continue;
-          if(Vector2Distance(mouse, cdd.p1) < 10){
-              cdd.p1 = Vector2Add(cdd.p1, delta);
-              return true;
-          }else if(Vector2Distance(mouse, cdd.p2) < 10){
-              cdd.p1 = Vector2Add(cdd.p2, delta);
-              return true;
+          Connection_drawdata * cdd = &connection_drawdata[i];
+          if (!cdd->active) continue;
+          if (rel){
+              if (Vector2Distance(mouse, cdd->points[cdd->num_points-2]) < 10.0f){
+                  if (cdd->num_points < MAX_CONN_POINTS) {
+                      cdd->points[cdd->num_points] = cdd->points[cdd->num_points -1];
+                      cdd->points[cdd->num_points -1] = cdd->points[cdd->num_points-2];
+                      connection_drawdata[i].num_points++;
+                      cdd->points[cdd->num_points-3] = Vector2Lerp(cdd->points[0], cdd->points[cdd->num_points -1], 0.5f);
+                  }
+              }
+          }
+          else if (down){
+              for(int i = 1; i < cdd->num_points -1 ; i++){ //last point is end, first point is start
+                  if(Vector2Distance(mouse, cdd->points[i]) < 30.0f){
+                      cdd->points[i] = Vector2Add(cdd->points[i], delta);
+                      return true;
+                  }
+              }
           }
         }
     }
@@ -174,9 +199,10 @@ void draw_module_connections(){
     for (int i = 0; i < IDX_MOD_DRAWDATA; i++){
         Connection_drawdata cdd = connection_drawdata[i];
         if (!cdd.active) continue;
-        DrawSplineSegmentBezierCubic(cdd.start, cdd.p1, cdd.p2, cdd.end, 2, DARKGREEN);
-        DrawCircle(cdd.p1.x, cdd.p1.y, 4, GREEN);
-        DrawCircle(cdd.p2.x, cdd.p2.y, 4, GREEN);
+        DrawSplineCatmullRom(cdd.points, cdd.num_points, 2, DARKGREEN);
+        for(int i = 1; i < cdd.num_points -1; i++){
+        DrawCircle(cdd.points[i].x, cdd.points[i].y, 4, GREEN);
+        }
     }
 }
 
@@ -211,8 +237,12 @@ void layout_module(Module * mod){
         cdd->active = true;
         cdd->start = (Vector2){data2.boundingBox.x + data2.boundingBox.width / 2
                 , data2.boundingBox.y + data2.boundingBox.height / 2};
-        cdd->end = (Vector2){ data.boundingBox.x + data.boundingBox.width / 2
+        cdd->points[1] = cdd->start;
+        cdd->points[0] = (Vector2){ cdd->start.x - 30.0f, cdd->start.y };
+        cdd->points[cdd->num_points-2] = (Vector2){ data.boundingBox.x + data.boundingBox.width / 2 
                 , data.boundingBox.y + data.boundingBox.height / 2};
+        cdd->points[cdd->num_points-1] = (Vector2){ cdd->points[cdd->num_points-2].x - 30.0f
+                                                  , cdd->points[cdd->num_points-2].y };
     } else if (mod->type == MODULE_INPUT && mod->input.connection == NULL){
         Connection_drawdata * cdd = mod->input.connection_draw_data;
         cdd->active = false;
