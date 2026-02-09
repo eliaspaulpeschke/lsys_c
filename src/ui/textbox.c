@@ -7,10 +7,6 @@
 #include <raymath.h>
 #include "../clay/clay.h"
 #include "common.h"
-#include "../lsystem/lsystem.h"
-#include "../lsystem/lsystem_parser.h"
-#include "inputbox.h"
-#include "module.h"
 #include "textbox.h"
 
 static unsigned int NUM_TEXTBOX_IDS = 0;
@@ -22,31 +18,19 @@ textbox mk_textbox(unsigned int max_len){
     if (!a) { free(text); return (textbox){NULL}; }
     char * b = malloc(1024);
     if (!b) { free(text); free(b); return (textbox){NULL}; }
-    textbox tb = (textbox){ .text = malloc(2048) 
+    textbox tb = (textbox){ .text = text
                        , .changed = false
                        , .lenText = 2048
-                       , .bufA = malloc(1024)
-                       , .bufB = malloc(1024)
+                       , .bufA = a 
+                       , .bufB = b
                        , .lenA = 1024
                        , .lenB = 1024
                        , .posA = 0
                        , .posB = 1023
                        , .max_len = max_len
-                       , .size = (Vector2){250, 250}
-                       , .pos = (Vector2){300, 200}
                        , .clay_id_num = NUM_TEXTBOX_IDS 
                            + NAMESPACE_TEXTBOX 
-                       , .lsystem = NULL
-                       , .generated = NULL
-                       , .init_turtle = NULL 
-                       , .title = mk_inputbox(0)
-                       , .module1 = mk_module(MODULE_INPUT, 
-                                              MODULE_INPUT_TYPE_turtle)
-                       , .module2 = mk_module(MODULE_OUTPUT, 
-                                              MODULE_INPUT_TYPE_turtle)
-
                        };
-    tb.init_turtle = mk_base_turtle();
     memset(tb.bufA, '\0', tb.lenA);
     memset(tb.bufB, '\0', tb.lenB);
     memset(tb.text, '\0', tb.lenText);
@@ -54,15 +38,10 @@ textbox mk_textbox(unsigned int max_len){
     return tb;
 }
 
-void free_textbox(textbox * tb){
-    free(tb->bufA);
-    free(tb->bufB);
-    free(tb->text);
-    free_lsystem(*tb->lsystem);
-    free(tb->lsystem);
-    free(tb->generated);
-    free_inputbox(tb->title);
-    free(tb);
+void free_textbox(textbox tb){
+    free(tb.bufA);
+    free(tb.bufB);
+    free(tb.text);
 }
 
 bool realloc_bufA(textbox * tb, unsigned int extra){
@@ -135,35 +114,6 @@ void textbox_update_text(textbox * tb){
     }
 }
 
-void textbox_update_lsystem(textbox * tb){
-    textbox_update_text(tb);
-    if (tb->lsystem != NULL){
-        free_lsystem(*tb->lsystem);
-        free(tb->lsystem);
-    }
-    Lsystem * lsys = malloc(sizeof(Lsystem));
-    char * lsys_text = malloc(tb->lenText);
-    strlcpy(lsys_text, tb->text, tb->lenText);
-    *lsys = lsystem_from_string(lsys_text, true);
-    if (lsys->ruleset.num_rules <= 0 || lsys == NULL) return;
-    tb->lsystem = lsys;
-    TraceLog(LOG_DEBUG, "%s", lsys->axiom); 
-    for (int i = 0; i < lsys->ruleset.num_rules; i++){
-       TraceLog(LOG_DEBUG, "%s", str_rule(lsys->ruleset.ruleset + i, "   "));
-    }
-    if (lsys->axiom != NULL) {
-        if (tb->generated != NULL) {
-            free(tb->generated);
-        }
-        tb->generated = strdup(lsys->axiom);
-    }
-}
-
-void textbox_generate(textbox * tb){
-    if (tb->generated == NULL || tb->lsystem == NULL) return;
-    tb->generated = applyRules(tb->lsystem->ruleset, tb->generated, true);
-}
-
 void textbox_paste(textbox * tb){
     const char * clip = GetClipboardText();
     if (clip == NULL) return;
@@ -181,37 +131,10 @@ void textbox_copy(textbox * tb){
     SetClipboardText(tb->text);
 }
 
-bool update_textbox(textbox * tb){
-    if (update_inputbox(tb->title)) return true;
-    bool ptr =Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox"), tb->clay_id_num));
-    bool sizer=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-sizer"), tb->clay_id_num));
-    bool button_lsys=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-lsys"), tb->clay_id_num));
-    bool button_gen=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox-btn-gen"), tb->clay_id_num));
-    
-    bool mod1 = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("module"), tb->module1.clay_id_num));
-    bool mod2 = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("module"), tb->module1.clay_id_num));   
+bool update_textbox(textbox * tb, bool focused_anyway){
+    bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox"), tb->clay_id_num));
 
-    if (mod1 || mod2) return false;
-
-    if (!(ptr || sizer || button_lsys || button_gen)) return false;
-
-    if (IsMouseButtonReleased(0)) {
-        if (button_lsys) {
-           textbox_update_lsystem(tb);
-        } else if (button_gen) {
-            textbox_generate(tb);
-        }    
-        return true;
-    }
-    if (IsMouseButtonDown(0)){
-        Vector2 mouse = GetMouseDelta();
-        if (sizer) {
-            tb->size = Vector2Add(mouse, tb->size);
-        } else {
-            tb->pos = Vector2Add(mouse, tb->pos);
-        }
-        return true;
-    }
+    if (!ptr && !focused_anyway) return false;
 
     char chr = GetCharPressed();
     bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
@@ -245,7 +168,6 @@ bool update_textbox(textbox * tb){
                     tb->bufA[tb->posA] = '\0';
                     tb->posB -= 1;
                     tb->changed = true;
-
                     TraceLog(LOG_DEBUG,"left %d", tb->posB);
                 }
                 break;
@@ -257,7 +179,6 @@ bool update_textbox(textbox * tb){
                     tb->posB++;
                     tb->posA++;
                     tb->changed = true;
-
                 }
                 break; 
              case KEY_UP: ;
@@ -307,9 +228,6 @@ bool update_textbox(textbox * tb){
                     }
                 } 
                 unsigned int line_len = len_til_prev_newline + len_til_newline;
-                // 1234\n123456\n1234\n123456
-                // 12
-                //
                 if (len_til_newline < 0) return true;
                 if (len_til_next_newline < 0) len_til_next_newline = (tb->lenB - tb->posB) - len_til_newline;
                 dist = len_til_prev_newline > len_til_next_newline ? len_til_newline + len_til_next_newline -1 : line_len -1;
@@ -351,62 +269,25 @@ bool update_textbox(textbox * tb){
     return true;
 }
 
-
-
-void layout_textbox(textbox * tb, Font * font, bool focused){
+void layout_textbox(textbox * tb, Font * font){
   textbox_update_text(tb);
-  Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {4,4,4,4,0}, .color = COL_ACCENT};
-  Clay_BorderElementConfig border_normal = (Clay_BorderElementConfig){.width = {0,0,0,0,0}, .color = {0,0,0,0}};
   Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb->lenText - 1, .chars = tb->text};
   Vector2 cursorPos = get_cursor_offset(tb->bufA, strlen(tb->bufA), font, 16,0, 1.0);
-  CLAY(CLAY_IDI("textbox", tb->clay_id_num), { .floating = { //.expand = { .width = tb->size.x, .height = tb->size.y}
-                                             .offset = (Clay_Vector2){tb->pos.x, tb->pos.y}
-                                            , .attachTo = CLAY_ATTACH_TO_PARENT
-                                            , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT}
-                              , .layout = { .layoutDirection = CLAY_LEFT_TO_RIGHT }
-                              , .backgroundColor = COL_LIGHT
-                              , .border = focused ? border_focused : border_normal 
-                              , .cornerRadius = CLAY_CORNER_RADIUS(8)}) {
-          CLAY_AUTO_ID({ .floating = { .offset = (Clay_Vector2){36, - 16} , .attachTo = CLAY_ATTACH_TO_PARENT}}){
-              layout_inputbox(tb->title, font, Clay_Hovered());
-          };
-          CLAY(CLAY_IDI("textbox-sizer", tb->clay_id_num), {.floating = { .offset = (Clay_Vector2){tb->size.x, tb->size.y-16}
-                                    , .attachTo = CLAY_ATTACH_TO_PARENT
-                                    , .expand = { .width=32, .height=32 } }
-                       , .backgroundColor = COL_TRANSPARENT
-                       , .cornerRadius = CLAY_CORNER_RADIUS(8)}){
-              CLAY_AUTO_ID({.layout={ .sizing = { .width = CLAY_SIZING_FIXED(8), .height = CLAY_SIZING_FIXED(8)}}
-                           ,.backgroundColor = COL_DARK
-                           ,.cornerRadius=8}){};
-          };
-          CLAY_AUTO_ID({ .layout = { .sizing = {.width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_GROW(0)}
-                                   , .layoutDirection = CLAY_TOP_TO_BOTTOM }
-                       , .border = {.width = {0,1,0,0,1}, .color = COL_DARK}
-                       , .backgroundColor = COL_TRANSPARENT}){
-              CLAY(CLAY_IDI("textbox-btn-lsys", tb->clay_id_num), { .layout = { .sizing = { .width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_FIXED(24)}
-                                                            , .childAlignment = {.x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER} }
-                                                , .backgroundColor = (Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT) 
-                                                }){ CLAY_TEXT(CLAY_STRING(">"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 })); };
-              CLAY(CLAY_IDI("textbox-btn-gen", tb->clay_id_num), { .layout = { .sizing = { .width = CLAY_SIZING_FIXED(24), .height = CLAY_SIZING_FIXED(24)}
-                                                            , .childAlignment = {.x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_CENTER} }
-                                                , .backgroundColor = (Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT) 
-                                                }){ CLAY_TEXT(CLAY_STRING("gen"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 })); };
-              layout_module(&tb->module1);
-              layout_module(&tb->module2);
-          };
+  CLAY(CLAY_IDI("textbox", tb->clay_id_num), { .layout = { .layoutDirection = CLAY_LEFT_TO_RIGHT
+                                                         , .padding = CLAY_PADDING_ALL(8) 
+                                                         , .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)} }
+                                             , .clip = {.horizontal = true, .vertical = true, .childOffset = Clay_GetScrollOffset()}
+                                             , .backgroundColor = COL_LIGHT
+                                             }) {
 
-          CLAY_AUTO_ID({.layout = { .sizing = { .width = CLAY_SIZING_FIXED(tb->size.x)
-                                              , .height = CLAY_SIZING_FIXED(tb->size.y) }
-                                  , .padding = CLAY_PADDING_ALL(16)}
-                                  , .clip = { .horizontal = true, .vertical = true, .childOffset = Clay_GetScrollOffset()}} ) {
               Clay_Vector2 scr = Clay_GetScrollOffset();
                   
-              CLAY_AUTO_ID({.floating = { .offset = (Clay_Vector2){cursorPos.x + 16 + scr.x, cursorPos.y +8+ scr.y}
+              CLAY_AUTO_ID({.floating = { .offset = (Clay_Vector2){cursorPos.x + 8 + scr.x, cursorPos.y + scr.y}
                                     , .attachTo = CLAY_ATTACH_TO_PARENT
                                     , .expand = { .width=1, .height=8 }
                                     , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT }
                         , .backgroundColor = COL_ACCENT});
+
               CLAY_TEXT( str , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
           };
   }
-}

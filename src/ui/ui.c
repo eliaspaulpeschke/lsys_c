@@ -4,13 +4,11 @@
 #include "textbox.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #define CLAY_IMPLEMENTATION
 #include "ui.h"
 #include "keys.h"
 #include "../clay/clay_renderer_raylib.h"
-
-#define CED_MAX_LEN 64
+#include "fonts.h"
 
 void HandleClayErrs(Clay_ErrorData errorData) {
         printf("CLAY ERROR: %s \n", errorData.errorText.chars);
@@ -18,11 +16,9 @@ void HandleClayErrs(Clay_ErrorData errorData) {
 }
 
 clay_ctx init_clay(){
-    Font * fonts = malloc(sizeof(Font));
-    setup_connection_drawdata();
-    fonts[0]  = LoadFontEx("resources/fonts/roboto_mono/static/RobotoMono-Bold.ttf",48,NULL,0);
-    SetTextureFilter(fonts[0].texture, TEXTURE_FILTER_BILINEAR);
+    Font * fonts = get_fonts();
 
+    setup_connection_drawdata();
     uint64_t clayReqMem = Clay_MinMemorySize();
     Clay_Arena clayMem = 
         Clay_CreateArenaWithCapacityAndMemory(clayReqMem, malloc(clayReqMem));
@@ -34,8 +30,6 @@ clay_ctx init_clay(){
                 }
             , (Clay_ErrorHandler) {HandleClayErrs} 
             );
-    //CustomElementData * ced = mk_textbox(8192, "testbox");
-   // CustomElementData * ced = malloc(sizeof(CustomElementData) * ced_max_len);
 
     Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts); 
     return (clay_ctx){
@@ -49,17 +43,9 @@ clay_ctx init_clay(){
 }
 
 void add_textbox(clay_ctx * ctx){
-    if (ctx->num_custom_elems >= CED_MAX_LEN) return;
+    if (ctx->num_custom_elems >= MAX_CUSTOM_ELEMS) return;
     ctx->ced[ctx->num_custom_elems] = mk_textbox_elem(8192);
     ctx->num_custom_elems += 1;
-}
-
-bool focus_has_valid_turtle(clay_ctx * ctx){
-    if (ctx->focus_index < 0) return false;
-    if (ctx->ced[ctx->focus_index]->type 
-            != CUSTOM_ELEM_T_textbox) return false;
-    if (ctx->ced[ctx->focus_index]->textbox.init_turtle == NULL) return false;
-    return true;
 }
 
 bool update_ui(clay_ctx * ctx){
@@ -72,15 +58,17 @@ bool update_ui(clay_ctx * ctx){
             return true;
         }
     }
+
     for (int i = 0; i < ctx->num_custom_elems; i++){
         switch (ctx->ced[i]->type) {
             case CUSTOM_ELEM_T_textbox:
-                if (update_textbox(&(ctx->ced[i]->textbox))) return true;
+                if (update_textbox(&(ctx->ced[i]->textbox), false)) return true;
                 break;
             default:
                 break;
         }
     } 
+
     KeyboardKey pressed[3] = {GetKeyPressed(), GetKeyPressed(), GetKeyPressed()};
     
     if (!IsKeyDown(KEY_LEFT_CONTROL)) return false;
@@ -93,9 +81,7 @@ bool update_ui(clay_ctx * ctx){
     } shift = shift 
              || IsKeyDown(KEY_LEFT_SHIFT) 
              || IsKeyDown(KEY_RIGHT_SHIFT);
-    if (pressed[0] != 0){
-        TraceLog(LOG_DEBUG, "key: %s %s %s %d %b", kc_to_rep(pressed[0]),  kc_to_rep(pressed[1]),  kc_to_rep(pressed[2]), switch_idx, shift); 
-    }
+
     switch (pressed[switch_idx]){
         case KEY_ENTER:
             if (ctx->focus_index < ((int)ctx->num_custom_elems - 1)
@@ -103,16 +89,6 @@ bool update_ui(clay_ctx * ctx){
                 ctx->focus_index += 1;
             }else{
                 ctx->focus_index = -1;
-            }
-            return true;
-        case KEY_A:  
-            if (!focus_has_valid_turtle(ctx)) return false;
-            if (shift) {
-                ctx->ced[ctx->focus_index]
-                    ->textbox.init_turtle->rads += 0.1f;
-            }else{
-                ctx->ced[ctx->focus_index]
-                    ->textbox.init_turtle->rads -= 0.1f;
             }
             return true;
         default: 
@@ -157,7 +133,7 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
                 case CUSTOM_ELEM_T_textbox:
-                    layout_textbox(&(ctx.ced[i]->textbox), &ctx.fonts[0], i == ctx.focus_index);
+                    layout_textbox(&(ctx.ced[i]->textbox), &ctx.fonts[0]);
                     break;
                 default:
                     break;

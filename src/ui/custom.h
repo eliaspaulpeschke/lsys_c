@@ -14,4 +14,6 @@ typedef struct {
 } CustomElementData;
 
 CustomElementData * mk_textbox_elem(unsigned int max_len);
+
+void free_custom_elem(CustomElementData ced);
 #endif

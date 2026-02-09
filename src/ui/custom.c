@@ -1,5 +1,7 @@
 #include "custom.h"
+#include "textbox.h"
 #include <string.h>
+#include <stdlib.h>
 
 CustomElementData * mk_textbox_elem(unsigned int max_len){
     CustomElementData * ced = 
@@ -14,4 +16,14 @@ CustomElementData * mk_textbox_elem(unsigned int max_len){
         return NULL;
     }
     return ced;
+}
+
+void free_custom_elem(CustomElementData ced){
+    switch (ced.type) {
+        case CUSTOM_ELEM_T_textbox:
+            free_textbox(ced.textbox);
+            return;
+        default:
+            return;
+    }
 }

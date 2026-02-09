@@ -49,13 +49,7 @@ int main(void)
         Clay_Raylib_Render(layout, clay_context.fonts, NULL);
         draw_module_connections();
         BeginMode2D(camera);
-        for(int i = 0; i < clay_context.num_custom_elems; i++){
-            if (clay_context.ced[i]->type != CUSTOM_ELEM_T_textbox) continue; 
-            if (clay_context.ced[i]->textbox.generated == NULL) continue;
-            if (len > strlen(clay_context.ced[i]->textbox.generated)) len = 1;
-            turtle_draw(clay_context.ced[i]->textbox.generated,len, clay_context.ced[i]->textbox.init_turtle);
-            len += 10;
-        }
+        // Turtle stuff was here
         EndMode2D();
         EndDrawing();
     }
