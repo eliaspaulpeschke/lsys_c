@@ -2,3 +2,5 @@ a.out
 test
 *.bak
 aristid
+build/**/*
+build
