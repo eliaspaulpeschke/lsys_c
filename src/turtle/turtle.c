@@ -1,19 +1,8 @@
-#ifndef TURTLE_H
-#define TURTLE_H
 #include "string.h"
-#include <raylib.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "turtle.h"
 #include <raymath.h>
-
-typedef struct Turtle {
-    Vector2 pos;
-    Vector2 heading;
-    float length;
-    float rads;
-    Color color;
-    struct Turtle * prev;
-} Turtle;
 
 void rotate_turtle(Turtle * turtle, bool ccw){
     if (ccw) {
@@ -69,7 +58,7 @@ Turtle * mk_base_turtle(){
   return turtle;
 }
 
-void turtle_draw(char * text, uint len, Turtle * turtle){
+void turtle_draw(char * text, unsigned int len, Turtle * turtle){
   if (turtle == NULL) return;
   Turtle * turt = malloc(sizeof(Turtle));
   memcpy(turt, turtle, sizeof(Turtle));
@@ -124,5 +113,3 @@ void standard_turtle_draw(char * text, Color col, float rads, Vector2 pos){
       free(turtle);
   }
 }
-
-#endif

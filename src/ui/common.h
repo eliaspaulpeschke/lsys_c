@@ -1,6 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
-#include "../clay.h"
+#include "../clay/clay.h"
 #include <raylib.h>
 #include "string.h"
 
@@ -8,12 +8,12 @@
 #define NAMESPACE_INPUTBOX 2000
 #define NAMESPACE_MODULE 3000
 
-const Clay_Color COL_LIGHT = (Clay_Color) {220, 220, 230, 255};
-const Clay_Color COL_ACCENT = (Clay_Color) {90, 100, 230, 255};
-const Clay_Color COL_DARK = (Clay_Color) {80, 80, 80, 255};
-const Clay_Color COL_TRANSPARENT = (Clay_Color) {0, 0, 0, 0};
+#define COL_LIGHT         (Clay_Color) {220, 220, 230, 255}
+#define COL_ACCENT        (Clay_Color) {90, 100, 230, 255}
+#define COL_DARK          (Clay_Color) {80, 80, 80, 255}
+#define COL_TRANSPARENT   (Clay_Color) {0, 0, 0, 0}
 
-Vector2 get_cursor_offset(char * text, uint len, Font *font, float font_size, float letter_spacing, float line_height) {
+static inline Vector2 get_cursor_offset(char * text, unsigned int len, Font *font, float font_size, float letter_spacing, float line_height) {
     // Measure string size for Font
     Vector2 textSize = { 0 };
 

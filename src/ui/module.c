@@ -1,44 +1,17 @@
-#ifndef MODULE_H
-#define MODULE_H
-
-#include "../turtle.h"
-#include "../lsystem.h"
-#include "../clay.h"
+#include "../clay/clay.h"
 #include "common.h"
 #include "raylib.h"
 #include "raymath.h"
-
-#define MAX_MODULES 128
+#include "module.h"
 
 static int NUM_MODULE_IDS = 0; // only count up
 static int IDX_MOD_DRAWDATA = 0;
-
-typedef struct Module_input Module_input;
-typedef struct Module_output Module_output;
-typedef struct Module Module;
-
-typedef struct {
-    bool active;
-    Vector2 start;
-    Vector2 p1;
-    Vector2 p2;
-    Vector2 end;
-} Connection_drawdata; 
 
 Connection_drawdata connection_drawdata[MAX_MODULES];
 
 void setup_connection_drawdata(){
     memset(connection_drawdata, 0, sizeof(Connection_drawdata) * MAX_MODULES);
 }
-
-typedef enum {
-    MODULE_INPUT_TYPE_turtle
-  , MODULE_INPUT_TYPE_ruleset
-  , MODULE_INPUT_TYPE_axiom
-  , MODULE_INPUT_TYPE_integer
-  , MODULE_INPUT_TYPE_floating
-  , MODULE_INPUT_TYPE_string
-} MODULE_DATA_TYPE;
 
 Clay_String module_type_name(MODULE_DATA_TYPE type){
     switch (type) {
@@ -59,48 +32,9 @@ Clay_String module_type_name(MODULE_DATA_TYPE type){
     }
 }
 
-struct Module_input {
-    Module * connection;
-    Connection_drawdata * connection_draw_data;
-};
-
-struct Module_output {
-    bool valid;
-    union {
-      Turtle turtle;
-      Ruleset ruleset;
-      char * axiom;
-      int integer;
-      float floating;
-      char * string;
-   };
-};
-
-
-typedef enum {
-    MOD_CONN_STATUS_IDLE
-  , MOD_CONN_STATUS_CONNECTING
-} MOD_CONN_STATUS;
-
-typedef enum {
-    MODULE_NONE
-  , MODULE_INPUT
-  , MODULE_OUTPUT
-} MODULE_TYPE;
-
-struct Module {
-    MODULE_TYPE type;
-    MODULE_DATA_TYPE data_type;
-    uint clay_id_num;
-    union {
-      Module_input input;
-      Module_output output;
-    };
-};
-
 Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type){
     if (NUM_MODULE_IDS >= MAX_MODULES || type == MODULE_NONE) return (Module){ .type = MODULE_NONE };
-    uint id = NAMESPACE_MODULE + NUM_MODULE_IDS;
+    unsigned int id = NAMESPACE_MODULE + NUM_MODULE_IDS;
     NUM_MODULE_IDS += 1;
     TraceLog(LOG_DEBUG, "Creating mod %d", id); 
     Module mod =   { .type = type
@@ -185,9 +119,13 @@ void handle_module_hover(Clay_ElementId id, Clay_PointerData ptr, void * userDat
       return;
 }
 
-void update_connection_status(){
-    if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) return;
-    if (IsMouseButtonUp(0)) MODULES_CONNECTION_STATUS.connecting_status = MOD_CONN_STATUS_IDLE;
+bool update_connection_status(){
+    if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) return false;
+    if (IsMouseButtonUp(0)) {
+        MODULES_CONNECTION_STATUS.connecting_status = MOD_CONN_STATUS_IDLE;
+        return false;
+    }
+    return true;
 }
 
 Clay_String module_kind_name(Module mod){
@@ -280,4 +218,3 @@ void layout_module(Module * mod){
         cdd->active = false;
     }
 }
-#endif

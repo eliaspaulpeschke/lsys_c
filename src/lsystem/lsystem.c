@@ -1,50 +1,17 @@
-#ifndef LSYSTEM_H
-#define LSYSTEM_H
-#include <limits.h>
+#include "lsystem.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
-
-typedef struct Rule {
-    char *name;
-    char *premise; 
-    char *lcont;
-    char *rcont;
-    char *result;
-    } Rule;
-
-typedef struct { //TODO: use this everywhere
-    uint num_rules;
-    Rule *ruleset;
-} Ruleset;
-
-typedef struct Lsystem {
-    uint nrules;
-    char *name;
-    char *axiom;
-    Rule *ruleset;
-    char *free_me;
-} Lsystem;
-
-/*Rule mkRule (char * premise, char * result) {
-    char *the_res = malloc(strlen(result) + 1);
-    Rule the_rule = {premise, the_res, NULL, NULL};
-    strcpy(the_rule.result, result);
-    return the_rule;
-}*/
-
-char * applyRules( Rule rules[], uint n_rules, char * input, bool freeInput){
+char * applyRules( Ruleset rules, char * input, bool freeInput){
     ulong output_len = strlen(input) << 3;
     ulong output_pos = 0;
     char * the_output = malloc(output_len);
     if (the_output == NULL) return NULL;
-    for(uint i = 0; i < strlen(input); i++){
+    for(unsigned int i = 0; i < strlen(input); i++){
         char prem = input[i];
         bool copyflag = true;
-        for (uint j = 0; j < n_rules; j++){
-            Rule current_rule = rules[j];
+        for (unsigned int j = 0; j < rules.num_rules; j++){
+            Rule current_rule = rules.ruleset[j];
             size_t reslen = strlen(current_rule.result);
             if (prem == *current_rule.premise) {
                 if (output_len <= output_pos + reslen + 1) {
@@ -110,4 +77,18 @@ void print_rule(Rule * rule, char * offset){
     }
     free(x);
 }
-#endif
+
+void free_ruleset(Ruleset rules){
+    if (rules.free_me != NULL){
+        free(rules.free_me);
+    }
+}
+
+void free_lsystem(Lsystem sys){
+    if (sys.free_me != sys.ruleset.free_me){
+        free_ruleset(sys.ruleset);
+    }
+    if (sys.free_me != NULL){
+        free(sys.free_me);
+    }
+}

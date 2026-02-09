@@ -1,29 +1,16 @@
-#ifndef UI_H
-#define UI_H
 #include "module.h"
 #include "raylib.h"
 #include "common.h"
 #include "textbox.h"
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #define CLAY_IMPLEMENTATION
-#include "../clay.h"
-#include "custom.h"
-#include "../keys.h"
-#include "../clay_renderer_raylib.c"
+#include "ui.h"
+#include "keys.h"
+#include "../clay/clay_renderer_raylib.h"
 
 #define CED_MAX_LEN 64
-
-typedef struct {
-    Clay_Context * ctx;
-    uint font_num;
-    Font * fonts; 
-    CustomElementData * ced[64];
-    int focus_index;
-    uint num_custom_elems;
-} clay_ctx;
 
 void HandleClayErrs(Clay_ErrorData errorData) {
         printf("CLAY ERROR: %s \n", errorData.errorText.chars);
@@ -77,10 +64,8 @@ bool focus_has_valid_turtle(clay_ctx * ctx){
 
 bool update_ui(clay_ctx * ctx){
     if (update_module_connections()) return true;
-    if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_CONNECTING) {
-        update_connection_status();
-        return false;
-    }
+    if (update_connection_status()) return false;
+
     if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_textbox")))) {
         if (IsMouseButtonReleased(0)){
             add_textbox(ctx);
@@ -99,7 +84,7 @@ bool update_ui(clay_ctx * ctx){
     KeyboardKey pressed[3] = {GetKeyPressed(), GetKeyPressed(), GetKeyPressed()};
     
     if (!IsKeyDown(KEY_LEFT_CONTROL)) return false;
-    uint switch_idx = 0;
+    unsigned int switch_idx = 0;
     bool shift = false;
     if (pressed[0] == KEY_LEFT_SHIFT 
         || pressed[0] == KEY_RIGHT_SHIFT) {
@@ -181,4 +166,3 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
         }
     return Clay_EndLayout();
 }
-#endif

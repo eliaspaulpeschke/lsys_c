@@ -1,6 +1,6 @@
 #include "raylib.h"
 
-char * kc_to_rep(KeyboardKey key) {
+static char * kc_to_rep(KeyboardKey key) {
     switch (key) {
         case KEY_NULL:
             return "KEY_NULL";

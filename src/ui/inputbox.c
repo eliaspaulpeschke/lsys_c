@@ -1,25 +1,9 @@
-#ifndef INPUTBOX_H
-#define INPUTBOX_H
-#include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include "../clay.h"
-#include "raylib.h"
-#include "sys/types.h"
+#include "../clay/clay.h"
 #include "common.h"
+#include "inputbox.h"
 
-static uint NUM_INPUT_IDS = 0;
-
-typedef struct {
-    char * text;
-    uint max_len;
-    uint cursor;
-    uint clay_id_num;
-    bool changed;
-} inputbox;
-
-
-inputbox * mk_inputbox(uint max_len /*default 64*/){
+inputbox * mk_inputbox(unsigned int max_len /*default 64*/){
     inputbox * ipb = malloc(sizeof(inputbox));
     if (max_len == 0) max_len = 64;
     if (!ipb) return NULL;
@@ -52,7 +36,7 @@ bool update_inputbox(inputbox * ipb){
     if (chr != 0 && !ctrl){
         if (ipb->cursor >= ipb->max_len -1) return true;
         if (ipb->text[ipb->cursor] != '\0') {
-            uint movelen = strlen(ipb->text + ipb->cursor);
+            unsigned int movelen = strlen(ipb->text + ipb->cursor);
             if (ipb->cursor + movelen + 1 >= ipb->max_len) return true;
             memmove(ipb->text + ipb->cursor + 1, ipb->text + ipb->cursor, movelen);
         }
@@ -67,7 +51,7 @@ bool update_inputbox(inputbox * ipb){
                 ipb->cursor--;
                 ipb->text[ipb->cursor] = '\0';
                 if (ipb->text[ipb->cursor+1] != '\0') {
-                    uint movelen = strlen(ipb->text + ipb->cursor + 1);
+                    unsigned int movelen = strlen(ipb->text + ipb->cursor + 1);
                     memmove( ipb->text + ipb->cursor
                            , ipb->text + ipb->cursor+1
                            , movelen);
@@ -110,4 +94,3 @@ void layout_inputbox(inputbox * ipb, Font * font, bool focus){
         CLAY_TEXT(text, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
     };
 }
-#endif

@@ -1,18 +1,11 @@
-#include "lib/ui/custom.h"
 #include "raylib.h"
-#include "raymath.h"
-//#include <math.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "lib/lsystem.h"
-#include "lib/lsystem_parser.h"
-#include "lib/turtle.h"
-#include "lib/ui/module.h"
-
-#include "lib/ui/ui.h"
+#include "turtle/turtle.h"
+#include "ui/module.h"
+#include "ui/ui.h"
+#include "ui/custom.h"
+#include "clay/clay_renderer_raylib.h"
 
 int main(void)
 {

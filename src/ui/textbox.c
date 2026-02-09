@@ -1,5 +1,3 @@
-#ifndef TEXTBOX_H
-#define TEXTBOX_H
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -7,40 +5,17 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <raymath.h>
-#include "../clay.h"
+#include "../clay/clay.h"
 #include "common.h"
-#include "../lsystem.h"
-#include "../lsystem_parser.h"
-#include "../turtle.h"
+#include "../lsystem/lsystem.h"
+#include "../lsystem/lsystem_parser.h"
 #include "inputbox.h"
 #include "module.h"
+#include "textbox.h"
 
-static uint NUM_TEXTBOX_IDS = 0;
+static unsigned int NUM_TEXTBOX_IDS = 0;
 
-typedef struct {
-    char * text;
-    bool changed;
-    uint lenTextBuf;
-    uint lenText;
-    char * bufA;
-    char * bufB;
-    uint lenA;
-    uint lenB;
-    uint posA;
-    uint posB; //used backwards, start at lenB-1
-    uint max_len;
-    Vector2 size;
-    Vector2 pos;
-    uint clay_id_num;
-    Lsystem * lsystem;
-    char * generated;
-    Turtle * init_turtle;
-    inputbox * title;
-    Module module1;
-    Module module2;
-} textbox;
-
-textbox mk_textbox(uint max_len){
+textbox mk_textbox(unsigned int max_len){
     char * text = malloc(2048);
     if (!text) return (textbox){NULL};
     char * a = malloc(1024);
@@ -90,8 +65,8 @@ void free_textbox(textbox * tb){
     free(tb);
 }
 
-bool realloc_bufA(textbox * tb, uint extra){
-  uint newlen = tb->lenA << 1;
+bool realloc_bufA(textbox * tb, unsigned int extra){
+  unsigned int newlen = tb->lenA << 1;
   if (newlen < (tb->lenA + extra)) newlen += extra;  
   if (newlen + tb->lenB >= tb->max_len) return false;
   char * temp = realloc(tb->bufA, newlen);
@@ -106,15 +81,15 @@ bool realloc_bufA(textbox * tb, uint extra){
   return success;
 } 
 
-bool realloc_bufB(textbox * tb, uint extra){
-  uint newlen = tb->lenB << 1;
+bool realloc_bufB(textbox * tb, unsigned int extra){
+  unsigned int newlen = tb->lenB << 1;
   if (newlen < (tb->lenB + extra)) newlen += extra;  
   TraceLog(LOG_DEBUG, "%u %u %u", tb->lenB, newlen, extra); 
   if (newlen + tb->lenA >= tb->max_len) return false;
   char * temp = malloc(newlen);
   bool success = false;
   if (temp != NULL) {
-     uint pos = newlen - (tb->lenB - tb->posB);
+     unsigned int pos = newlen - (tb->lenB - tb->posB);
      memset(temp, '\0', newlen);
      memcpy(temp + pos, tb->bufB+tb->posB, tb->lenB - tb->posB);
      free(tb->bufB);
@@ -128,7 +103,7 @@ bool realloc_bufB(textbox * tb, uint extra){
 }
 
 void print_tb(textbox * tb){
-    uint lb = tb->lenB - tb->posB;
+    unsigned int lb = tb->lenB - tb->posB;
     char * testA = malloc(tb->posA + 1);
     char * testB = malloc(lb);
     memcpy(testA, tb->bufA, tb->posA);
@@ -170,11 +145,11 @@ void textbox_update_lsystem(textbox * tb){
     char * lsys_text = malloc(tb->lenText);
     strlcpy(lsys_text, tb->text, tb->lenText);
     *lsys = lsystem_from_string(lsys_text, true);
-    if (lsys->nrules <= 0 || lsys == NULL) return;
+    if (lsys->ruleset.num_rules <= 0 || lsys == NULL) return;
     tb->lsystem = lsys;
     TraceLog(LOG_DEBUG, "%s", lsys->axiom); 
-    for (int i = 0; i < lsys->nrules; i++){
-       TraceLog(LOG_DEBUG, "%s", str_rule(lsys->ruleset + i, "   "));
+    for (int i = 0; i < lsys->ruleset.num_rules; i++){
+       TraceLog(LOG_DEBUG, "%s", str_rule(lsys->ruleset.ruleset + i, "   "));
     }
     if (lsys->axiom != NULL) {
         if (tb->generated != NULL) {
@@ -186,13 +161,13 @@ void textbox_update_lsystem(textbox * tb){
 
 void textbox_generate(textbox * tb){
     if (tb->generated == NULL || tb->lsystem == NULL) return;
-    tb->generated = applyRules(tb->lsystem->ruleset, tb->lsystem->nrules, tb->generated, true);
+    tb->generated = applyRules(tb->lsystem->ruleset, tb->generated, true);
 }
 
 void textbox_paste(textbox * tb){
     const char * clip = GetClipboardText();
     if (clip == NULL) return;
-    uint len = strlen(clip);
+    unsigned int len = strlen(clip);
     TraceLog(LOG_DEBUG, "paste \"%s\": %d", clip, len); 
     if (tb->lenA - tb->posA - 1< len) if (!realloc_bufA(tb, len)) return;
     memcpy(tb->bufA + tb->posA, clip, len);
@@ -251,7 +226,7 @@ bool update_textbox(textbox * tb){
         TraceLog(LOG_DEBUG,"keying"); 
         int len_til_newline;
         int len_til_next_newline;
-        uint dist;
+        unsigned int dist;
         switch (key) {
             case KEY_BACKSPACE:
                 if (tb->posA >= 0){
@@ -311,7 +286,7 @@ bool update_textbox(textbox * tb){
                 TraceLog(LOG_DEBUG, "down"); 
                 break;
             case KEY_DOWN: ;
-                uint len_til_prev_newline = -1;
+                unsigned int len_til_prev_newline = -1;
                 for (int i = tb->posA-1; i >= 0; i--){
                     if (tb->bufA[i] == '\n') {
                         len_til_prev_newline = tb->posA - i;
@@ -331,7 +306,7 @@ bool update_textbox(textbox * tb){
                         } 
                     }
                 } 
-                uint line_len = len_til_prev_newline + len_til_newline;
+                unsigned int line_len = len_til_prev_newline + len_til_newline;
                 // 1234\n123456\n1234\n123456
                 // 12
                 //
@@ -435,4 +410,3 @@ void layout_textbox(textbox * tb, Font * font, bool focused){
           };
   }
 }
-#endif

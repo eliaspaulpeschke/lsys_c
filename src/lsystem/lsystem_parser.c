@@ -1,12 +1,11 @@
-#ifndef LSYSTEM_PARSER_H
-#define LSYSTEM_PARSER_H
+#include "lsystem_parser.h"
+#include "../util/util.h"
+#include "lsystem.h"
+#include "raylib.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include "lsystem.h"
 
 char * file_to_mem(char * fpath){
     FILE *file = fopen(fpath, "r");
@@ -16,42 +15,25 @@ char * file_to_mem(char * fpath){
     if (content == NULL) return NULL;
     ulong r = fread(content, 1, sb.st_size, file);
     if (r < sb.st_size) {
-        printf("Warning in file_to_mem, fread read less than the file");
+        TraceLog(LOG_WARNING
+                , "Warning in file_to_mem, fread read less than the file");
     }
     content[sb.st_size] = '\0';
     fclose(file);
     return content;
 }
 
-char *ltrim(char *s)
-{
-    while(isspace(*s)) s++;
-    return s;
-}
-
-char *rtrim(char *s)
-{
-    char* back = s + strlen(s);
-    while(isspace(*--back));
-    *(back+1) = '\0';
-    return s;
-}
-
-char *trim(char *s)
-{
-    return rtrim(ltrim(s)); 
-}
-
-int line_list(char* result[], uint line_num, char * text) {
+int line_list(char* result[], unsigned int line_num, char * text) {
     char * res = strtok(text, "\n");
-    uint i = 0;
+    unsigned int i = 0;
     while((res != NULL) && (i < line_num)){
         result[i] = res;
         res = strtok(NULL, "\n");
         i++;
     }
     if (res != NULL) {
-        printf("Error in parse_lsys: more than %d lines in text \n", line_num);
+        TraceLog(LOG_ERROR
+                , "Error in parse_lsys: more than %d lines in text \n", line_num);
         return(-1);
     }
     return i;
@@ -60,7 +42,8 @@ int line_list(char* result[], uint line_num, char * text) {
 char * parse_axiom(char * line){
     char * start = strpbrk(line, ":");
     if (start == NULL) {
-        printf("Warning in parse_axiom: unnamed axiom \n");
+        TraceLog(LOG_WARNING
+                , "Warning in parse_axiom: unnamed axiom \n");
     }
     start = trim(start + 1);
     return start;
@@ -71,6 +54,8 @@ typedef struct Prem_and_ctx {
     char *lcont;
     char *rcont;
 } Prem_and_ctx;
+
+static const Prem_and_ctx err_prem_and_ctx = (Prem_and_ctx){NULL, NULL, NULL};
 
 Prem_and_ctx parse_prem_and_ctx (char * line) {
     char * lt = strstr(line, "<");
@@ -88,7 +73,7 @@ Prem_and_ctx parse_prem_and_ctx (char * line) {
         lt = trim(line);
     } else {
         if (lt > gt) {
-            printf("Warning in parse_prem_and_ctx: a > b < c occurred in context part. Interpreting as a < b > cq \n");
+            TraceLog(LOG_WARNING, "Warning in parse_prem_and_ctx: a > b < c occurred in context part. Interpreting as a < b > cq \n");
             char * x = lt;
             lt = gt;
             gt = x;
@@ -100,8 +85,10 @@ Prem_and_ctx parse_prem_and_ctx (char * line) {
         gt = trim(gt + 1);
     }
     if (strlen(premise) != 1) {
-        printf("Error in parse_prem_and_ctx: malformed premise \" %s \" \n", premise);
-        return (Prem_and_ctx){NULL, NULL, NULL};
+        TraceLog(LOG_ERROR
+                , "Error in parse_prem_and_ctx: malformed premise \" %s \" \n"
+                , premise);
+        return err_prem_and_ctx; 
     }
     return (Prem_and_ctx){premise, lt, gt};
 }
@@ -119,8 +106,9 @@ Rule parse_rule(char * line){
     char * name;
     char * arrow = strstr(line, "->");
     if (arrow == NULL){
-        printf("Error in parse_rule: no -> found \n");
-        return (Rule){NULL, NULL, NULL, NULL, NULL};
+        TraceLog( LOG_ERROR
+                , "Error in parse_rule: no -> found \n");
+        return err_rule;
     }
     result = trim(arrow + 2);
     *arrow = '\0';
@@ -134,23 +122,25 @@ Rule parse_rule(char * line){
             case RS_PREMISE:
                 prem_and_ctx = parse_prem_and_ctx(trim(res));
                 if (prem_and_ctx.premise == NULL) {
-                    return (Rule){NULL, NULL, NULL, NULL, NULL};
+                    return err_rule; 
                 }
                 break;
             case RS_QUALIFIER:
-                printf("Warning: qualifiers not yet implemented \n");
+                TraceLog(LOG_WARNING
+                        , "Warning: qualifiers not yet implemented \n");
                 break;
             default:
-                printf("Error in parse_rule: unforseen state\n");
-                return (Rule){NULL, NULL, NULL, NULL, NULL};
-
+                TraceLog(LOG_ERROR
+                       , "Error in parse_rule: unforseen state\n");
+                return err_rule; 
         }
         res = strtok(NULL, ":");
         state++;
     }
     if (res != NULL || state < RS_PREMISE) {
-        printf("Error in parse_rule: to less or too many colons \n");
-        return (Rule){NULL, NULL, NULL, NULL, NULL};
+        TraceLog(LOG_ERROR
+                , "Error in parse_rule: to less or too many colons \n");
+        return err_rule; 
     }
 
     return (Rule){ name
@@ -161,44 +151,62 @@ Rule parse_rule(char * line){
                  }; 
 }
 
-Lsystem parse_lsystem(char * lines[], uint line_num, bool with_axiom, char * free_me){
+Ruleset parse_ruleset(char * lines[], unsigned int line_num, char * free_me){
+    Ruleset rules = {
+          .ruleset = malloc(sizeof(Rule) * line_num)
+        , .num_rules = line_num
+        , .free_me = free_me
+    };
+    if (rules.ruleset == NULL) {
+        TraceLog(LOG_ERROR
+                , "Could not allocate space for ruleset");
+        return err_ruleset;
+    }
+    for (unsigned int i = 0; i < line_num; i++){
+        *(rules.ruleset + i) = parse_rule(lines[i]);
+    }
+    return rules;
+}
+
+Lsystem parse_lsystem(char * lines[], unsigned int line_num, bool with_axiom, char * free_me){
     char * axiom = NULL;
-    uint rule_num = line_num;
+    unsigned int rule_num = line_num;
     if (with_axiom){
       axiom = parse_axiom(lines[0]);
       rule_num -= 1;
     }
     char * name = "not implemented";
-    Rule * ruleset = malloc(sizeof(Rule) * (rule_num)); 
-    if (ruleset == NULL) return (Lsystem){-1, NULL, NULL, NULL, free_me};
     int start = 0;
     if (with_axiom) start = 1;
-    for (int i = start; i < line_num; i++){
-      ruleset[i - start] = parse_rule(lines[i]);
-      if (ruleset[i - start].premise == NULL) return (Lsystem){-1, NULL, NULL, NULL, free_me};
+    Ruleset rules = parse_ruleset(lines + start,line_num - start, NULL);
+    if (rules.num_rules == -1 || rules.ruleset == NULL){
+        return err_lsystem;
     }
-    return (Lsystem){line_num -1, name, axiom, ruleset, free_me};
+    return (Lsystem){.ruleset = rules, .name = name, .axiom = axiom,.free_me = free_me};
 }
 
 Lsystem lsystem_from_file(char * filename, bool with_axiom){
     char * data = file_to_mem(filename);
-    if (data == NULL) return (Lsystem){-1, NULL, NULL, NULL, NULL};
+    if (data == NULL) return err_lsystem;
     char * lines[64];
-    uint line_num = line_list(lines, 64, data);
+    unsigned int line_num = line_list(lines, 64, data);
     return parse_lsystem(lines, line_num, with_axiom, data);
 }
 
 Lsystem lsystem_from_string(char * text, bool with_axiom){
     char * data = strdup(text);
-    if (data == NULL) return (Lsystem){-1, NULL, NULL, NULL, NULL};
+    if (data == NULL) return err_lsystem;
     char * lines[64];
-    uint line_num = line_list(lines, 64, data);
+    unsigned int line_num = line_list(lines, 64, data);
     return parse_lsystem(lines, line_num, with_axiom, data);
 }
 
-void free_lsystem(Lsystem sys){
-    if (sys.free_me != NULL){
-        free(sys.free_me);
-    }
+Ruleset ruleset_from_string(char * text){
+    char * data = strdup(text);
+    if (data == NULL) return err_ruleset;
+    char * lines[64];
+    unsigned int line_num = line_list(lines, 64, data);
+    return parse_ruleset(lines, line_num, data);
 }
-#endif
+
+
