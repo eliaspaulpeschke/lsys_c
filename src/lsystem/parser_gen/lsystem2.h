@@ -14,15 +14,16 @@ typedef struct {
 } ParserStr;
 
 typedef enum {
-     LPAYLOAD_dbl
+     LPAYLOAD_empty = 0
+   , LPAYLOAD_dbl
    , LPAYLOAD_letter
+   , LPAYLOAD_bool
    , LPAYLOAD_string
    , LPAYLOAD_unary_op_dbl
    , LPAYLOAD_binary_op_dbl
    , LPAYLOAD_unary_op_bool
    , LPAYLOAD_binary_op_dbl_bool
    , LPAYLOAD_binary_op_bool_bool
-   , LPAYLOAD_empty
 }LPayloadType;
 
 typedef double(*unary_op_dbl)(double);
@@ -36,6 +37,7 @@ typedef struct {
     union {
         double dbl_val;
         char letter_val;
+        bool bool_val;
         char * string_val;
         unary_op_dbl unary_op_dbl_val;
         binary_op_dbl binary_op_dbl_val;
@@ -82,6 +84,17 @@ double lop_binary_minus(double x, double y);
 double lop_multiply(double x, double y);
 double lop_divide(double x, double y);
 
+bool lop_eq(double l, double r);
+bool lop_lt(double l, double r);
+bool lop_gt(double l, double r);
+bool lop_leq(double l, double r);
+bool lop_geq(double l, double r);
+bool lop_neq(double l, double r);
+
+bool lop_not(bool x);
+bool lop_and(bool l, bool r);
+bool lop_or(bool l, bool r);
+
 typedef struct LRule {
     char * name;
     LRuleWord premise;
@@ -94,7 +107,8 @@ typedef struct LRule {
 } LRule;
 
 typedef enum {
-    PARSE_DATA_string
+    PARSE_DATA_empty = 0
+  , PARSE_DATA_string
   , PARSE_DATA_LRuleWord
   , PARSE_DATA_LAstNode
   , PARSE_DATA_LResultWord
@@ -116,10 +130,10 @@ typedef struct ParseData{
 } ParseData;
 
 void print_LAst( LAstNode * node, char * offset); 
+ParseData * mk_parse_data(ParseDataType type);
+bool is_parse_data_empty(ParseData * pd);
+LAstNode * mk_node(LPayload payload);
 
-ParseData * create_parse_data(ParseDataType type);
-
-LAstNode * create_node(LPayload payload);
 void node_add_child(LAstNode * node, LAstNode * child);
 void node_set_parent(LAstNode * node, LAstNode * parent);
 

@@ -1,17 +1,3 @@
-# This code is hereby placed in the public domain.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 %prefix "lsys"
 
 %auxil "ParserStr *"
@@ -25,6 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 #define PCC_GETCHAR(auxil) parser_str_getch(auxil)
+
+
 }
 
 
@@ -50,6 +38,23 @@ letter_with_term <- < [A-Za-z0-9] > ('(' _ t:termlist _ ')')?
 qualifier <- termlist
 
 termlist <- l:termlist _ ',' _ r:term 
+
+term <- l:term _ '+' _ r:factor { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_binary_plus} ); node_add_child($$, l); node_add_child($$, r); }
+      / l:term _ '-' _ r:factor { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_binary_minus} ); node_add_child($$, l); node_add_child($$, r); }
+      / e:factor                { $$ = e; }
+
+factor <- l:factor _ '*' _ r:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_multiply} ); node_add_child($$, l); node_add_child($$, r); }
+        / l:factor _ '/' _ r:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_divide} ); node_add_child($$, l); node_add_child($$, r); }
+        / e:unary                  { $$ = e; }
+
+unary <- '+' _ e:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_unary_op_dbl, .unary_op_dbl_val = *lop_unary_plus} ); node_add_child($$, e); }
+       / '-' _ e:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_unary_op_dbl, .unary_op_dbl_val = *lop_unary_minus} ); node_add_child($$, e); }
+       / e:primary     { $$ = e; }
+
+primary <- < [0-9]+ >               { $$ = create_node( (LPayload){.type = LPAYLOAD_dbl, .dbl_val = strtod($1, NULL)} ); }
+         / '(' _ e:expression _ ')' { $$ = e; }
+
+
 
 _      <- [ \t]*
 

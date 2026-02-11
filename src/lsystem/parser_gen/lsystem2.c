@@ -57,7 +57,7 @@ void print_LAst( LAstNode * node, char * offset){
 }
 
 
-LAstNode * create_node(LPayload payload){
+LAstNode * mk_node(LPayload payload){
 //    ast_buffer_pos += sizeof(LAstNode);
     LAstNode * node = malloc(sizeof(LAstNode));
     *node = (LAstNode){
@@ -99,11 +99,19 @@ ParserStr * mk_parser_str(char * str){
     return pst;
 }
 
-ParseData * create_parse_data(ParseDataType type){
+ParseData * mk_parse_data(ParseDataType type){
     ParseData * pd = malloc(sizeof(ParseData));
     *pd = (ParseData) {.type = type, 0};
     return pd;
 };
+
+bool is_parse_data_empty(ParseData *pd){
+    if (pd == NULL) return true;
+    if (pd->type == PARSE_DATA_empty) return true;  
+    if (pd->list_length == 0) return true;
+    if (pd->parse_data_val == NULL) return true;
+    return false;
+}
 
 double lop_unary_plus(double x){ return (+x); }
 double lop_unary_minus(double x){ return (-x); }
@@ -111,4 +119,16 @@ double lop_binary_plus(double x, double y){ return (x + y); }
 double lop_binary_minus(double x, double y){ return (x - y); }
 double lop_multiply(double x, double y){ return (x * y); }
 double lop_divide(double x, double y){ return (x / y); }
+
+bool lop_eq(double l, double r){  return (l == r); }
+bool lop_lt(double l, double r){  return (l  < r); }
+bool lop_gt(double l, double r){  return (l  > r); }
+bool lop_leq(double l, double r){ return (l <= r); }
+bool lop_geq(double l, double r){ return (l >= r); }
+bool lop_neq(double l, double r){ return (l != r); }
+
+bool lop_not(bool x){ return (!x); }
+bool lop_and(bool l, bool r){ return (l && r); }
+bool lop_or(bool l, bool r){ return (l || r); }
+
 
