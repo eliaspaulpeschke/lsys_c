@@ -1,5 +1,9 @@
 #include "lsystem2.h"
+#include <stdlib.h>
+#include <string.h>
 #include "lsys_parse_util.h"
+
+// TODO: think about how we free this!
 
 ParseData * mk_node_empty(){
     ParseData * pd = mk_parse_data(PARSE_DATA_empty);
@@ -213,6 +217,21 @@ ParseData * mk_node_and(ParseData * l, ParseData * r, bool free_child_data){
 }
 ParseData * mk_node_or(ParseData * l, ParseData * r, bool free_child_data){
     return mk_node_bool_bool(l, r, free_child_data, lop_or);
+}
+
+ParseData * ast_node_append(ParseData * x, ParseData * y, bool free_old_data){
+    if (!pd_is_ast(x) || !pd_is_ast(y)) return x;
+    unsigned int len = x->list_length;
+    ParseData * pd = mk_parse_data(PARSE_DATA_LAstNode);
+    pd->list_length = len+1;
+    pd->lastnode_val = malloc(sizeof(LAstNode) * (len+1));
+    memcpy(pd->lastnode_val, x->lastnode_val, sizeof(LAstNode) * len);
+    memcpy(pd->lastnode_val + len, y->lastnode_val , sizeof(LAstNode));
+    if (free_old_data){
+        free(x);
+        free(y);
+    }
+    return pd;
 }
 
 

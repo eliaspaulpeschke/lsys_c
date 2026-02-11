@@ -25,12 +25,13 @@
 #result <- letter_with_term+
 #letter_with_term <- < [A-Za-z0-9] > ('(' _ t:termlist _ ')')?
 #qualifier <- termlist
-#termlist <- l:termlist _ ',' _ r:term 
-#
 
-expr <- t:term _ EOL { $$ = t; }
+expr <- t:termlist _ EOL { $$ = t; }
       / b:boolterm _ EOL { $$ = b; }
       / ( !EOL* ) EOL { $$ = mk_node_empty(); }
+
+termlist <- l:termlist _ ',' _ r:term { $$ = ast_node_append(l, r, true); }  
+         / t:term { $$ = t; }
 
 boolterm <- l:boolterm _ '&' _ r:boolfact { $$ = mk_node_and(l, r, true); }
           / l:boolterm _ '|' _ r:boolfact { $$ = mk_node_and(l, r, true); }
@@ -82,7 +83,9 @@ int main(){
     ParseData * res;
     lsys_context_t *ctx = lsys_create(NULL);
     while (lsys_parse(ctx, &res)){
-      print_LAst(res->lastnode_val, "  ");
+      for(int i = 0; i < res->list_length; i++){
+          print_LAst(res->lastnode_val + i, "  ");
+      }
     }
     lsys_destroy(ctx);
     return 0;

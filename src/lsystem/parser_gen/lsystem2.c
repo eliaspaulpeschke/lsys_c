@@ -62,7 +62,6 @@ void print_LAst( LAstNode * node, char * offset){
     }
 }
 
-
 LAstNode * mk_node(LPayload payload){
 //    ast_buffer_pos += sizeof(LAstNode);
     LAstNode * node = malloc(sizeof(LAstNode));
