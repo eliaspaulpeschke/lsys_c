@@ -58,6 +58,7 @@
             ];
             packages = with pkgs; [
               raylib
+              packcc
               clang-tools
             ] ++ (if stdenv.hostPlatform.system == "aarch64-darwin" then [ ] else [ gdb ]);
           };
