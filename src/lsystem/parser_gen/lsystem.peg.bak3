@@ -1,0 +1,81 @@
+# This code is hereby placed in the public domain.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+%prefix "lsys"
+
+%auxil "ParserStr *"
+%value "MyNode *"
+
+%header {
+    #include "lsystem2.h"
+
+    typedef struct MyNode{
+        struct MyNode * n1;
+        struct MyNode * n2;
+        char * name;
+    } MyNode;
+}
+
+%source {
+#include <stdio.h>
+#include <string.h>
+#define PCC_GETCHAR(auxil) parser_str_getch(auxil)
+}
+
+statement <- _ e:expression _ EOL { $$ = e; }
+           / ( !EOL . )* EOL      { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){NULL, NULL, "eol"}; }
+
+expression <- e:term { $$ = e; }
+
+term <- l:term _ '+' _ r:factor { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){r, l, "+"}; }
+      / l:term _ '-' _ r:factor { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){r, l, "-"}; }
+      / e:factor                { $$ = e; }
+
+factor <- l:factor _ '*' _ r:unary { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){r, l, "*"}; }
+        / l:factor _ '/' _ r:unary { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){r, l, "/"}; }
+        / e:unary                  { $$ = e; }
+
+unary <- '+' _ e:unary { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){e, NULL, "u+"}; }
+       / '-' _ e:unary { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){e, NULL, "u-"}; }
+       / e:primary     { $$ = e; }
+
+primary <- < [0-9]+ >               { $$ =malloc(sizeof(MyNode)); *($$)= (MyNode){NULL, NULL, $1}; }
+         / '(' _ e:expression _ ')' { $$ = e; }
+
+_      <- [ \t]*
+EOL    <- '\n' / '\r\n' / '\r' / ';'
+
+%%
+
+void printnode(MyNode * n, char * offset){
+    if (n == NULL) return;
+    printf("%s node: %s \n", offset, n->name);
+    if (n->n1 != NULL) {
+        printnode(n->n1, "  ");
+    }
+    if (n->n2 != NULL){
+        printnode(n->n2, "  ");
+    }
+}
+
+int main(){
+    ParserStr * aux = mk_parser_str("1+24*3\n");
+    MyNode * res;
+    lsys_context_t *ctx = lsys_create(aux);
+    while (lsys_parse(ctx, &res)){
+      printnode(res, "  ");
+    }
+    lsys_destroy(ctx);
+    return 0;
+}
