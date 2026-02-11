@@ -11,14 +11,14 @@
 
 static unsigned int NUM_TEXTBOX_IDS = 0;
 
-textbox mk_textbox(unsigned int max_len){
+Textbox mk_textbox(unsigned int max_len){
     char * text = malloc(2048);
-    if (!text) return (textbox){NULL};
+    if (!text) return ERR_TEXTBOX;
     char * a = malloc(1024);
-    if (!a) { free(text); return (textbox){NULL}; }
+    if (!a) { free(text); return ERR_TEXTBOX; }
     char * b = malloc(1024);
-    if (!b) { free(text); free(b); return (textbox){NULL}; }
-    textbox tb = (textbox){ .text = text
+    if (!b) { free(text); free(b); return ERR_TEXTBOX; }
+    Textbox tb = (Textbox){ .text = text
                        , .changed = false
                        , .lenText = 2048
                        , .bufA = a 
@@ -38,13 +38,13 @@ textbox mk_textbox(unsigned int max_len){
     return tb;
 }
 
-void free_textbox(textbox tb){
+void free_textbox(Textbox tb){
     free(tb.bufA);
     free(tb.bufB);
     free(tb.text);
 }
 
-bool realloc_bufA(textbox * tb, unsigned int extra){
+bool realloc_bufA(Textbox * tb, unsigned int extra){
   unsigned int newlen = tb->lenA << 1;
   if (newlen < (tb->lenA + extra)) newlen += extra;  
   if (newlen + tb->lenB >= tb->max_len) return false;
@@ -60,7 +60,7 @@ bool realloc_bufA(textbox * tb, unsigned int extra){
   return success;
 } 
 
-bool realloc_bufB(textbox * tb, unsigned int extra){
+bool realloc_bufB(Textbox * tb, unsigned int extra){
   unsigned int newlen = tb->lenB << 1;
   if (newlen < (tb->lenB + extra)) newlen += extra;  
   TraceLog(LOG_DEBUG, "%u %u %u", tb->lenB, newlen, extra); 
@@ -81,7 +81,7 @@ bool realloc_bufB(textbox * tb, unsigned int extra){
   return success;
 }
 
-void print_tb(textbox * tb){
+void print_tb(Textbox * tb){
     unsigned int lb = tb->lenB - tb->posB;
     char * testA = malloc(tb->posA + 1);
     char * testB = malloc(lb);
@@ -95,7 +95,7 @@ void print_tb(textbox * tb){
     free(testB);
 }
 
-void textbox_update_text(textbox * tb){
+void textbox_update_text(Textbox * tb){
     int len = tb->posA + (tb->lenB - tb->posB);
     tb->lenText = len;
     if (tb->changed){
@@ -114,7 +114,7 @@ void textbox_update_text(textbox * tb){
     }
 }
 
-void textbox_paste(textbox * tb){
+void textbox_paste(Textbox * tb){
     const char * clip = GetClipboardText();
     if (clip == NULL) return;
     unsigned int len = strlen(clip);
@@ -126,12 +126,12 @@ void textbox_paste(textbox * tb){
     tb->changed = true;
 }
 
-void textbox_copy(textbox * tb){
+void textbox_copy(Textbox * tb){
     if (tb->changed) textbox_update_text(tb);
     SetClipboardText(tb->text);
 }
 
-bool update_textbox(textbox * tb, bool focused_anyway){
+bool update_textbox(Textbox * tb, bool focused_anyway){
     bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox"), tb->clay_id_num));
 
     if (!ptr && !focused_anyway) return false;
@@ -269,11 +269,10 @@ bool update_textbox(textbox * tb, bool focused_anyway){
     return true;
 }
 
-void layout_textbox(textbox * tb, Font * font){
-  textbox_update_text(tb);
-  Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb->lenText - 1, .chars = tb->text};
-  Vector2 cursorPos = get_cursor_offset(tb->bufA, strlen(tb->bufA), font, 16,0, 1.0);
-  CLAY(CLAY_IDI("textbox", tb->clay_id_num), { .layout = { .layoutDirection = CLAY_LEFT_TO_RIGHT
+void layout_textbox(Textbox tb, Font * font){
+  Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb.lenText - 1, .chars = tb.text};
+  Vector2 cursorPos = get_cursor_offset(tb.bufA, strlen(tb.bufA), font, 16,0, 1.0);
+  CLAY(CLAY_IDI("textbox", tb.clay_id_num), { .layout = { .layoutDirection = CLAY_LEFT_TO_RIGHT
                                                          , .padding = CLAY_PADDING_ALL(8) 
                                                          , .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)} }
                                              , .clip = {.horizontal = true, .vertical = true, .childOffset = Clay_GetScrollOffset()}

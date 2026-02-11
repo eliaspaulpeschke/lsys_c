@@ -1,32 +1,38 @@
+#include <stdlib.h>
 #include <string.h>
 #include "../clay/clay.h"
 #include "common.h"
 #include "inputbox.h"
 
-inputbox * mk_inputbox(unsigned int max_len /*default 64*/){
-    inputbox * ipb = malloc(sizeof(inputbox));
+Inputbox mk_inputbox(unsigned int max_len /*default 64*/){
     if (max_len == 0) max_len = 64;
-    if (!ipb) return NULL;
-    *ipb = (inputbox){ .text = malloc(max_len)
+    char * text = malloc(max_len+1);
+    if (!text) return ERR_INPUTBOX;
+    Inputbox ipb = (Inputbox){ 
+                       .error = false
+                     , .text = text
                      , .max_len = max_len
                      , .cursor = 0
                      , .clay_id_num = NUM_INPUT_IDS + NAMESPACE_INPUTBOX 
                      , .changed = true
                      };
-    if (!ipb->text) {
-        free(ipb);
-        return NULL;
-    }
     NUM_INPUT_IDS += 1;
-    memset(ipb->text, '\0', ipb->max_len);
+    memset(ipb.text, '\0', ipb.max_len+1);
     return ipb;
 }
 
-void free_inputbox(inputbox * ipb){
-    free(ipb->text);
+void set_inputbox_text(Inputbox ipb, char * text){
+    unsigned int len = strlen(text);
+    if (len > ipb.max_len) len = ipb.max_len;
+    memset(ipb.text, '\0', ipb.max_len+1);
+    memcpy(ipb.text, text, len);
 }
 
-bool update_inputbox(inputbox * ipb){
+void free_inputbox(Inputbox ipb){
+    free(ipb.text);
+}
+
+bool update_inputbox(Inputbox * ipb){
     bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("inputbox"), ipb->clay_id_num));
     if (!ptr) return false;
     char chr = GetCharPressed();
@@ -72,25 +78,38 @@ bool update_inputbox(inputbox * ipb){
     return false;
 }
 
-void layout_inputbox(inputbox * ipb, Font * font, bool focus){
-    Clay_String text = (Clay_String){ .isStaticallyAllocated = false, .length = strlen(ipb->text), .chars = ipb->text};
+void layout_inputbox(Inputbox ipb, Font * font, bool focus, char 
+        * label){
+    Clay_String text = (Clay_String){ .isStaticallyAllocated = false, .length = strlen(ipb.text), .chars = ipb.text};
     Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {2,2,2,2,0}, .color = COL_ACCENT};
     Clay_BorderElementConfig border_normal = (Clay_BorderElementConfig){.width = {1,1,1,1,0}, .color = COL_DARK};
-    Vector2 cursorPos = get_cursor_offset(ipb->text, ipb->cursor, font, 16,0, 1.0);
-    CLAY(CLAY_IDI("inputbox", ipb->clay_id_num), { .layout = { .sizing = {CLAY_SIZING_FIXED(128), CLAY_SIZING_FIXED(24)} 
-                                                             , .childAlignment = {CLAY_ALIGN_X_LEFT, CLAY_ALIGN_Y_CENTER}
-                                                             , .padding = CLAY_PADDING_ALL(4) }
-                                                 , .cornerRadius = CLAY_CORNER_RADIUS(8)
-                                                 , .backgroundColor = COL_LIGHT
-                                                 , .border = focus ? border_focused : border_normal
-                                                 , .clip = {.horizontal=true, .vertical=true, .childOffset=Clay_GetScrollOffset() }}){
-        Clay_Vector2 scr = Clay_GetScrollOffset();
-        CLAY_AUTO_ID({.floating = { .offset = (Clay_Vector2){cursorPos.x + 4 + scr.x, cursorPos.y - 2+ scr.y}
-                                    , .attachTo = CLAY_ATTACH_TO_PARENT
-                                    , .expand = { .width=1, .height=8 }
-                                    , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT }
-                      , .backgroundColor = focus ? COL_ACCENT : COL_TRANSPARENT }){};
+    Vector2 cursorPos = get_cursor_offset(ipb.text, ipb.cursor, font, 16,0, 1.0);
+    CLAY(CLAY_IDI("inputbox_wrapper", ipb.clay_id_num)
+        , { .layout = { .sizing = {CLAY_SIZING_FIT(0), CLAY_SIZING_FIT(0)}
+                      , .layoutDirection = CLAY_LEFT_TO_RIGHT
+                      , .childGap = 8 }
+          , .backgroundColor = COL_LIGHT
+        }){
+            bool ipb_hovered = Clay_Hovered();
+            add_label(label);
+            CLAY(CLAY_IDI("inputbox", ipb.clay_id_num)
+                , { .layout = { .sizing = {CLAY_SIZING_FIXED(64)
+                                         , CLAY_SIZING_FIXED(24)} 
+                              , .childAlignment = {CLAY_ALIGN_X_LEFT, CLAY_ALIGN_Y_CENTER}
+                              , .padding = CLAY_PADDING_ALL(4) }
+                  , .cornerRadius = CLAY_CORNER_RADIUS(8)
+                  , .backgroundColor = COL_LIGHT
+                  , .border = focus ? border_focused : border_normal
+                  , .clip = {.horizontal=true, .vertical=true, .childOffset=Clay_GetScrollOffset() }}){
 
-        CLAY_TEXT(text, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
-    };
+                Clay_Vector2 scr = Clay_GetScrollOffset();
+                CLAY_AUTO_ID({.floating = { .offset = (Clay_Vector2){cursorPos.x + 4 + scr.x, cursorPos.y - 2+ scr.y}
+                                            , .attachTo = CLAY_ATTACH_TO_PARENT
+                                            , .expand = { .width=1, .height=8 }
+                                            , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT }
+                              , .backgroundColor = ipb_hovered ? COL_DARK: COL_TRANSPARENT }){};
+
+                CLAY_TEXT(text, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+            };
+        };
 }

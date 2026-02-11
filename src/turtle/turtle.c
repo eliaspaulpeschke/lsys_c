@@ -12,13 +12,13 @@ void rotate_turtle(Turtle * turtle, bool ccw){
 }
 
 void move_turtle(Turtle * turtle){
-    Vector2 new = Vector2Add(turtle->pos, turtle->heading);
+    Vector2 new = Vector2Add(turtle->pos, Vector2Scale(turtle->heading, turtle->length));
     DrawLineV(turtle->pos, new, turtle->color);
     turtle->pos = new;
 }
 
 void move_turtle_col(Turtle * turtle, Color col){
-    Vector2 new = Vector2Add(turtle->pos, turtle->heading);
+    Vector2 new = Vector2Add(turtle->pos, Vector2Scale(turtle->heading, turtle->length));
     DrawLineV(turtle->pos, new, col);
     turtle->pos = new;
 }
@@ -45,23 +45,19 @@ Turtle * pop_turtle(Turtle * turtle){
     return prev;
 }
 
-Turtle * mk_base_turtle(){
-  Turtle * turtle = malloc(sizeof(Turtle));
-  if (turtle == NULL) return NULL;
-  *turtle = (Turtle){ .heading = (Vector2){ 5.0f, 0.0f }
+Turtle mk_base_turtle(){
+  return (Turtle){ .heading = (Vector2){ 5.0f, 0.0f }
                     , .length = 5.0f
                     , .pos = (Vector2){0.0f, 0.0f}
                     , .prev = NULL
                     , .rads = PI/8
                     , .color = WHITE
                     };
-  return turtle;
 }
 
-void turtle_draw(char * text, unsigned int len, Turtle * turtle){
-  if (turtle == NULL) return;
+void turtle_draw(char * text, unsigned int len, Turtle turtle){
   Turtle * turt = malloc(sizeof(Turtle));
-  memcpy(turt, turtle, sizeof(Turtle));
+  memcpy(turt, &turtle, sizeof(Turtle));
   if (len > strlen(text)) len = strlen(text);
   for (int i = 0; i < len; i++) {
       switch (text[i]) {
@@ -106,10 +102,6 @@ void turtle_draw(char * text, unsigned int len, Turtle * turtle){
 }
 
 void standard_turtle_draw(char * text, Color col, float rads, Vector2 pos){ 
-  Turtle * turtle = mk_base_turtle();
-  if (turtle == NULL) return;
+  Turtle turtle = mk_base_turtle();
   turtle_draw(text, strlen(text), turtle);
-  if (turtle != NULL){
-      free(turtle);
-  }
 }

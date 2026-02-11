@@ -1,3 +1,5 @@
+#include "custom.h"
+#include "turtlebox.h"
 #include "module.h"
 #include "raylib.h"
 #include "common.h"
@@ -44,7 +46,27 @@ clay_ctx init_clay(){
 
 void add_textbox(clay_ctx * ctx){
     if (ctx->num_custom_elems >= MAX_CUSTOM_ELEMS) return;
-    ctx->ced[ctx->num_custom_elems] = mk_textbox_elem(8192);
+    CustomElementData * elem = malloc(sizeof(CustomElementData));
+    if (!elem) return;
+    *elem = mk_textbox_elem(2048);
+    if (elem->error) {
+        free(elem);
+        return;
+    }
+    ctx->ced[ctx->num_custom_elems] = elem;
+    ctx->num_custom_elems += 1;
+}
+
+void add_turtle_box(clay_ctx * ctx){
+    if (ctx->num_custom_elems >= MAX_CUSTOM_ELEMS) return;
+    CustomElementData * elem = malloc(sizeof(CustomElementData));
+    if (!elem) return;
+    *elem = mk_turtlebox_elem();
+    if (elem->error) {
+        free(elem);
+        return;
+    }
+    ctx->ced[ctx->num_custom_elems] = elem;
     ctx->num_custom_elems += 1;
 }
 
@@ -58,12 +80,22 @@ bool update_ui(clay_ctx * ctx){
             return true;
         }
     }
+    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_turtlebox")))) {
+        if (IsMouseButtonReleased(0)){
+            add_turtle_box(ctx);
+            return true;
+        }
+    }
+
 
     for (int i = 0; i < ctx->num_custom_elems; i++){
         switch (ctx->ced[i]->type) {
             case CUSTOM_ELEM_T_textbox:
                 if (update_textbox(&(ctx->ced[i]->textbox), false)) return true;
                 break;
+            case CUSTOM_ELEM_T_turtle_box:
+                if (update_turtlebox(&(ctx->ced[i]->turtlebox))) return true;
+                break; 
             default:
                 break;
         }
@@ -129,11 +161,19 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                                          , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
                 CLAY_TEXT(CLAY_STRING("+"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
             };
+            CLAY(CLAY_ID("add_turtlebox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
+                                                     , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
+                                         , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
+                CLAY_TEXT(CLAY_STRING("T"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+            };
         };
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
                 case CUSTOM_ELEM_T_textbox:
-                    layout_textbox(&(ctx.ced[i]->textbox), &ctx.fonts[0]);
+                    layout_textbox(ctx.ced[i]->textbox, &ctx.fonts[0]);
+                    break;
+                case CUSTOM_ELEM_T_turtle_box:
+                    layout_turtle_box(ctx.ced[i]->turtlebox, ctx.fonts, "Turtle Box");
                     break;
                 default:
                     break;

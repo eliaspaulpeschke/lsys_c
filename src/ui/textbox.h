@@ -3,7 +3,10 @@
 #include <stdbool.h>
 #include "raylib.h"
 
+#define ERR_TEXTBOX (Textbox){true,0,0,0,0,0,0,0,0,0,0,0,0}
+
 typedef struct {
+    bool error;
     char * text;
     bool changed;
     unsigned int lenTextBuf;
@@ -16,14 +19,12 @@ typedef struct {
     unsigned int posB; //used backwards, start at lenB-1
     unsigned int max_len;
     unsigned int clay_id_num;
-} textbox;
+} Textbox;
 
-textbox mk_textbox(unsigned int max_len);
-void free_textbox(textbox tb);
-void textbox_update_text(textbox * tb);
-void textbox_update_lsystem(textbox * tb);
-void textbox_generate(textbox * tb);
-bool update_textbox(textbox * tb, bool focused_anyway);
-void layout_textbox(textbox * tb, Font * font);
+Textbox mk_textbox(unsigned int max_len);
+void free_textbox(Textbox tb);
+void textbox_update_text(Textbox * tb);
+bool update_textbox(Textbox * tb, bool focused_anyway);
+void layout_textbox(Textbox tb, Font * font);
 #endif
 

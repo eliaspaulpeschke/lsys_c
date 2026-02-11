@@ -44,4 +44,9 @@ static inline Vector2 get_cursor_offset(char * text, unsigned int len, Font *fon
     return textSize;
 }
 
+static inline void add_label(char * label){
+        Clay_String str = (Clay_String) { .isStaticallyAllocated = false, .length = strlen(label), .chars = label }; 
+        CLAY_TEXT(str, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+}
+
 #endif
