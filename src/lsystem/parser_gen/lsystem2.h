@@ -74,7 +74,7 @@ typedef struct {
 typedef struct {
     char name;
     unsigned int num_calculations;
-    LAstNode ** calculations;
+    LAstNode * calculations;
 } LResultWord;
 
 double lop_unary_plus(double x);

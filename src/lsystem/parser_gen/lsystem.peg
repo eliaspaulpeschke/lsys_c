@@ -14,7 +14,7 @@
 //define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 }
 
-#lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:premise _ ('>' _ rc:context)? _ (':' _ q:qualifier) _ '->' _ res:result _ EOL
+#lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:premise _ ('>' _ rc:context)? _ (':' _ q:boolterm) _ '->' _ res:result _ EOL
 #name <- < [A-Za-z0-9_]+ > { $$ = create_parse_data(PARSE_DATA_string); $$->string_val = strdup($1);}
 #context <- c:letter_with_binding+
 #premise <- letter_with_binding
@@ -22,15 +22,20 @@
 #bindinglist <- bl:bindinglist ',' b:binding? 
 #             / binding
 #binding <- [a-z]
-#result <- letter_with_term+
-#letter_with_term <- < [A-Za-z0-9] > ('(' _ t:termlist _ ')')?
-#qualifier <- termlist
+#
+#
 
-expr <- t:termlist _ EOL { $$ = t; }
-      / b:boolterm _ EOL { $$ = b; }
-      / ( !EOL* ) EOL { $$ = mk_node_empty(); }
+res <- r:result _ EOL { $$ = r; }
+result <- l:result _ r:letter_with_term  { $$ = pd_node_append(l,r,true); }
+        / l:letter_with_term { $$ = l; }
 
-termlist <- l:termlist _ ',' _ r:term { $$ = ast_node_append(l, r, true); }  
+letter_with_term <- < [A-Za-z] > ('(' _ t:termlist _ ')')? { $$ = mk_pd_resultword( *$1, t ); }
+
+#expr <- t:termlist _ EOL { $$ = t; }
+#      / b:boolterm _ EOL { $$ = b; }
+#      / ( !EOL* ) EOL { $$ = mk_node_empty(); }
+
+termlist <- l:termlist _ ',' _ r:term { $$ = pd_node_append(l, r, true); }  
          / t:term { $$ = t; }
 
 boolterm <- l:boolterm _ '&' _ r:boolfact { $$ = mk_node_and(l, r, true); }
@@ -83,9 +88,9 @@ int main(){
     ParseData * res;
     lsys_context_t *ctx = lsys_create(NULL);
     while (lsys_parse(ctx, &res)){
-      for(int i = 0; i < res->list_length; i++){
-          print_LAst(res->lastnode_val + i, "  ");
-      }
+//      for(int i = 0; i < res->list_length; i++){
+  //        print_LAst(res->lastnode_val + i, "  ");
+    //  }
     }
     lsys_destroy(ctx);
     return 0;

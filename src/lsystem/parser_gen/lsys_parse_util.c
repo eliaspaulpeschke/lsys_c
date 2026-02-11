@@ -219,14 +219,49 @@ ParseData * mk_node_or(ParseData * l, ParseData * r, bool free_child_data){
     return mk_node_bool_bool(l, r, free_child_data, lop_or);
 }
 
-ParseData * ast_node_append(ParseData * x, ParseData * y, bool free_old_data){
-    if (!pd_is_ast(x) || !pd_is_ast(y)) return x;
+ParseData * pd_node_append(ParseData * x, ParseData * y, bool free_old_data){
     unsigned int len = x->list_length;
-    ParseData * pd = mk_parse_data(PARSE_DATA_LAstNode);
-    pd->list_length = len+1;
-    pd->lastnode_val = malloc(sizeof(LAstNode) * (len+1));
-    memcpy(pd->lastnode_val, x->lastnode_val, sizeof(LAstNode) * len);
-    memcpy(pd->lastnode_val + len, y->lastnode_val , sizeof(LAstNode));
+    if (x->type != y->type) return x;
+    ParseData * pd;
+    switch (x->type) {
+        case PARSE_DATA_LAstNode:
+           pd = mk_parse_data(PARSE_DATA_LAstNode);
+           pd->list_length = len+1;
+           pd->lastnode_val = malloc(sizeof(LAstNode) * (len+1));
+           memcpy(pd->lastnode_val, x->lastnode_val, sizeof(LAstNode) * len);
+           memcpy(pd->lastnode_val + len, y->lastnode_val , sizeof(LAstNode));
+           break;
+        case PARSE_DATA_LResultWord:
+           pd = mk_parse_data(PARSE_DATA_LResultWord);
+           pd->list_length = len+1;
+           pd->lresultword_val = malloc(sizeof(LResultWord) * (len+1));
+           memcpy(pd->lresultword_val, x->lresultword_val, sizeof(LResultWord) * (len));
+           memcpy(pd->lresultword_val + len, y->lresultword_val, sizeof(LResultWord));
+           break;
+        case PARSE_DATA_LRuleWord:
+           pd = mk_parse_data(PARSE_DATA_LRuleWord);
+           pd->list_length = len+1;
+           pd->lruleword_val = malloc(sizeof(LRuleWord) * (len+1));
+           memcpy(pd->lruleword_val, x->lruleword_val, sizeof(LRuleWord) * (len));
+           memcpy(pd->lruleword_val + len, y->lruleword_val, sizeof(LRuleWord));
+           break;
+        case PARSE_DATA_LRule:
+           pd = mk_parse_data(PARSE_DATA_LRule);
+           pd->list_length = len+1;
+           pd->lrule_val = malloc(sizeof(LRule) * (len+1));
+           memcpy(pd->lrule_val, x->lrule_val, sizeof(LRule) * (len));
+           memcpy(pd->lrule_val + len, y->lrule_val, sizeof(LRule));
+           break;
+        case PARSE_DATA_ParseData:
+           pd = mk_parse_data(PARSE_DATA_ParseData);
+           pd->list_length = len+1;
+           pd->parse_data_val= malloc(sizeof(ParseData) * (len+1));
+           memcpy(pd->parse_data_val, x->parse_data_val, sizeof(ParseData) * (len));
+           memcpy(pd->parse_data_val+ len, y->parse_data_val, sizeof(ParseData));
+           break;
+        default:
+            return x;
+    }
     if (free_old_data){
         free(x);
         free(y);
@@ -234,4 +269,17 @@ ParseData * ast_node_append(ParseData * x, ParseData * y, bool free_old_data){
     return pd;
 }
 
-
+ParseData * mk_pd_resultword(char letter, ParseData * ast){
+    ParseData * pd = mk_parse_data(PARSE_DATA_LResultWord);
+    LResultWord * lrw = malloc(sizeof(LResultWord));
+    lrw->name = letter;
+    if ((ast == NULL) || (ast->type != PARSE_DATA_LAstNode)){
+        lrw->num_calculations = 0;
+        lrw->calculations = NULL;
+    } else {
+        lrw->num_calculations = ast->list_length;
+        lrw->calculations = ast->lastnode_val;
+    }
+    pd->lresultword_val = lrw;
+    return pd;
+}

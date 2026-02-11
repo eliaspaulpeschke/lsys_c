@@ -42,6 +42,6 @@ ParseData * mk_node_or(ParseData * l, ParseData * r, bool free_child_data);
 
 ParseData * mk_node_empty();
 
-ParseData * ast_node_append(ParseData * x, ParseData * y, bool free_old_data);
-
+ParseData * pd_node_append(ParseData * x, ParseData * y, bool free_old_data);
+ParseData * mk_pd_resultword(char letter, ParseData * ast);
 #endif
