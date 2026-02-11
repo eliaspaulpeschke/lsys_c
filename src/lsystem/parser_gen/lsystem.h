@@ -11,8 +11,8 @@ extern "C" {
 
 typedef struct lsys_context_tag lsys_context_t;
 
-lsys_context_t *lsys_create(ParserStr *auxil);
-int lsys_parse(lsys_context_t *ctx, LAstNode **ret);
+lsys_context_t *lsys_create(void *auxil);
+int lsys_parse(lsys_context_t *ctx, ParseData **ret);
 void lsys_destroy(lsys_context_t *ctx);
 
 #ifdef __cplusplus

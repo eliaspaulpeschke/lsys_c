@@ -30,8 +30,14 @@ void print_LAst( LAstNode * node, char * offset){
         case LPAYLOAD_dbl:
             printf("%s double: %f\n", new_offset, node->payload.dbl_val);
             break;
+        case LPAYLOAD_bool:
+            printf("%s bool: %b\n", new_offset, node->payload.bool_val);
+            break;
         case LPAYLOAD_letter:
-            printf("%s double: %c\n", new_offset, node->payload.letter_val);
+            printf("%s letter: %c\n", new_offset, node->payload.letter_val);
+            break;
+        case LPAYLOAD_string:
+            printf("%s string: %s\n", new_offset, node->payload.string_val);
             break;
         case LPAYLOAD_unary_op_dbl:
             printf("%s unary double: %p\n", new_offset, node->payload.unary_op_dbl_val);

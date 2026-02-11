@@ -1,6 +1,6 @@
 %prefix "lsys"
 
-%auxil "ParserStr *"
+#auxil "ParserStr *"
 %value "ParseData *"
 
 %header {
@@ -10,51 +10,66 @@
 %source {
 #include <stdio.h>
 #include <string.h>
-#define PCC_GETCHAR(auxil) parser_str_getch(auxil)
-
-
+#include "lsys_parse_util.h"
+//define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 }
 
+#lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:premise _ ('>' _ rc:context)? _ (':' _ q:qualifier) _ '->' _ res:result _ EOL
+#name <- < [A-Za-z0-9_]+ > { $$ = create_parse_data(PARSE_DATA_string); $$->string_val = strdup($1);}
+#context <- c:letter_with_binding+
+#premise <- letter_with_binding
+#letter_with_binding <- < [A-Za-z0-9] > ('(' _ b:bindinglist _ ')')?
+#bindinglist <- bl:bindinglist ',' b:binding? 
+#             / binding
+#binding <- [a-z]
+#result <- letter_with_term+
+#letter_with_term <- < [A-Za-z0-9] > ('(' _ t:termlist _ ')')?
+#qualifier <- termlist
+#termlist <- l:termlist _ ',' _ r:term 
+#
 
-lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:premise _ ('>' _ rc:context)? _ (':' _ q:qualifier) _ '->' _ res:result _ EOL
+expr <- t:term _ EOL { $$ = t; }
+      / b:boolterm _ EOL { $$ = b; }
+      / ( !EOL* ) EOL { $$ = mk_node_empty(); }
 
-name <- < [A-Za-z0-9_]+ > { $$ = create_parse_data(PARSE_DATA_string); $$->string_val = strdup($1);}
+boolterm <- l:boolterm _ '&' _ r:boolfact { $$ = mk_node_and(l, r, true); }
+          / l:boolterm _ '|' _ r:boolfact { $$ = mk_node_and(l, r, true); }
+          / '!' _ x:boolfact { $$ = mk_node_not(x, true); }
+          / b:boolfact { $$ = b; }
 
-context <- c:letter_with_binding+
+boolfact <- l:term _ '=' _ r:term { $$ = mk_node_eq(l, r, true); }
+          / l:term _ '>' _ r:term { $$ = mk_node_gt(l, r, true); }
+          / l:term _ '<' _ r:term { $$ = mk_node_lt(l, r, true); }
+          / l:term _ '>=' _ r:term { $$ = mk_node_geq(l, r, true); }
+          / l:term _ '<=' _ r:term { $$ = mk_node_leq(l, r, true); }
+          / l:term _ '!=' _ r:term { $$ = mk_node_neq(l, r, true); }
+          / b:boolprim {$$ = b; }
 
-premise <- letter_with_binding
+boolprim <- b:boolean { $$ = b; }
+          / '(' _ b:boolterm _ ')' { $$ = b; }
 
-letter_with_binding <- < [A-Za-z0-9] > ('(' _ b:bindinglist _ ')')?
-
-bindinglist <- bl:bindinglist ',' b:binding? 
-            / binding
-
-binding <- [a-z]
-
-result <- letter_with_term+
-
-letter_with_term <- < [A-Za-z0-9] > ('(' _ t:termlist _ ')')?
-
-qualifier <- termlist
-
-termlist <- l:termlist _ ',' _ r:term 
-
-term <- l:term _ '+' _ r:factor { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_binary_plus} ); node_add_child($$, l); node_add_child($$, r); }
-      / l:term _ '-' _ r:factor { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_binary_minus} ); node_add_child($$, l); node_add_child($$, r); }
+term <- l:term _ '+' _ r:factor { $$ = mk_node_binplus(l, r, true); }
+      / l:term _ '-' _ r:factor { $$ = mk_node_binminus(l, r, true); }
       / e:factor                { $$ = e; }
 
-factor <- l:factor _ '*' _ r:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_multiply} ); node_add_child($$, l); node_add_child($$, r); }
-        / l:factor _ '/' _ r:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = *lop_divide} ); node_add_child($$, l); node_add_child($$, r); }
+factor <- l:factor _ '*' _ r:unary { $$ = mk_node_multiply(l, r, true); }
+        / l:factor _ '/' _ r:unary { $$ = mk_node_divide(l, r, true); }
         / e:unary                  { $$ = e; }
 
-unary <- '+' _ e:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_unary_op_dbl, .unary_op_dbl_val = *lop_unary_plus} ); node_add_child($$, e); }
-       / '-' _ e:unary { $$ = create_node( (LPayload){ .type=LPAYLOAD_unary_op_dbl, .unary_op_dbl_val = *lop_unary_minus} ); node_add_child($$, e); }
+unary <- '+' _ e:unary { $$ = mk_node_uplus(e, true); }
+       / '-' _ e:unary { $$ = mk_node_uminus(e, true); }
        / e:primary     { $$ = e; }
 
-primary <- < [0-9]+ >               { $$ = create_node( (LPayload){.type = LPAYLOAD_dbl, .dbl_val = strtod($1, NULL)} ); }
-         / '(' _ e:expression _ ')' { $$ = e; }
+primary <- d:dbl { $$ = d; }
+         / '(' _ t:term _ ')' { $$ = t; }
+         / l:letter { $$ = l; }
 
+dbl <- < [+-]?[0-9]+([.][0-9]+)? > { $$ = mk_node_dbl_lit(strtod($1, NULL)); } 
 
+boolean <- 'true' { $$ = mk_node_bool_lit(true); }
+      / 'false' { $$ = mk_node_bool_lit(false); }
+
+letter <- < [a-z] > { $$ = mk_node_letter_lit(*$1); }
 
 _      <- [ \t]*
 
@@ -63,11 +78,11 @@ EOL    <- '\n' / '\r\n' / '\r' / ';'
 %%
 
 int main(){
-    ParserStr * aux = mk_parser_str("1 + 24 * 3 * 4;");
+//    ParserStr * aux = mk_parser_str("1 + 24 * 3 * 4;");
     ParseData * res;
-    lsys_context_t *ctx = lsys_create(aux);
+    lsys_context_t *ctx = lsys_create(NULL);
     while (lsys_parse(ctx, &res)){
-      print_LAst(res, "  ");
+      print_LAst(res->lastnode_val, "  ");
     }
     lsys_destroy(ctx);
     return 0;

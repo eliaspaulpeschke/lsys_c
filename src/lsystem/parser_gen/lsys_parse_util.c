@@ -1,6 +1,11 @@
 #include "lsystem2.h"
 #include "lsys_parse_util.h"
 
+ParseData * mk_node_empty(){
+    ParseData * pd = mk_parse_data(PARSE_DATA_empty);
+    return pd;
+}
+
 ParseData * mk_node_pd(LPayload payload){
     ParseData * pd = mk_parse_data(PARSE_DATA_LAstNode);
     if (pd == NULL) return NULL;
@@ -13,11 +18,12 @@ ParseData * mk_node_pd(LPayload payload){
     return pd;
 }
 
-static inline bool pd_is_ast(ParseData * pd){
+
+bool pd_is_ast(ParseData * pd){
     return (pd->type == PARSE_DATA_LAstNode);
 }
 
-static inline bool pd_is_dbl(ParseData * pd){
+bool pd_is_dbl(ParseData * pd){
     if (!pd_is_ast(pd)) return false;
     if (!(pd->lastnode_val->payload.type == LPAYLOAD_dbl
        ||pd->lastnode_val->payload.type == LPAYLOAD_letter //a binding
@@ -27,7 +33,27 @@ static inline bool pd_is_dbl(ParseData * pd){
     return true;
 }
 
-static inline bool pd_is_bool(ParseData * pd){
+bool pd_is_dbl_lit(ParseData * pd){
+    if (!pd_is_ast(pd)) return false;
+    return (pd->lastnode_val->payload.type == LPAYLOAD_dbl);
+}
+
+double dbl_lit_value(ParseData * pd){
+    if(!pd_is_dbl_lit(pd)) return 0;
+    return (pd->lastnode_val->payload.dbl_val);
+}
+
+bool pd_is_bool_lit(ParseData * pd){
+    if (!pd_is_ast(pd)) return false;
+    return (pd->lastnode_val->payload.type == LPAYLOAD_bool);
+}
+
+bool bool_lit_value(ParseData * pd){
+    if(!pd_is_dbl_lit(pd)) return 0;
+    return (pd->lastnode_val->payload.bool_val);
+}
+
+bool pd_is_bool(ParseData * pd){
     if (!pd_is_ast(pd)) return false;
     if (!(pd->lastnode_val->payload.type == LPAYLOAD_bool
        ||pd->lastnode_val->payload.type == LPAYLOAD_unary_op_bool
@@ -37,11 +63,36 @@ static inline bool pd_is_bool(ParseData * pd){
     return true;
 }
 
-ParseData * mk_node_binplus(ParseData * l, ParseData * r, bool free_child_data){
+ParseData * mk_node_dbl_lit(double x){
+    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_dbl, .dbl_val = x});
+    return pd;
+}
+
+ParseData * mk_node_bool_lit(bool x){
+    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_bool, .bool_val = x});
+    return pd;
+}
+
+ParseData * mk_node_letter_lit(char x){
+    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_letter, .letter_val = x});
+    return pd;
+}
+
+ParseData * mk_node_string_lit(char * x){
+    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_string, .string_val = x});
+    return pd;
+}
+
+ParseData * mk_node_bdbl(ParseData * l, ParseData * r, bool free_child_data, binary_op_dbl fn){
     if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = lop_binary_plus});
-    node_add_child(pd->lastnode_val, l->lastnode_val);
-    node_add_child(pd->lastnode_val, r->lastnode_val);
+    ParseData * pd; 
+    if (pd_is_dbl_lit(l) && pd_is_dbl_lit(r)) {
+        pd = mk_node_dbl_lit(fn(dbl_lit_value(l), dbl_lit_value(r)));
+    } else {
+        pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = fn});
+        node_add_child(pd->lastnode_val, l->lastnode_val);
+        node_add_child(pd->lastnode_val, r->lastnode_val);
+    }
     if (free_child_data){
         free(l);
         free(r);
@@ -50,92 +101,118 @@ ParseData * mk_node_binplus(ParseData * l, ParseData * r, bool free_child_data){
 }
 
 ParseData * mk_node_binminus(ParseData * l, ParseData * r, bool free_child_data){
-    if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = lop_binary_minus});
-    node_add_child(pd->lastnode_val, l->lastnode_val);
-    node_add_child(pd->lastnode_val, r->lastnode_val);
-    if (free_child_data){
-        free(l);
-        free(r);
-    }
-    return pd;
+    return mk_node_bdbl(l,r,free_child_data, lop_binary_minus);
 }
-
+ParseData * mk_node_binplus(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_bdbl(l,r,free_child_data, lop_binary_plus);
+}
 ParseData * mk_node_multiply(ParseData * l, ParseData * r, bool free_child_data){
-    if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = lop_multiply});
-    node_add_child(pd->lastnode_val, l->lastnode_val);
-    node_add_child(pd->lastnode_val, r->lastnode_val);
-    if (free_child_data){
-        free(l);
-        free(r);
-    }
-    return pd;
+    return mk_node_bdbl(l,r,free_child_data, lop_multiply);
 }
-
 ParseData * mk_node_divide(ParseData * l, ParseData * r, bool free_child_data){
-    if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl, .binary_op_dbl_val = lop_divide});
-    node_add_child(pd->lastnode_val, l->lastnode_val);
-    node_add_child(pd->lastnode_val, r->lastnode_val);
+    return mk_node_bdbl(l,r,free_child_data, lop_divide);
+}
+
+ParseData * mk_node_udbl(ParseData * x, bool free_child_data, unary_op_dbl fn){
+    if (!pd_is_dbl(x)) return NULL;
+
+    ParseData * pd;
+    if (pd_is_dbl_lit(x)) {
+        pd = mk_node_dbl_lit(fn(dbl_lit_value(x)));
+    } else {
+        pd = mk_node_pd((LPayload){.type = LPAYLOAD_unary_op_dbl, .unary_op_dbl_val = fn});
+        node_add_child(pd->lastnode_val, x->lastnode_val);
+    }
     if (free_child_data){
-        free(l);
-        free(r);
+        free(x);
     }
     return pd;
 }
-
 
 ParseData * mk_node_uplus(ParseData * x, bool free_child_data){
-    if (!pd_is_dbl(x)) return NULL;
-    if (x->lastnode_val->payload.type == LPAYLOAD_dbl){
-        x->lastnode_val->payload.dbl_val = +(x->lastnode_val->payload.dbl_val);
-        return x;
-    }
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_unary_op_dbl, .binary_op_dbl_val = lop_binary_plus});
-    node_add_child(pd->lastnode_val, x->lastnode_val);
-    if (free_child_data){
-        free(x);
-    }
-    return pd;
+    return mk_node_udbl(x,free_child_data, lop_unary_plus);
 }
-
 ParseData * mk_node_uminus(ParseData * x, bool free_child_data){
-    if (!pd_is_dbl(x)) return NULL;
-    if (x->lastnode_val->payload.type == LPAYLOAD_dbl){
-        x->lastnode_val->payload.dbl_val = -(x->lastnode_val->payload.dbl_val);
-        return x;
+    return mk_node_udbl(x,free_child_data, lop_unary_minus);
+}
+
+ParseData * mk_node_dbl_bool(ParseData * l, ParseData * r, bool free_child_data, binary_op_dbl_bool fn){
+    if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
+    ParseData * pd; 
+    if (pd_is_dbl_lit(l) && pd_is_dbl_lit(r)) {
+        pd = mk_node_bool_lit(fn(dbl_lit_value(l), dbl_lit_value(r)));
+    } else {
+        pd =  mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl_bool, .binary_op_dbl_bool_val = fn});
+        node_add_child(pd->lastnode_val, l->lastnode_val);
+        node_add_child(pd->lastnode_val, r->lastnode_val);
     }
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_unary_op_dbl, .binary_op_dbl_val = lop_binary_minus});
-    node_add_child(pd->lastnode_val, x->lastnode_val);
+    if (free_child_data){
+        free(l);
+        free(r);
+    }
+    return pd;
+}
+
+ParseData * mk_node_eq(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_dbl_bool(l, r, free_child_data, lop_eq);
+}
+ParseData * mk_node_lt(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_dbl_bool(l, r, free_child_data, lop_lt);
+}
+ParseData * mk_node_gt(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_dbl_bool(l, r, free_child_data, lop_gt);
+}
+ParseData * mk_node_leq(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_dbl_bool(l, r, free_child_data, lop_leq);
+}
+ParseData * mk_node_geq(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_dbl_bool(l, r, free_child_data, lop_geq);
+}
+ParseData * mk_node_neq(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_dbl_bool(l, r, free_child_data, lop_neq);
+}
+
+ParseData * mk_node_ubool(ParseData * x, bool free_child_data, unary_op_bool fn){
+    if (!pd_is_bool(x)) return NULL;
+    ParseData * pd;
+    if (pd_is_bool_lit(x)) {
+        pd = mk_node_bool_lit(fn(bool_lit_value(x)));
+    } else {
+        pd =  mk_node_pd((LPayload){.type = LPAYLOAD_unary_op_bool, .unary_op_bool_val = fn});
+        node_add_child(pd->lastnode_val, x->lastnode_val);
+    }
     if (free_child_data){
         free(x);
     }
     return pd;
 }
 
-ParseData * mk_node_dbl_bool(ParseData * l, ParseData * r, bool free_child_data){
-    if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl_bool, .binary_op_dbl_bool_val = lop_eq});
-    node_add_child(pd->lastnode_val, l->lastnode_val);
-    node_add_child(pd->lastnode_val, r->lastnode_val);
+ParseData * mk_node_not(ParseData * x, bool free_child_data){
+    return mk_node_ubool(x, free_child_data, lop_not);
+}
+
+ParseData * mk_node_bool_bool(ParseData * l, ParseData * r, bool free_child_data, binary_op_bool_bool fn){
+    if (!pd_is_bool(r) || !pd_is_bool(l)) return NULL;
+    ParseData * pd;
+    if (pd_is_bool_lit(l) && pd_is_bool_lit(r)) {
+        pd = mk_node_bool_lit(fn(bool_lit_value(l), bool_lit_value(r)));
+    } else {
+        pd =  mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_bool_bool, .binary_op_bool_bool_val = fn});
+        node_add_child(pd->lastnode_val, l->lastnode_val);
+        node_add_child(pd->lastnode_val, r->lastnode_val);
+    }
     if (free_child_data){
-        free(l);
         free(r);
+        free(l);
     }
     return pd;
 }
 
-ParseData * mk_node_lt(ParseData * l, ParseData * r, bool free_child_data){
-    if (!pd_is_dbl(l) && pd_is_dbl(r)) return NULL;
-    ParseData * pd = mk_node_pd((LPayload){.type = LPAYLOAD_binary_op_dbl_bool, .binary_op_dbl_bool_val = lop_lt});
-    node_add_child(pd->lastnode_val, l->lastnode_val);
-    node_add_child(pd->lastnode_val, r->lastnode_val);
-    if (free_child_data){
-        free(l);
-        free(r);
-    }
-    return pd;
+ParseData * mk_node_and(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_bool_bool(l, r, free_child_data, lop_and);
+}
+ParseData * mk_node_or(ParseData * l, ParseData * r, bool free_child_data){
+    return mk_node_bool_bool(l, r, free_child_data, lop_or);
 }
 
 
