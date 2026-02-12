@@ -89,22 +89,15 @@ $(objs)/fonts.o: $(ui)/fonts.c $(ui)/fonts.h
 	$(mkdirs)
 	$(CC) $(CFLAGS)  -c $(ui)/fonts.c -o $(objs)/fonts.o
 
-$(objs)/lsystem_parser.o: $(lsys)/lsystem_parser.c \
-	          $(lsys)/lsystem_parser.h \
-		  $(lsys)/lsystem.h \
-		  $(util)/util.h
-	$(mkdirs)
-	$(CC) $(CFLAGS)  -c $(lsys)/lsystem_parser.c -o $(objs)/lsystem_parser.o
-
 $(objs)/lsystem_parser.o: $(parser)/lsystem_parser.c \
 	$(parser)/lsystem_parser.h $(parser)/lsys_parse_util.h \
 	$(lsys)/lsystem.h
+	$(mkdirs)
 	$(CC) $(CFLAGS)  -c $(parser)/lsystem_parser.c -o $(objs)/lsystem_parser.o
 
 $(objs)/lsys_parse_util.o: $(parser)/lsys_parse_util.c \
 	$(parser)/lsys_parse_util.h $(lsys)/lsystem.h
 	$(CC) $(CFLAGS)  -c $(parser)/lsys_parse_util.c -o $(objs)/lsys_parse_util.o
-
 
 $(parser)/lsystem_parser.c: $(parser)/lsystem_parser.peg
 	packcc $(parser)/lsystem_parser.peg -o $(parser)/lsystem_parser
