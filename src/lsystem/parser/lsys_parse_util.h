@@ -1,6 +1,6 @@
 #ifndef LSYS_PARSE_UTIL_H
 #define LSYS_PARSE_UTIL_H
-#include "lsystem2.h"
+#include "../lsystem.h"
 
 ParseData * mk_node_pd(LPayload payload);
 

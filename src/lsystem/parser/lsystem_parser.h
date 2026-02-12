@@ -3,7 +3,7 @@
 #ifndef PCC_INCLUDED_LSYSTEM_PARSER_H
 #define PCC_INCLUDED_LSYSTEM_PARSER_H
 
-#include "lsystem2.h"
+#include "../lsystem.h"
 #include "lsys_parse_util.h"
 
 #ifdef __cplusplus

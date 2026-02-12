@@ -3,6 +3,7 @@ src = ./src
 clay = $(src)/clay
 ui = $(src)/ui
 lsys = $(src)/lsystem
+parser = $(lsys)/parser
 turtle = $(src)/turtle
 util = $(src)/util
 elems = $(ui)/elements
@@ -16,7 +17,8 @@ aristid: $(objs)/main.o $(objs)/ui.o $(objs)/textbox.o \
 	 $(objs)/module.o $(objs)/inputbox.o $(objs)/custom.o \
 	 $(objs)/util.o $(objs)/turtle.o $(objs)/lsystem.o $(objs)/lsystem_parser.o \
 	 $(objs)/clay_renderer_raylib.o $(objs)/fonts.o $(ui)/move_container.o \
-	 $(objs)/vectorbox.o $(objs)/turtlebox.o
+	 $(objs)/vectorbox.o $(objs)/turtlebox.o \
+	 $(objs)/lsys_parse_util.o
 	$(mkdirs)
 	$(CC) -lm -lraylib $(LDFLAGS) $^ -o $(build)/aristid
 
@@ -93,6 +95,19 @@ $(objs)/lsystem_parser.o: $(lsys)/lsystem_parser.c \
 		  $(util)/util.h
 	$(mkdirs)
 	$(CC) $(CFLAGS)  -c $(lsys)/lsystem_parser.c -o $(objs)/lsystem_parser.o
+
+$(objs)/lsystem_parser.o: $(parser)/lsystem_parser.c \
+	$(parser)/lsystem_parser.h $(parser)/lsys_parse_util.h \
+	$(lsys)/lsystem.h
+	$(CC) $(CFLAGS)  -c $(parser)/lsystem_parser.c -o $(objs)/lsystem_parser.o
+
+$(objs)/lsys_parse_util.o: $(parser)/lsys_parse_util.c \
+	$(parser)/lsys_parse_util.h $(lsys)/lsystem.h
+	$(CC) $(CFLAGS)  -c $(parser)/lsys_parse_util.c -o $(objs)/lsys_parse_util.o
+
+
+$(parser)/lsystem_parser.c: $(parser)/lsystem_parser.peg
+	packcc $(parser)/lsystem_parser.peg -o $(parser)/lsystem_parser
 
 $(objs)/lsystem.o: $(lsys)/lsystem.c $(lsys)/lsystem.h
 	$(mkdirs)
