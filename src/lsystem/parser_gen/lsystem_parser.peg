@@ -4,7 +4,7 @@
 %value "ParseData *"
 
 %header {
-    #include "lsystem2.h"
+    #include "lsystem.h"
     #include "lsys_parse_util.h"
 }
 
