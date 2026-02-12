@@ -14,8 +14,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "lsys_parse_util.h"
-//define PCC_GETCHAR(auxil) parser_str_getch(auxil)
+#define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 
 #if !defined __has_attribute || defined _MSC_VER
 #define __attribute__(x)
@@ -69,7 +68,7 @@ typedef struct pcc_range_tag {
 
 typedef ParseData *pcc_value_t;
 
-typedef void *pcc_auxil_t;
+typedef ParserStr *pcc_auxil_t;
 
 typedef lsys_context_t pcc_context_t;
 
@@ -1119,40 +1118,6 @@ static void pcc_do_action(pcc_context_t *ctx, const pcc_thunk_array_t *thunks, p
     }
 }
 
-static void pcc_action_ruleset_0(lsys_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
-#define auxil (__pcc_ctx->auxil)
-#define __ (*__pcc_out)
-#define l (*__pcc_in->data.leaf.values.buf[0])
-#define r (*__pcc_in->data.leaf.values.buf[1])
-#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
-#define _0s ((const size_t)(__pcc_ctx->pos + __pcc_in->data.leaf.capt0.range.start))
-#define _0e ((const size_t)(__pcc_ctx->pos + __pcc_in->data.leaf.capt0.range.end))
-    __ = pd_node_append(l,r,true);
-#undef _0e
-#undef _0s
-#undef _0
-#undef r
-#undef l
-#undef __
-#undef auxil
-}
-
-static void pcc_action_ruleset_1(lsys_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
-#define auxil (__pcc_ctx->auxil)
-#define __ (*__pcc_out)
-#define r (*__pcc_in->data.leaf.values.buf[1])
-#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
-#define _0s ((const size_t)(__pcc_ctx->pos + __pcc_in->data.leaf.capt0.range.start))
-#define _0e ((const size_t)(__pcc_ctx->pos + __pcc_in->data.leaf.capt0.range.end))
-    __ = r;
-#undef _0e
-#undef _0s
-#undef _0
-#undef r
-#undef __
-#undef auxil
-}
-
 static void pcc_action_lrule_0(lsys_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
 #define auxil (__pcc_ctx->auxil)
 #define __ (*__pcc_out)
@@ -1887,7 +1852,6 @@ static void pcc_action_letter_0(lsys_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in
 #undef auxil
 }
 
-static pcc_thunk_chunk_t *pcc_evaluate_rule_ruleset(pcc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_lrule(pcc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_name(pcc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_context(pcc_context_t *ctx);
@@ -1909,64 +1873,6 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_boolean(pcc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_letter(pcc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule__(pcc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_EOL(pcc_context_t *ctx);
-
-static pcc_thunk_chunk_t *pcc_evaluate_rule_ruleset(pcc_context_t *ctx) {
-    pcc_thunk_chunk_t *const chunk = pcc_thunk_chunk__create(ctx);
-    chunk->pos = ctx->cur;
-    PCC_DEBUG(ctx->auxil, PCC_DBG_EVALUATE, "ruleset", ctx->level, chunk->pos, (ctx->buffer.buf + chunk->pos), (ctx->buffer.len - chunk->pos));
-    ctx->level++;
-    pcc_value_table__resize(ctx->auxil, &chunk->values, 2);
-    pcc_value_table__clear(ctx->auxil, &chunk->values);
-    {
-        MARK_VAR_AS_USED
-        const size_t p = ctx->cur;
-        MARK_VAR_AS_USED
-        const size_t n = chunk->thunks.len;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ruleset, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_EOL, &chunk->thunks, NULL)) goto L0002;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_lrule, &chunk->thunks, &(chunk->values.buf[1]))) goto L0002;
-        {
-            pcc_thunk_t *const thunk = pcc_thunk__create_leaf(ctx, pcc_action_ruleset_0, 2, 0);
-            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
-            thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
-            thunk->data.leaf.capt0.range.start = chunk->pos;
-            thunk->data.leaf.capt0.range.end = ctx->cur;
-            pcc_char_array__resize(ctx->auxil, &thunk->data.leaf.capt0.string, 0);
-            pcc_thunk_array__add(ctx, &chunk->thunks, thunk);
-        }
-        goto L0001;
-    L0002:;
-        ctx->cur = p;
-        pcc_thunk_array__revert(ctx, &chunk->thunks, n);
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_lrule, &chunk->thunks, &(chunk->values.buf[1]))) goto L0003;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0003;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_EOL, &chunk->thunks, NULL)) goto L0003;
-        {
-            pcc_thunk_t *const thunk = pcc_thunk__create_leaf(ctx, pcc_action_ruleset_1, 2, 0);
-            thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
-            thunk->data.leaf.capt0.range.start = chunk->pos;
-            thunk->data.leaf.capt0.range.end = ctx->cur;
-            pcc_char_array__resize(ctx->auxil, &thunk->data.leaf.capt0.string, 0);
-            pcc_thunk_array__add(ctx, &chunk->thunks, thunk);
-        }
-        goto L0001;
-    L0003:;
-        ctx->cur = p;
-        pcc_thunk_array__revert(ctx, &chunk->thunks, n);
-        goto L0000;
-    L0001:;
-    }
-    ctx->level--;
-    PCC_DEBUG(ctx->auxil, PCC_DBG_MATCH, "ruleset", ctx->level, chunk->pos, (ctx->buffer.buf + chunk->pos), (ctx->cur - chunk->pos));
-    return chunk;
-L0000:;
-    ctx->level--;
-    PCC_DEBUG(ctx->auxil, PCC_DBG_NOMATCH, "ruleset", ctx->level, chunk->pos, (ctx->buffer.buf + chunk->pos), (ctx->cur - chunk->pos));
-    pcc_thunk_chunk__destroy(ctx, chunk);
-    return NULL;
-}
 
 static pcc_thunk_chunk_t *pcc_evaluate_rule_lrule(pcc_context_t *ctx) {
     pcc_thunk_chunk_t *const chunk = pcc_thunk_chunk__create(ctx);
@@ -2060,6 +1966,19 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_lrule(pcc_context_t *ctx) {
     ctx->cur += 2;
     if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
     if (!pcc_apply_rule(ctx, pcc_evaluate_rule_result, &chunk->thunks, &(chunk->values.buf[5]))) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        MARK_VAR_AS_USED
+        const size_t p = ctx->cur;
+        MARK_VAR_AS_USED
+        const size_t n = chunk->thunks.len;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_EOL, &chunk->thunks, NULL)) goto L0009;
+        goto L0010;
+    L0009:;
+        ctx->cur = p;
+        pcc_thunk_array__revert(ctx, &chunk->thunks, n);
+    L0010:;
+    }
     {
         pcc_thunk_t *const thunk = pcc_thunk__create_leaf(ctx, pcc_action_lrule_0, 6, 0);
         thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
@@ -3524,13 +3443,13 @@ L0000:;
     return NULL;
 }
 
-lsys_context_t *lsys_create(void *auxil) {
+lsys_context_t *lsys_create(ParserStr *auxil) {
     return pcc_context__create(auxil);
 }
 
 int lsys_parse(lsys_context_t *ctx, ParseData **ret) {
     if (pcc_refill_buffer(ctx, 1) < 1) return 0;
-    if (pcc_apply_rule(ctx, pcc_evaluate_rule_ruleset, &ctx->thunks, ret))
+    if (pcc_apply_rule(ctx, pcc_evaluate_rule_lrule, &ctx->thunks, ret))
         pcc_do_action(ctx, &ctx->thunks, ret);
     else
         PCC_ERROR(ctx->auxil);
@@ -3543,27 +3462,27 @@ void lsys_destroy(lsys_context_t *ctx) {
     pcc_context__destroy(ctx);
 }
 
-/*
-ParseData * parse_string_to_ruleset(char * in){
+LRuleset * parse_string_to_ruleset(char * in, unsigned int max_rules){
+    if (max_rules <= 0) return NULL;
     ParserStr * aux = mk_parser_str(in);
     ParseData * res;
-    lsys_context_t *ctx = lsys_create(NULL);
+    ParseData * out = malloc(sizeof(ParseData) * max_rules);
+    memset(out, '\0', sizeof(ParseData) * max_rules);
+    lsys_context_t *ctx = lsys_create(aux);
+    int idx = -1;
     while (lsys_parse(ctx, &res)){
-      printf("Parsed %d\n", res->list_length);
-          print_pd(res ,"  ");
+        if (idx < ((int)max_rules) -1){
+            idx++;
+            out[idx] = *res;
+        }
     }
     lsys_destroy(ctx);
-    return res;
-}*/
-
-int main(){
-//    ParserStr * aux = mk_parser_str("1 + 24 * 3 * 4;");
-    ParseData * res;
-    lsys_context_t *ctx = lsys_create(NULL);
-    while (lsys_parse(ctx, &res)){
-      printf("Parsed %d\n", res->list_length);
-          print_pd(res ,"  ");
+    LRuleset * result = malloc(sizeof(LRuleset));
+    result->num_rules = idx+1;
+    result->rules = malloc(sizeof(LRule) * (idx+1));
+    for (unsigned int i = 0; i <= idx; i++){
+        result->rules[i] = *(out[i].lrule_val);
     }
-    lsys_destroy(ctx);
-    return 0;
+    free(out);
+    return result;
 }

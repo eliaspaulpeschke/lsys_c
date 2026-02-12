@@ -128,6 +128,11 @@ typedef struct ParseData{
     };
 } ParseData;
 
+typedef struct LRuleset {
+    unsigned int num_rules;
+    LRule * rules;
+} LRuleset;
+
 void print_LAst( LAstNode * node, char * offset); 
 void print_pd( ParseData * pd, char * offset);
 ParseData * mk_parse_data(ParseDataType type);

@@ -14,12 +14,7 @@
 #define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 }
 
-result <- r:ruleset _ EOF { $$ = r; }
-
-ruleset <- l:ruleset _ r:lrule _ EOL {$$ = pd_node_append(l,r,true); }
-         / r:lrule _ EOL { $$ = r; }
-
-lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:letter_with_binding _ ('>' _ rc:context)? _ (':' _ q:boolterm)? _ '->' _ res:result { $$ = mk_pd_rule(n, lc, p, rc, q, res, true); }
+lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:letter_with_binding _ ('>' _ rc:context)? _ (':' _ q:boolterm)? _ '->' _ res:result _ EOL? { $$ = mk_pd_rule(n, lc, p, rc, q, res, true); }
 
 name <- < [A-Za-z0-9_]+ > { $$ = mk_parse_data(PARSE_DATA_string); $$->string_val = strdup($1); $$->list_length = 1;}
 
@@ -84,27 +79,31 @@ _      <- [ \t]*
 
 EOL    <- '\n' / '\r\n' / '\r' / ';'
 
-EOF    <- 'EOF' / '\0' / '\0x03' / '\0x04'
+EOF    <- 'EOF'.* / '\0' / '\0x03' / '\0x04'
 
 %%
-/*
-ParseData * parse_string_to_ruleset(char * in){
+
+LRuleset * parse_string_to_ruleset(char * in, unsigned int max_rules){
+    if (max_rules <= 0) return NULL;
     ParserStr * aux = mk_parser_str(in);
     ParseData * res;
-    lsys_context_t *ctx = lsys_create(NULL);
+    ParseData * out = malloc(sizeof(ParseData) * max_rules);
+    memset(out, '\0', sizeof(ParseData) * max_rules);
+    lsys_context_t *ctx = lsys_create(aux);
+    int idx = -1;
     while (lsys_parse(ctx, &res)){
-      printf("Parsed %d\n", res->list_length);
-          print_pd(res ,"  ");
+        if (idx < ((int)max_rules) -1){
+            idx++;
+            out[idx] = *res;
+        } 
     }
     lsys_destroy(ctx);
-    return res;
-}*/
-
-int main(){
-    ParserStr * aux = mk_parser_str("F(j)G(k) -> FF \n a1 : F(G) -> U \n PP < F -> G \n EOF");
-    ParseData * res;
-    lsys_context_t *ctx = lsys_create(aux);
-    while (lsys_parse(ctx, &res));
-    lsys_destroy(ctx);
-    return 0;
+    LRuleset * result = malloc(sizeof(LRuleset));
+    result->num_rules = idx+1;
+    result->rules = malloc(sizeof(LRule) * (idx+1));
+    for (unsigned int i = 0; i <= idx; i++){
+        result->rules[i] = *(out[i].lrule_val);
+    }
+    free(out);
+    return result;
 }

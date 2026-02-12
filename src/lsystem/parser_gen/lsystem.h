@@ -4,6 +4,7 @@
 #define PCC_INCLUDED_LSYSTEM_H
 
 #include "lsystem2.h"
+#include "lsys_parse_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,7 +12,7 @@ extern "C" {
 
 typedef struct lsys_context_tag lsys_context_t;
 
-lsys_context_t *lsys_create(void *auxil);
+lsys_context_t *lsys_create(ParserStr *auxil);
 int lsys_parse(lsys_context_t *ctx, ParseData **ret);
 void lsys_destroy(lsys_context_t *ctx);
 

@@ -210,16 +210,10 @@ void node_add_child(LAstNode * node, LAstNode * child){
 }
 
 int parser_str_getch(ParserStr * str){
-    printf("getch called");
     if (str->pos < str->len){
-        printf("getch");
         int val = str->str[str->pos];
         str->pos += 1;
         return val;
-    } else if (str->pos == str->len){
-        printf("null");
-        return '\0';
-        str->pos += 1;
     }
     return -1;
 }
