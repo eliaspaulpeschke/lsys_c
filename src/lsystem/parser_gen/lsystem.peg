@@ -1,39 +1,42 @@
 %prefix "lsys"
 
-#auxil "ParserStr *"
+%auxil "ParserStr *"
 %value "ParseData *"
 
 %header {
     #include "lsystem2.h"
+    #include "lsys_parse_util.h"
 }
 
 %source {
 #include <stdio.h>
 #include <string.h>
-#include "lsys_parse_util.h"
-//define PCC_GETCHAR(auxil) parser_str_getch(auxil)
+#define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 }
 
-#lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:premise _ ('>' _ rc:context)? _ (':' _ q:boolterm) _ '->' _ res:result _ EOL
-#name <- < [A-Za-z0-9_]+ > { $$ = create_parse_data(PARSE_DATA_string); $$->string_val = strdup($1);}
-#context <- c:letter_with_binding+
-#premise <- letter_with_binding
-#letter_with_binding <- < [A-Za-z0-9] > ('(' _ b:bindinglist _ ')')?
-#bindinglist <- bl:bindinglist ',' b:binding? 
-#             / binding
-#binding <- [a-z]
-#
-#
+result <- r:ruleset _ EOF { $$ = r; }
 
-res <- r:result _ EOL { $$ = r; }
+ruleset <- l:ruleset _ r:lrule _ EOL {$$ = pd_node_append(l,r,true); }
+         / r:lrule _ EOL { $$ = r; }
+
+lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:letter_with_binding _ ('>' _ rc:context)? _ (':' _ q:boolterm)? _ '->' _ res:result { $$ = mk_pd_rule(n, lc, p, rc, q, res, true); }
+
+name <- < [A-Za-z0-9_]+ > { $$ = mk_parse_data(PARSE_DATA_string); $$->string_val = strdup($1); $$->list_length = 1;}
+
+context <- l:context _ r:letter_with_binding {$$ = pd_node_append(l,r,true); }
+         / l:letter_with_binding { $$ = l; }
+
+letter_with_binding <- < [A-Za-z0-9] > ('(' _ b:bindinglist _ ')')? { $$ = mk_pd_ruleword( *$1, b, true ); }
+
+bindinglist <- bl:bindinglist _ ',' _ b:binding? {$$ = pd_node_append(bl,b,true);}
+             / b:binding { $$ = b; }
+
+binding <- l:letter { $$ = l; }
+
 result <- l:result _ r:letter_with_term  { $$ = pd_node_append(l,r,true); }
         / l:letter_with_term { $$ = l; }
 
-letter_with_term <- < [A-Za-z] > ('(' _ t:termlist _ ')')? { $$ = mk_pd_resultword( *$1, t ); }
-
-#expr <- t:termlist _ EOL { $$ = t; }
-#      / b:boolterm _ EOL { $$ = b; }
-#      / ( !EOL* ) EOL { $$ = mk_node_empty(); }
+letter_with_term <- < [A-Za-z] > ('(' _ t:termlist _ ')')? { $$ = mk_pd_resultword( *$1, t, true); }
 
 termlist <- l:termlist _ ',' _ r:term { $$ = pd_node_append(l, r, true); }  
          / t:term { $$ = t; }
@@ -81,17 +84,27 @@ _      <- [ \t]*
 
 EOL    <- '\n' / '\r\n' / '\r' / ';'
 
-%%
+EOF    <- 'EOF' / '\0' / '\0x03' / '\0x04'
 
-int main(){
-//    ParserStr * aux = mk_parser_str("1 + 24 * 3 * 4;");
+%%
+/*
+ParseData * parse_string_to_ruleset(char * in){
+    ParserStr * aux = mk_parser_str(in);
     ParseData * res;
     lsys_context_t *ctx = lsys_create(NULL);
     while (lsys_parse(ctx, &res)){
-//      for(int i = 0; i < res->list_length; i++){
-  //        print_LAst(res->lastnode_val + i, "  ");
-    //  }
+      printf("Parsed %d\n", res->list_length);
+          print_pd(res ,"  ");
     }
+    lsys_destroy(ctx);
+    return res;
+}*/
+
+int main(){
+    ParserStr * aux = mk_parser_str("F(j)G(k) -> FF \n a1 : F(G) -> U \n PP < F -> G \n EOF");
+    ParseData * res;
+    lsys_context_t *ctx = lsys_create(aux);
+    while (lsys_parse(ctx, &res));
     lsys_destroy(ctx);
     return 0;
 }

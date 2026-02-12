@@ -43,5 +43,9 @@ ParseData * mk_node_or(ParseData * l, ParseData * r, bool free_child_data);
 ParseData * mk_node_empty();
 
 ParseData * pd_node_append(ParseData * x, ParseData * y, bool free_old_data);
-ParseData * mk_pd_resultword(char letter, ParseData * ast);
+ParseData * mk_pd_resultword(char letter, ParseData * ast, bool free_old);
+ParseData * mk_pd_ruleword(char letter, ParseData * ast, bool free_old);
+
+ParseData * mk_pd_rule(ParseData * name, ParseData * lc, ParseData * prem, ParseData * rc, ParseData * qualif, ParseData * result, bool free_old);
+
 #endif

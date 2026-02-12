@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define CONTEXT_SIZE 3
-
 typedef struct {
     char * str;
     unsigned int len;
@@ -99,8 +97,9 @@ typedef struct LRule {
     char * name;
     LRuleWord premise;
     unsigned int l_context_size;
-    LRuleWord l_context[CONTEXT_SIZE];
-    LRuleWord r_context[CONTEXT_SIZE];
+    unsigned int r_context_size;
+    LRuleWord * l_context;
+    LRuleWord * r_context;
     LAstNode * qualifier;
     unsigned int num_result_words;
     LResultWord * result;
@@ -130,6 +129,7 @@ typedef struct ParseData{
 } ParseData;
 
 void print_LAst( LAstNode * node, char * offset); 
+void print_pd( ParseData * pd, char * offset);
 ParseData * mk_parse_data(ParseDataType type);
 bool is_parse_data_empty(ParseData * pd);
 LAstNode * mk_node(LPayload payload);

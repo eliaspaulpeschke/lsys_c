@@ -1,4 +1,5 @@
 #include "lsystem2.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lsys_parse_util.h"
@@ -269,9 +270,10 @@ ParseData * pd_node_append(ParseData * x, ParseData * y, bool free_old_data){
     return pd;
 }
 
-ParseData * mk_pd_resultword(char letter, ParseData * ast){
+ParseData * mk_pd_resultword(char letter, ParseData * ast, bool free_old){
     ParseData * pd = mk_parse_data(PARSE_DATA_LResultWord);
     LResultWord * lrw = malloc(sizeof(LResultWord));
+    pd->list_length = 1;
     lrw->name = letter;
     if ((ast == NULL) || (ast->type != PARSE_DATA_LAstNode)){
         lrw->num_calculations = 0;
@@ -280,6 +282,80 @@ ParseData * mk_pd_resultword(char letter, ParseData * ast){
         lrw->num_calculations = ast->list_length;
         lrw->calculations = ast->lastnode_val;
     }
+    if (free_old){
+        free(ast);
+    }
     pd->lresultword_val = lrw;
     return pd;
 }
+
+ParseData * mk_pd_ruleword(char letter, ParseData * ast, bool free_old){
+    ParseData * pd = mk_parse_data(PARSE_DATA_LRuleWord);
+    LRuleWord * lrw = malloc(sizeof(LRuleWord));
+    pd->list_length = 1;
+    lrw->name = letter;
+     if ((ast == NULL) || (ast->type != PARSE_DATA_LAstNode)){
+        lrw->num_bindings = 0;
+        lrw->bindings = NULL;
+    } else {
+        lrw->bindings = malloc(ast->list_length + 1);
+        for (int i = 0; i < ast->list_length; i++){
+            LPayload pl = (ast->lastnode_val + i)->payload;
+            lrw->bindings[i] = pl.letter_val;
+        }
+        lrw->bindings[ast->list_length] = '\0';
+        lrw->num_bindings = ast->list_length;
+    }
+    if (free_old){
+        free(ast);
+    }
+    pd->lruleword_val = lrw;
+    return pd;
+}
+
+ParseData * mk_pd_rule(ParseData * name, ParseData * lc, ParseData * prem, ParseData * rc, ParseData * qualif, ParseData * result, bool free_old){
+    ParseData * pd = mk_parse_data(PARSE_DATA_LRule);
+    pd->list_length = 1;
+    pd->lrule_val = malloc(sizeof(LRule));
+    LRule * r = pd->lrule_val;
+    r->name = NULL;
+    if (!is_parse_data_empty(name)) r->name = name->string_val;
+    r->l_context_size = 0;
+    r->l_context = NULL;
+    if (!is_parse_data_empty(lc)){
+        r->l_context_size = lc->list_length;
+        r->l_context = lc->lruleword_val;
+    }
+    r->r_context_size = 0;
+    r->r_context = NULL;
+    if (!is_parse_data_empty(rc)){
+        r->r_context_size = rc->list_length;
+        r->r_context = rc->lruleword_val;
+    }
+    if (is_parse_data_empty(prem)) {
+        printf("ERROR, have no premise");
+        return NULL;
+    }
+    r->premise = *prem->lruleword_val;
+    r->qualifier = NULL;
+    if (!is_parse_data_empty(qualif)){
+        r->qualifier = qualif->lastnode_val;
+    }
+    if (is_parse_data_empty(result)) {
+        printf("ERROR, have no result");
+        return NULL;
+    }
+    r->result = result->lresultword_val;
+    r->num_result_words = result->list_length;
+
+    if(free_old){
+        free(result);
+        free(prem);
+        if (rc != NULL) free(rc);
+        if (lc != NULL) free(lc);
+        if (qualif != NULL) free(qualif);
+        if (name != NULL) free(name);
+    }
+    return pd;
+}
+
