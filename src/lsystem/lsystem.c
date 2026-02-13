@@ -272,8 +272,6 @@ typedef struct {
 } BindingValueList;
 
 bool check_letterwise_apply(LRule rule, LString * input, unsigned int idx){
-    if (rule.l_context_size < idx) return false;
-    if (idx + rule.r_context_size >= input->length) return false;
     LRuleWord p = rule.premise;
     LWord w = input->content[idx];
     if (p.name != w.name) return false;
@@ -313,8 +311,13 @@ BindingValueList evaluate_words_bindings(BindingValueList b, LRuleWord rw, LWord
 BindingValueList evaluate_bindings(LRule rule, LString * input, unsigned int idx){
     BindingValueList b = { {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
                          , {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} };
-    if (rule.l_context_size < idx) return b;
+    LRuleWord p = rule.premise;
+    LWord w = input->content[idx];
+    b = evaluate_words_bindings(b, p, w);
+
+    if (rule.l_context_size > idx) return b;
     if (idx + rule.r_context_size >= input->length) return b;
+
     for (unsigned int i = 0; i < rule.l_context_size; i++){
         LRuleWord lc = rule.l_context[i];
         unsigned int word_idx = idx - (rule.l_context_size - i);
@@ -327,9 +330,6 @@ BindingValueList evaluate_bindings(LRule rule, LString * input, unsigned int idx
         LWord w = input->content[word_idx]; 
         b = evaluate_words_bindings(b, rc, w);
     }
-    LRuleWord p = rule.premise;
-    LWord w = input->content[idx];
-    b = evaluate_words_bindings(b, p, w);
     return b;
 }
 
@@ -401,6 +401,7 @@ EvaluationResult evaluate_ast(BindingValueList bindings, LAstNode node){
             if (tmp1.type != EVALUATION_RESULT_DBL) return empty;
             tmp2 = evaluate_ast(bindings, *node.child[1]);
             if (tmp2.type != EVALUATION_RESULT_DBL) return empty;
+            bool_res = node.payload.binary_op_dbl_bool_val(tmp1.dbl_val, tmp2.dbl_val);
             return (EvaluationResult){.type=EVALUATION_RESULT_BOOL,.bool_val = bool_res};
         case LPAYLOAD_binary_op_bool_bool:
             if (node.child_count < 2) return empty;
@@ -415,8 +416,11 @@ EvaluationResult evaluate_ast(BindingValueList bindings, LAstNode node){
 
 bool does_rule_apply(LRule rule, LString * input, unsigned int idx){
     if (rule.l_context_size > idx) return false;
+    if (idx + rule.r_context_size >= input->length) return false;
+
     LWord word = input->content[idx];
     if (word.name != rule.premise.name) return false;
+
     if (!check_letterwise_apply(rule, input, idx)) return false;
     if (rule.qualifier == NULL) return true;
     BindingValueList bindings = evaluate_bindings(rule, input, idx);
@@ -447,7 +451,7 @@ void append_result(LString * output, LRule rule, LString * input, unsigned int i
 
 LString * apply_rules(LRuleset rules, LString * input){
     LString * output = malloc(sizeof(LString));
-    output->capacity = input->capacity << 2;
+    output->capacity = input->length << 2;
     output->length = 0;
     output->content = malloc(sizeof(LWord) * output->capacity);
     memset(output->content, 0, output->capacity);
@@ -480,4 +484,91 @@ LString * apply_rules(LRuleset rules, LString * input){
     return output;
 }
 
+LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n){
+    LString * out = NULL;
+/*    LString * tmp = malloc(sizeof(LString));
+    memcpy(tmp, input, sizeof(LString));
+    tmp->content = malloc(sizeof(LWord) * tmp->capacity);
+    memcpy(tmp->content, input->content, sizeof(LWord) * tmp->capacity);
+*/
+    out = apply_rules(rules, input);
 
+    for (int i = 1; i < n; i++){
+        out = apply_rules(rules, out);
+    }
+    return out;
+}
+
+typedef enum {
+     PARSE_STATE_INIT
+   , PARSE_STATE_VALUES
+}LSTRING_PARSE_STATE;
+
+void realloc_if_needed(LString * str){
+    if (str->length >= str->capacity -1){
+        unsigned int new = str->capacity << 1;
+        LWord * temp = realloc(str->content, new);
+        if (!temp) return;
+        str->content = temp;
+        memset(str->content + str->length, 0, new - str->length);
+        str->capacity = new;
+    }
+}
+
+void add_value(LWord * word, double val){
+    if (word->num_values == 0){
+        word->values = malloc(sizeof(double));
+        word->values[0] = val;
+        word->num_values = 1;
+    }else{
+        double * temp = realloc(word->values, sizeof(double) * (word->num_values + 1));
+        if(temp == NULL) return;
+        temp[word->num_values] = val;
+        word->num_values++;
+        word->values = temp;
+    }
+}
+
+LString parse_lstring(char*input){
+    char * pos = input;
+    char buffer[64]; 
+    memset(buffer, 0, 64);
+    unsigned int bufferpos = 0;
+    LSTRING_PARSE_STATE state = PARSE_STATE_INIT;
+    LString out = (LString){.capacity = 64, .length = 0, .content = malloc(sizeof(LWord)*64)};
+    while(*pos != '\0'){
+        switch (state) {
+            case PARSE_STATE_INIT:
+                if(*pos == '('){
+                    state = PARSE_STATE_VALUES;
+                }else{
+                    realloc_if_needed(&out);
+                    out.content[out.length] = (LWord){.name = *pos
+                                , .num_values = 0, .values = NULL};
+                    out.length++;
+                }
+                break;
+            case PARSE_STATE_VALUES:
+                if(*pos == ')'){
+                    add_value(&out.content[out.length-1], strtod(buffer,NULL));
+                    memset(buffer, 0, 64);
+                    state = PARSE_STATE_INIT;
+                    bufferpos = 0;
+                } else if(*pos == ','){
+                    add_value(&out.content[out.length-1], strtod(buffer,NULL));
+                    memset(buffer, 0, 64);
+                    bufferpos = 0;
+                }else{
+                    if (bufferpos < 64){
+                        buffer[bufferpos] = *pos;
+                        bufferpos+=1;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        pos++;
+    }
+    return out;
+}
