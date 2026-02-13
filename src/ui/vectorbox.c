@@ -5,6 +5,18 @@
 #include "../clay/clay.h"
 #include "common.h"
 
+Vector1_box mk_vector1box(){
+    Inputbox x = mk_inputbox(32);
+    if (x.error == true) return ERR_VECTOR_1_BOX;
+    Vector1_box vb = (Vector1_box) {
+          .error = false
+        , .x = x 
+        , .value = 0.0f
+    };
+    set_inputbox_text(vb.x, "0.0");
+    return vb;
+}
+
 Vector2_box mk_vector2box(){
     Inputbox x = mk_inputbox(32);
     if (x.error == true) return ERR_VECTOR_2_BOX;
@@ -88,7 +100,9 @@ Vector4_box mk_vector4box(){
     return vb;
 }
 
-
+void free_vector1box(Vector1_box vb){
+    free_inputbox(vb.x);
+}
 void free_vector2box(Vector2_box vb){
     free_inputbox(vb.x);
     free_inputbox(vb.y);
@@ -111,38 +125,44 @@ Clay_ElementDeclaration vector_box_conf = (Clay_ElementDeclaration){
             .layout = { .sizing = { .width = CLAY_SIZING_GROW(0)
                                   , .height = CLAY_SIZING_GROW(0) }
                       , .layoutDirection = CLAY_TOP_TO_BOTTOM
-                      , .childGap = 8 
+                      , .childGap = 4
+                      , .padding = { 8, 8, 8, 8 }
                       , .childAlignment = { .x = CLAY_ALIGN_X_LEFT
                                           , .y = CLAY_ALIGN_Y_CENTER}
                       }
     };
 
 
-
+void layout_vector1box(Vector1_box vb, Font * fonts, char * label){
+    CLAY_AUTO_ID( vector_box_conf ) {
+        add_label(label);
+        layout_inputbox(vb.x, fonts, false,false, "x: ");
+    };
+}
 void layout_vector2box(Vector2_box vb, Font * fonts, char * label){
     CLAY_AUTO_ID( vector_box_conf ) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false, "x: ");
-        layout_inputbox(vb.y, fonts, false, "y: ");
+        layout_inputbox(vb.x, fonts, false,false, "x: ");
+        layout_inputbox(vb.y, fonts, false,false, "y: ");
     };
 }
 
 void layout_vector3box(Vector3_box vb, Font * fonts, char * label){
     CLAY_AUTO_ID( vector_box_conf ) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false, "x: ");
-        layout_inputbox(vb.y, fonts, false, "y: ");
-        layout_inputbox(vb.z, fonts, false, "z: ");
+        layout_inputbox(vb.x, fonts, false,false, "x: ");
+        layout_inputbox(vb.y, fonts, false,false, "y: ");
+        layout_inputbox(vb.z, fonts, false,false, "z: ");
     };
 }
 
-void layout_vector4box(Vector4_box vb, Font * fonts, char * label){
+void layout_vector4box(Vector4_box vb, Font * fonts, bool col, char * label){
     CLAY_AUTO_ID(vector_box_conf) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false, "x: ");
-        layout_inputbox(vb.y, fonts, false, "y: ");
-        layout_inputbox(vb.z, fonts, false, "z: ");
-        layout_inputbox(vb.w, fonts, false, "u: ");
+        layout_inputbox(vb.x, fonts, false,false, col ? "r: " : "x: ");
+        layout_inputbox(vb.y, fonts, false,false,col ? "g: " :  "y: ");
+        layout_inputbox(vb.z, fonts, false,false,col ? "b: " :  "z: ");
+        layout_inputbox(vb.w, fonts, false,false,col ? "a: " :  "u: ");
     };
 }
 
@@ -156,6 +176,11 @@ bool update_vector_component(Inputbox * ipb, float * comp){
   }
   return res;
 }
+bool update_vector1box(Vector1_box *vb){
+    if (update_vector_component(&(vb->x), &(vb->value))) return true;
+    return false;
+}
+
 
 bool update_vector2box(Vector2_box *vb){
     if (update_vector_component(&(vb->x), &(vb->value.x))) return true;

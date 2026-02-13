@@ -144,7 +144,6 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
         tb->bufA[tb->posA] = chr;
         tb->posA += 1;
         tb->changed = true;
-        TraceLog(LOG_DEBUG,"charring %d", tb->posA); 
     } else if (key != KEY_NULL) {
         TraceLog(LOG_DEBUG,"keying"); 
         int len_til_newline;
@@ -252,13 +251,13 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
             case KEY_C:
                 if (ctrl) {
                     textbox_copy(tb);
-                    return true;
+                    tb->changed = true;
                 }
                 break;
             case KEY_V:
                 if (ctrl) {
                     textbox_paste(tb);
-                    return true;
+                    tb->changed = true;
                 }
                 break;
             default:
@@ -266,12 +265,14 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
                 return false;
             }
         }
+    textbox_update_text(tb);
     return true;
 }
 
 void layout_textbox(Textbox tb, Font * font){
   Clay_String str = (Clay_String){.isStaticallyAllocated = false, .length = tb.lenText - 1, .chars = tb.text};
   Vector2 cursorPos = get_cursor_offset(tb.bufA, strlen(tb.bufA), font, 16,0, 1.0);
+
   CLAY(CLAY_IDI("textbox", tb.clay_id_num), { .layout = { .layoutDirection = CLAY_LEFT_TO_RIGHT
                                                          , .padding = CLAY_PADDING_ALL(8) 
                                                          , .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)} }
@@ -284,9 +285,9 @@ void layout_textbox(Textbox tb, Font * font){
               CLAY_AUTO_ID({.floating = { .offset = (Clay_Vector2){cursorPos.x + 8 + scr.x, cursorPos.y + scr.y}
                                     , .attachTo = CLAY_ATTACH_TO_PARENT
                                     , .expand = { .width=1, .height=8 }
-                                    , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT }
+                                    , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT
+                                    , .zIndex = 1}
                         , .backgroundColor = COL_ACCENT});
-
               CLAY_TEXT( str , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
           };
   }

@@ -16,17 +16,17 @@ void setup_connection_drawdata(){
 
 Clay_String module_type_name(MODULE_DATA_TYPE type){
     switch (type) {
-        case MODULE_INPUT_TYPE_string: 
+        case MODULE_DATA_TYPE_string: 
             return CLAY_STRING("str");
-        case MODULE_INPUT_TYPE_ruleset:
+        case MODULE_DATA_TYPE_ruleset:
             return CLAY_STRING("rul");
-        case MODULE_INPUT_TYPE_floating:
+        case MODULE_DATA_TYPE_floating:
             return CLAY_STRING("flo");
-        case MODULE_INPUT_TYPE_axiom:
+        case MODULE_DATA_TYPE_axiom:
             return CLAY_STRING("axi");
-        case MODULE_INPUT_TYPE_integer:
+        case MODULE_DATA_TYPE_integer:
             return CLAY_STRING("int");
-        case MODULE_INPUT_TYPE_turtle:
+        case MODULE_DATA_TYPE_turtle:
             return CLAY_STRING("tur");
         default:
             return CLAY_STRING("nul");

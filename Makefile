@@ -18,9 +18,9 @@ mkdirs =  @if [ ! -d $(objs) ]; then mkdir -p $(objs); fi;
 all_objects = $(objs)/main.o $(objs)/ui.o $(objs)/textbox.o \
 	 $(objs)/module.o $(objs)/inputbox.o $(objs)/custom.o \
 	 $(objs)/util.o $(objs)/turtle.o $(objs)/lsystem.o $(objs)/lsystem_parser.o \
-	 $(objs)/clay_renderer_raylib.o $(objs)/fonts.o $(ui)/move_container.o \
+	 $(objs)/clay_renderer_raylib.o $(objs)/fonts.o $(objs)/move_container.o \
 	 $(objs)/vectorbox.o $(objs)/turtlebox.o \
-	 $(objs)/lsys_parse_util.o
+	 $(objs)/lsys_parse_util.o $(objs)/turtle_move_box.o
 
 
 aristid: $(all_objects)
@@ -64,11 +64,16 @@ $(objs)/module.o: $(ui)/module.c $(ui)/module.h \
 	$(mkdirs)
 	$(CC) $(CFLAGS)  -c $(ui)/module.c -o $(objs)/module.o
 
+$(objs)/turtle_move_box.o: $(elems)/turtle_move_box.c $(elems)/turtle_move_box.h $(ui)/turtlebox.h \
+	    $(ui)/vectorbox.h $(ui)/inputbox.h \
+	    $(ui)/common.h $(clay)/clay.h
+	$(CC) $(CFLAGS)  -c $(elems)/turtle_move_box.c -o $(objs)/turtle_move_box.o
+
 $(objs)/turtlebox.o: $(ui)/turtlebox.c $(ui)/turtlebox.h \
 	    $(ui)/vectorbox.h $(ui)/inputbox.h \
 	    $(ui)/common.h $(clay)/clay.h
 	$(mkdirs)
-	$(CC) $(CFLAGS)  -c $(elems)/turtlebox.c -o $(objs)/turtlebox.o
+	$(CC) $(CFLAGS)  -c $(ui)/turtlebox.c -o $(objs)/turtlebox.o
 
 $(objs)/vectorbox.o: $(ui)/vectorbox.c $(ui)/vectorbox.h \
 	    $(ui)/inputbox.h \

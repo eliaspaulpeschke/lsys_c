@@ -12,8 +12,8 @@ typedef struct {
     Turtle turtle;
     Vector2_box pos;
     Vector2_box heading;
-    Inputbox length;
-    Inputbox turn_rads;
+    Vector1_box length;
+    Vector1_box turn_rads;
     Vector4_box color;
 } Turtlebox;
 

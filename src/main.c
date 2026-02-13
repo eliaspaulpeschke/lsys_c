@@ -27,9 +27,7 @@ int main(void)
     int len = 0;
     while (!WindowShouldClose())    
     {
-        
-        Clay_RenderCommandArray layout = mk_layout(clay_context);
-        if (!update_ui(&clay_context)) {
+         if (!update_ui(&clay_context)) {
             if (IsKeyDown(KEY_RIGHT)) {
                  camera.target.x += 3.0f;
             }else if (IsKeyDown(KEY_LEFT)) {
@@ -44,6 +42,8 @@ int main(void)
                 camera.zoom -= 0.2f;
             }
         }
+
+        Clay_RenderCommandArray layout = mk_layout(clay_context);
         BeginDrawing();
         ClearBackground(BLACK);
         Clay_Raylib_Render(layout, clay_context.fonts, NULL);

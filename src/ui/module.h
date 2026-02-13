@@ -20,12 +20,12 @@ typedef struct {
 } Connection_drawdata; 
 
 typedef enum {
-    MODULE_INPUT_TYPE_turtle
-  , MODULE_INPUT_TYPE_ruleset
-  , MODULE_INPUT_TYPE_axiom
-  , MODULE_INPUT_TYPE_integer
-  , MODULE_INPUT_TYPE_floating
-  , MODULE_INPUT_TYPE_string
+    MODULE_DATA_TYPE_turtle
+  , MODULE_DATA_TYPE_ruleset
+  , MODULE_DATA_TYPE_axiom
+  , MODULE_DATA_TYPE_integer
+  , MODULE_DATA_TYPE_floating
+  , MODULE_DATA_TYPE_string
 } MODULE_DATA_TYPE;
 
 struct Module_input {
@@ -38,7 +38,7 @@ struct Module_output {
     union {
       Turtle turtle;
       LRuleset ruleset;
-      char * axiom;
+      LString axiom;
       int integer;
       float floating;
       char * string;

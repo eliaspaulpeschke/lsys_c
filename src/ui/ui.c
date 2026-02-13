@@ -1,5 +1,5 @@
 #include "custom.h"
-#include "turtlebox.h"
+#include "elements/turtle_move_box.h"
 #include "module.h"
 #include "raylib.h"
 #include "common.h"
@@ -94,7 +94,7 @@ bool update_ui(clay_ctx * ctx){
                 if (update_textbox(&(ctx->ced[i]->textbox), false)) return true;
                 break;
             case CUSTOM_ELEM_T_turtle_box:
-                if (update_turtlebox(&(ctx->ced[i]->turtlebox))) return true;
+                if (update_turtle_move_box(&(ctx->ced[i]->turtlebox))) return true;
                 break; 
             default:
                 break;
@@ -173,7 +173,7 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                     layout_textbox(ctx.ced[i]->textbox, &ctx.fonts[0]);
                     break;
                 case CUSTOM_ELEM_T_turtle_box:
-                    layout_turtlebox(ctx.ced[i]->turtlebox, ctx.fonts, "Turtle Box");
+                    layout_turtle_move_box(ctx.ced[i]->turtlebox, ctx.fonts);
                     break;
                 default:
                     break;

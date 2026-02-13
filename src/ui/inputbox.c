@@ -2,6 +2,7 @@
 #include <string.h>
 #include "../clay/clay.h"
 #include "common.h"
+#include "raylib.h"
 #include "inputbox.h"
 
 Inputbox mk_inputbox(unsigned int max_len /*default 64*/){
@@ -78,7 +79,7 @@ bool update_inputbox(Inputbox * ipb){
     return false;
 }
 
-void layout_inputbox(Inputbox ipb, Font * font, bool focus, char 
+void layout_inputbox(Inputbox ipb, Font * font, bool focus, bool padd, char 
         * label){
     Clay_String text = (Clay_String){ .isStaticallyAllocated = false, .length = strlen(ipb.text), .chars = ipb.text};
     Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {2,2,2,2,0}, .color = COL_ACCENT};
@@ -87,7 +88,8 @@ void layout_inputbox(Inputbox ipb, Font * font, bool focus, char
     CLAY(CLAY_IDI("inputbox_wrapper", ipb.clay_id_num)
         , { .layout = { .sizing = {CLAY_SIZING_FIT(0), CLAY_SIZING_FIT(0)}
                       , .layoutDirection = CLAY_LEFT_TO_RIGHT
-                      , .childGap = 8 }
+                      , .childGap = 8
+                      , .padding = padd ? CLAY_PADDING_ALL(8) : CLAY_PADDING_ALL(0)}
           , .backgroundColor = COL_LIGHT
         }){
             bool ipb_hovered = Clay_Hovered();
@@ -103,11 +105,13 @@ void layout_inputbox(Inputbox ipb, Font * font, bool focus, char
                   , .clip = {.horizontal=true, .vertical=true, .childOffset=Clay_GetScrollOffset() }}){
 
                 Clay_Vector2 scr = Clay_GetScrollOffset();
+
                 CLAY_AUTO_ID({.floating = { .offset = (Clay_Vector2){cursorPos.x + 4 + scr.x, cursorPos.y - 2+ scr.y}
                                             , .attachTo = CLAY_ATTACH_TO_PARENT
                                             , .expand = { .width=1, .height=8 }
-                                            , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT }
-                              , .backgroundColor = ipb_hovered ? COL_DARK: COL_TRANSPARENT }){};
+                                            , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT
+                                            , .zIndex = 1000}
+                              , .backgroundColor = ipb_hovered || focus ? COL_DARK : COL_TRANSPARENT}){};
 
                 CLAY_TEXT(text, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
             };

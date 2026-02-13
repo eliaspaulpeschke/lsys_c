@@ -1,5 +1,6 @@
 #ifndef CUSTOM_H
 #define CUSTOM_H
+#include "elements/turtle_move_box.h"
 #include "textbox.h"
 #include "turtlebox.h"
 
@@ -15,7 +16,7 @@ typedef struct {
     CustomElementType type;
     union {
         Textbox textbox;
-        Turtlebox turtlebox;
+        TurtleMoveBox turtlebox;
     };
 } CustomElementData;
 
