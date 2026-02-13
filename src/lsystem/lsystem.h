@@ -154,7 +154,5 @@ int parser_str_getch(ParserStr * str);
 ParserStr * mk_parser_str(char * str);
 
 LString * apply_rules(LRuleset rules, LString * input);
-
-
 #endif
 

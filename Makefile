@@ -11,16 +11,29 @@ elems = $(ui)/elements
 build = ./build
 objs = $(build)/objects
 
+test = ./test
+
 mkdirs =  @if [ ! -d $(objs) ]; then mkdir -p $(objs); fi;
 
-aristid: $(objs)/main.o $(objs)/ui.o $(objs)/textbox.o \
+all_objects = $(objs)/main.o $(objs)/ui.o $(objs)/textbox.o \
 	 $(objs)/module.o $(objs)/inputbox.o $(objs)/custom.o \
 	 $(objs)/util.o $(objs)/turtle.o $(objs)/lsystem.o $(objs)/lsystem_parser.o \
 	 $(objs)/clay_renderer_raylib.o $(objs)/fonts.o $(ui)/move_container.o \
 	 $(objs)/vectorbox.o $(objs)/turtlebox.o \
 	 $(objs)/lsys_parse_util.o
+
+
+aristid: $(all_objects)
 	$(mkdirs)
-	$(CC) -lm -lraylib $(LDFLAGS) $^ -o $(build)/aristid
+	$(CC) -lm -lraylib $(LDFLAGS) $(all_objects) -o $(build)/aristid
+
+test: $(objs)/test_lsystem.o $(objs)/lsystem.o $(objs)/lsystem_parser.o $(objs)/lsys_parse_util.o
+	$(mkdirs)
+	$(CC) -lm -lraylib -g -O0 $(LDFLAGS) $^ -o $(build)/test
+
+$(objs)/test_lsystem.o: $(test)/test_lsystem.c $(lsys)/lsystem.h $(parser)/lsystem_parser.h
+	$(mkdirs)
+	$(CC) $(CFLAGS) -c $(test)/test_lsystem.c -o $(objs)/test_lsystem.o
 
 $(objs)/main.o: $(src)/main.c $(turtle)/turtle.h \
 	$(ui)/ui.h $(ui)/custom.h \

@@ -6,6 +6,8 @@
 #include "../lsystem.h"
 #include "lsys_parse_util.h"
 
+LRuleset * parse_string_to_ruleset(char * in, unsigned int max_rules);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

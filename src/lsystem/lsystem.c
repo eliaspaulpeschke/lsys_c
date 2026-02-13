@@ -360,24 +360,27 @@ EvaluationResult evaluate_ast(BindingValueList bindings, LAstNode node){
         case LPAYLOAD_empty:
             return empty;
         case LPAYLOAD_dbl:
-            return (EvaluationResult){EVALUATION_RESULT_DBL, node.payload.dbl_val};
+            return (EvaluationResult){.type = EVALUATION_RESULT_DBL
+                                     ,.dbl_val = node.payload.dbl_val};
         case LPAYLOAD_string:
-            return (EvaluationResult){EVALUATION_RESULT_STRING, node.payload.string_val};
+            return (EvaluationResult){ .type = EVALUATION_RESULT_STRING
+                                     , .string_val = node.payload.string_val};
         case LPAYLOAD_letter: 
             b_idx = char2idx(node.payload.letter_val);
             if (bindings.is_set[b_idx]){
-                return (EvaluationResult){EVALUATION_RESULT_DBL, bindings.value[b_idx]};
+                return (EvaluationResult){ .type = EVALUATION_RESULT_DBL
+                                   , .dbl_val = bindings.value[b_idx]};
             } else {
                 return (EvaluationResult){EVALUATION_RESULT_EMPTY};
             }
         case LPAYLOAD_bool:
-            return (EvaluationResult){EVALUATION_RESULT_BOOL, node.payload.bool_val};
+            return (EvaluationResult){.type = EVALUATION_RESULT_BOOL, .bool_val = node.payload.bool_val};
         case LPAYLOAD_unary_op_dbl:
             if (node.child_count < 1) return empty;
             tmp1 = evaluate_ast(bindings, *node.child[0]);
             if (tmp1.type != EVALUATION_RESULT_DBL) return empty;
             dbl_res = node.payload.unary_op_dbl_val(tmp1.dbl_val);
-            return (EvaluationResult){EVALUATION_RESULT_DBL, dbl_res};
+            return (EvaluationResult){ .type = EVALUATION_RESULT_DBL, .dbl_val = dbl_res};
         case LPAYLOAD_binary_op_dbl:
             if (node.child_count < 2) return empty;
             tmp1 = evaluate_ast(bindings, *node.child[0]);
@@ -385,20 +388,20 @@ EvaluationResult evaluate_ast(BindingValueList bindings, LAstNode node){
             tmp2 = evaluate_ast(bindings, *node.child[1]);
             if (tmp2.type != EVALUATION_RESULT_DBL) return empty;
             dbl_res = node.payload.binary_op_dbl_val(tmp1.dbl_val, tmp2.dbl_val);
-            return (EvaluationResult){EVALUATION_RESULT_DBL, dbl_res};
+            return (EvaluationResult){.type = EVALUATION_RESULT_DBL, .dbl_val = dbl_res};
         case LPAYLOAD_unary_op_bool:
             if (node.child_count < 1) return empty;
             tmp1 = evaluate_ast(bindings, *node.child[0]);
             if (tmp1.type != EVALUATION_RESULT_BOOL) return empty;
             bool_res = node.payload.unary_op_bool_val(tmp1.bool_val);
-            return (EvaluationResult){EVALUATION_RESULT_BOOL, bool_res};
+            return (EvaluationResult){.type = EVALUATION_RESULT_BOOL, .bool_val = bool_res};
         case LPAYLOAD_binary_op_dbl_bool:
             if (node.child_count < 2) return empty;
             tmp1 = evaluate_ast(bindings, *node.child[0]);
             if (tmp1.type != EVALUATION_RESULT_DBL) return empty;
             tmp2 = evaluate_ast(bindings, *node.child[1]);
             if (tmp2.type != EVALUATION_RESULT_DBL) return empty;
-            return (EvaluationResult){EVALUATION_RESULT_BOOL, bool_res};
+            return (EvaluationResult){.type=EVALUATION_RESULT_BOOL,.bool_val = bool_res};
         case LPAYLOAD_binary_op_bool_bool:
             if (node.child_count < 2) return empty;
             tmp1 = evaluate_ast(bindings, *node.child[0]);
@@ -406,12 +409,12 @@ EvaluationResult evaluate_ast(BindingValueList bindings, LAstNode node){
             tmp2 = evaluate_ast(bindings, *node.child[1]);
             if (tmp2.type != EVALUATION_RESULT_BOOL) return empty;
             bool_res = node.payload.binary_op_bool_bool_val(tmp1.bool_val, tmp2.bool_val);
-            return (EvaluationResult){EVALUATION_RESULT_BOOL, bool_res};
+            return (EvaluationResult){.type=EVALUATION_RESULT_BOOL, .bool_val= bool_res};
     }
 }
 
 bool does_rule_apply(LRule rule, LString * input, unsigned int idx){
-    if (rule.l_context_size < idx) return false;
+    if (rule.l_context_size > idx) return false;
     LWord word = input->content[idx];
     if (word.name != rule.premise.name) return false;
     if (!check_letterwise_apply(rule, input, idx)) return false;
@@ -422,27 +425,29 @@ bool does_rule_apply(LRule rule, LString * input, unsigned int idx){
     return res.bool_val;
 }
 
-void append_result(LString * input, LRule rule, LString * output, unsigned int idx){
+void append_result(LString * output, LRule rule, LString * input, unsigned int idx){
     BindingValueList bindings = evaluate_bindings(rule, input, idx);
     for (unsigned int i = 0; i < rule.num_result_words; i++){
         LResultWord res = rule.result[i];
         LWord out = (LWord){.name = res.name, .num_values = res.num_calculations};
+        double * outvals = malloc(sizeof(double) * res.num_calculations);
+        out.values=outvals;
         for (unsigned int j = 0; j < res.num_calculations; j++){
-            EvaluationResult ev_res = evaluate_ast(bindings, res.calculations[i]);
+            EvaluationResult ev_res = evaluate_ast(bindings, res.calculations[j]);
             if (ev_res.type != EVALUATION_RESULT_DBL) {
-                out.values[i] = 0;
+                out.values[j] = 0;
             } else {
-                out.values[i] = ev_res.dbl_val;
+                out.values[j] = ev_res.dbl_val;
             }
         }
-        output->content[idx] = out;
-        idx++;
+        output->content[output->length] = out;
+        output->length++;
     }
 }
 
 LString * apply_rules(LRuleset rules, LString * input){
     LString * output = malloc(sizeof(LString));
-    output->capacity = input->capacity < 1;
+    output->capacity = input->capacity << 2;
     output->length = 0;
     output->content = malloc(sizeof(LWord) * output->capacity);
     memset(output->content, 0, output->capacity);
@@ -459,10 +464,9 @@ LString * apply_rules(LRuleset rules, LString * input){
                     LWord * temp = realloc(output->content, output->capacity << 1);
                     if (temp == NULL) return NULL;
                     output->content = temp;
-                    output->capacity = output->capacity << 1;
+                    output->capacity = output->capacity << 2;
                     cap_left = output->capacity - output->length;
                 }
-
                 append_result(output, rule, input, word_idx);
                 break;
             }
