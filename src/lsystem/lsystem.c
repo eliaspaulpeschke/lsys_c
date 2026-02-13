@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include "raylib.h"
 
 #define LSYSTEM_AST_BUFFER_SIZE 1024
 
@@ -259,5 +261,219 @@ bool lop_neq(double l, double r){ return (l != r); }
 bool lop_not(bool x){ return (!x); }
 bool lop_and(bool l, bool r){ return (l && r); }
 bool lop_or(bool l, bool r){ return (l || r); }
+
+unsigned int char2idx(char c){
+    return (unsigned int)c - 97;
+}
+
+typedef struct {
+    bool is_set[26];
+    double value[26];
+} BindingValueList;
+
+bool check_letterwise_apply(LRule rule, LString * input, unsigned int idx){
+    if (rule.l_context_size < idx) return false;
+    if (idx + rule.r_context_size >= input->length) return false;
+    LRuleWord p = rule.premise;
+    LWord w = input->content[idx];
+    if (p.name != w.name) return false;
+    for (unsigned int i = 0; i < rule.l_context_size; i++){
+        LRuleWord lc = rule.l_context[i];
+        unsigned int word_idx = idx - (rule.l_context_size - i);
+        LWord w = input->content[word_idx]; 
+        if (w.name != lc.name) return false;
+    }
+    for (unsigned int i = 0; i < rule.r_context_size; i++){
+        LRuleWord rc = rule.r_context[i];
+        unsigned int word_idx = idx + i + 1;
+        LWord w = input->content[word_idx]; 
+        if (w.name != rc.name) return false;
+    }
+    return true;
+}
+
+BindingValueList evaluate_words_bindings(BindingValueList b, LRuleWord rw, LWord w){
+    unsigned int num_bindings = rw.num_bindings;
+    if (w.num_values < num_bindings) {
+        TraceLog(LOG_WARNING, "Word has less values than rule has Bindings!"); 
+        num_bindings = w.num_values;
+    }
+    for (int i = 0; i < num_bindings; i ++){
+        unsigned int binding_idx = char2idx(rw.bindings[i]);
+        if (b.is_set[binding_idx]) {
+            TraceLog(LOG_WARNING, "Binding is already set!"); 
+            break; 
+        }
+        b.is_set[binding_idx] = true;
+        b.value[binding_idx] = w.values[i];
+    }
+    return b;
+}
+
+BindingValueList evaluate_bindings(LRule rule, LString * input, unsigned int idx){
+    BindingValueList b = { {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+                         , {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} };
+    if (rule.l_context_size < idx) return b;
+    if (idx + rule.r_context_size >= input->length) return b;
+    for (unsigned int i = 0; i < rule.l_context_size; i++){
+        LRuleWord lc = rule.l_context[i];
+        unsigned int word_idx = idx - (rule.l_context_size - i);
+        LWord w = input->content[word_idx]; 
+        b = evaluate_words_bindings(b, lc, w);
+    }
+    for (unsigned int i = 0; i < rule.r_context_size; i++){
+        LRuleWord rc = rule.r_context[i];
+        unsigned int word_idx = idx + i + 1;
+        LWord w = input->content[word_idx]; 
+        b = evaluate_words_bindings(b, rc, w);
+    }
+    LRuleWord p = rule.premise;
+    LWord w = input->content[idx];
+    b = evaluate_words_bindings(b, p, w);
+    return b;
+}
+
+typedef enum{
+      EVALUATION_RESULT_BOOL
+    , EVALUATION_RESULT_DBL
+    , EVALUATION_RESULT_STRING
+    , EVALUATION_RESULT_EMPTY
+}EVALUATION_RES_TYPE;
+
+typedef struct{
+    EVALUATION_RES_TYPE type;
+    union{
+        bool bool_val;
+        double dbl_val;
+        char * string_val;
+    };
+}EvaluationResult;
+
+EvaluationResult evaluate_ast(BindingValueList bindings, LAstNode node){
+    unsigned int b_idx;
+    EvaluationResult tmp1;
+    EvaluationResult tmp2;
+    double dbl_res;
+    bool bool_res;
+    EvaluationResult empty = (EvaluationResult){EVALUATION_RESULT_EMPTY};
+    switch (node.payload.type) {
+        case LPAYLOAD_empty:
+            return empty;
+        case LPAYLOAD_dbl:
+            return (EvaluationResult){EVALUATION_RESULT_DBL, node.payload.dbl_val};
+        case LPAYLOAD_string:
+            return (EvaluationResult){EVALUATION_RESULT_STRING, node.payload.string_val};
+        case LPAYLOAD_letter: 
+            b_idx = char2idx(node.payload.letter_val);
+            if (bindings.is_set[b_idx]){
+                return (EvaluationResult){EVALUATION_RESULT_DBL, bindings.value[b_idx]};
+            } else {
+                return (EvaluationResult){EVALUATION_RESULT_EMPTY};
+            }
+        case LPAYLOAD_bool:
+            return (EvaluationResult){EVALUATION_RESULT_BOOL, node.payload.bool_val};
+        case LPAYLOAD_unary_op_dbl:
+            if (node.child_count < 1) return empty;
+            tmp1 = evaluate_ast(bindings, *node.child[0]);
+            if (tmp1.type != EVALUATION_RESULT_DBL) return empty;
+            dbl_res = node.payload.unary_op_dbl_val(tmp1.dbl_val);
+            return (EvaluationResult){EVALUATION_RESULT_DBL, dbl_res};
+        case LPAYLOAD_binary_op_dbl:
+            if (node.child_count < 2) return empty;
+            tmp1 = evaluate_ast(bindings, *node.child[0]);
+            if (tmp1.type != EVALUATION_RESULT_DBL) return empty;
+            tmp2 = evaluate_ast(bindings, *node.child[1]);
+            if (tmp2.type != EVALUATION_RESULT_DBL) return empty;
+            dbl_res = node.payload.binary_op_dbl_val(tmp1.dbl_val, tmp2.dbl_val);
+            return (EvaluationResult){EVALUATION_RESULT_DBL, dbl_res};
+        case LPAYLOAD_unary_op_bool:
+            if (node.child_count < 1) return empty;
+            tmp1 = evaluate_ast(bindings, *node.child[0]);
+            if (tmp1.type != EVALUATION_RESULT_BOOL) return empty;
+            bool_res = node.payload.unary_op_bool_val(tmp1.bool_val);
+            return (EvaluationResult){EVALUATION_RESULT_BOOL, bool_res};
+        case LPAYLOAD_binary_op_dbl_bool:
+            if (node.child_count < 2) return empty;
+            tmp1 = evaluate_ast(bindings, *node.child[0]);
+            if (tmp1.type != EVALUATION_RESULT_DBL) return empty;
+            tmp2 = evaluate_ast(bindings, *node.child[1]);
+            if (tmp2.type != EVALUATION_RESULT_DBL) return empty;
+            return (EvaluationResult){EVALUATION_RESULT_BOOL, bool_res};
+        case LPAYLOAD_binary_op_bool_bool:
+            if (node.child_count < 2) return empty;
+            tmp1 = evaluate_ast(bindings, *node.child[0]);
+            if (tmp1.type != EVALUATION_RESULT_BOOL) return empty;
+            tmp2 = evaluate_ast(bindings, *node.child[1]);
+            if (tmp2.type != EVALUATION_RESULT_BOOL) return empty;
+            bool_res = node.payload.binary_op_bool_bool_val(tmp1.bool_val, tmp2.bool_val);
+            return (EvaluationResult){EVALUATION_RESULT_BOOL, bool_res};
+    }
+}
+
+bool does_rule_apply(LRule rule, LString * input, unsigned int idx){
+    if (rule.l_context_size < idx) return false;
+    LWord word = input->content[idx];
+    if (word.name != rule.premise.name) return false;
+    if (!check_letterwise_apply(rule, input, idx)) return false;
+    if (rule.qualifier == NULL) return true;
+    BindingValueList bindings = evaluate_bindings(rule, input, idx);
+    EvaluationResult res = evaluate_ast(bindings, *rule.qualifier);
+    if (res.type != EVALUATION_RESULT_BOOL) return false;
+    return res.bool_val;
+}
+
+void append_result(LString * input, LRule rule, LString * output, unsigned int idx){
+    BindingValueList bindings = evaluate_bindings(rule, input, idx);
+    for (unsigned int i = 0; i < rule.num_result_words; i++){
+        LResultWord res = rule.result[i];
+        LWord out = (LWord){.name = res.name, .num_values = res.num_calculations};
+        for (unsigned int j = 0; j < res.num_calculations; j++){
+            EvaluationResult ev_res = evaluate_ast(bindings, res.calculations[i]);
+            if (ev_res.type != EVALUATION_RESULT_DBL) {
+                out.values[i] = 0;
+            } else {
+                out.values[i] = ev_res.dbl_val;
+            }
+        }
+        output->content[idx] = out;
+        idx++;
+    }
+}
+
+LString * apply_rules(LRuleset rules, LString * input){
+    LString * output = malloc(sizeof(LString));
+    output->capacity = input->capacity < 1;
+    output->length = 0;
+    output->content = malloc(sizeof(LWord) * output->capacity);
+    memset(output->content, 0, output->capacity);
+    bool found_rule = false;
+    for(unsigned int word_idx = 0; word_idx < input->length; word_idx++){
+        found_rule = false;
+        for(unsigned int rule_idx = 0; rule_idx < rules.num_rules; rule_idx++){
+            LRule rule = *(rules.rules + rule_idx); 
+            if (does_rule_apply(rule, input, word_idx)){
+                found_rule = true;
+                unsigned int append_len = rule.num_result_words;
+                unsigned int cap_left = output->capacity - output->length;
+                while (append_len >= cap_left) {
+                    LWord * temp = realloc(output->content, output->capacity << 1);
+                    if (temp == NULL) return NULL;
+                    output->content = temp;
+                    output->capacity = output->capacity << 1;
+                    cap_left = output->capacity - output->length;
+                }
+
+                append_result(output, rule, input, word_idx);
+                break;
+            }
+        }
+        if (!found_rule){
+            // just copy the letter verbatim then
+            output->content[output->length] = input->content[word_idx];
+            output->length++;
+        }
+    }
+    return output;
+}
 
 

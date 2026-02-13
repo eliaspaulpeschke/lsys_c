@@ -37,7 +37,7 @@ struct Module_output {
     bool valid;
     union {
       Turtle turtle;
-      Ruleset ruleset;
+      LRuleset ruleset;
       char * axiom;
       int integer;
       float floating;

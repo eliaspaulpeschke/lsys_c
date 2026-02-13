@@ -1,9 +1,7 @@
 #ifndef LSYSTEM_H
 #define LSYSTEM_H
 #include <limits.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
 
 typedef struct {
     char * str;
@@ -74,6 +72,12 @@ typedef struct {
     unsigned int num_calculations;
     LAstNode * calculations;
 } LResultWord;
+
+typedef struct {
+    unsigned int length;
+    unsigned int capacity;
+    LWord * content;
+}LString;
 
 double lop_unary_plus(double x);
 double lop_unary_minus(double x);
@@ -148,5 +152,9 @@ void free_ast_buffer();
 
 int parser_str_getch(ParserStr * str);
 ParserStr * mk_parser_str(char * str);
+
+LString * apply_rules(LRuleset rules, LString * input);
+
+
 #endif
 
