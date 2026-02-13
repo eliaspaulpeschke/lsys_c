@@ -173,7 +173,7 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                     layout_textbox(ctx.ced[i]->textbox, &ctx.fonts[0]);
                     break;
                 case CUSTOM_ELEM_T_turtle_box:
-                    layout_turtle_box(ctx.ced[i]->turtlebox, ctx.fonts, "Turtle Box");
+                    layout_turtlebox(ctx.ced[i]->turtlebox, ctx.fonts, "Turtle Box");
                     break;
                 default:
                     break;

@@ -1,6 +1,7 @@
 #ifndef TURTLE_H
 #define TURTLE_H
 #include <raylib.h>
+#include "../lsystem/lsystem.h"
 
 typedef struct Turtle {
     Vector2 pos;
@@ -18,7 +19,7 @@ void turtle_set_color(Turtle * turtle, Color col);
 Turtle * push_turtle(Turtle * turtle);
 Turtle * pop_turtle(Turtle * turtle);
 Turtle mk_base_turtle();
-void turtle_draw(char * text, unsigned int len, Turtle turtle);
-void standard_turtle_draw(char * text, Color col, float rads, Vector2 pos);
+void turtle_draw(LString * text, unsigned int len, Turtle turtle);
+void standard_turtle_draw(LString * text);
 
 #endif

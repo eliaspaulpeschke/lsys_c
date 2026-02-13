@@ -29,7 +29,7 @@ aristid: $(all_objects)
 
 test: $(objs)/test_lsystem.o $(objs)/lsystem.o $(objs)/lsystem_parser.o $(objs)/lsys_parse_util.o
 	$(mkdirs)
-	$(CC) -lm -lraylib -g -O0 $(LDFLAGS) $^ -o $(build)/test
+	$(CC) -lm -lraylib $(LDFLAGS) $^ -o $(build)/test
 
 $(objs)/test_lsystem.o: $(test)/test_lsystem.c $(lsys)/lsystem.h $(parser)/lsystem_parser.h
 	$(mkdirs)
@@ -53,7 +53,7 @@ $(objs)/ui.o: $(ui)/ui.c $(ui)/ui.h $(clay)/clay.h \
 $(objs)/textbox.o: $(ui)/textbox.c $(ui)/textbox.h \
 	   $(ui)/inputbox.h $(ui)/module.h \
 	   $(turtle)/turtle.h $(lsys)/lsystem.h \
-           $(lsys)/lsystem_parser.h \
+           $(parser)/lsystem_parser.h \
            $(ui)/common.h $(clay)/clay.h
 	$(mkdirs) 
 	$(CC) $(CFLAGS)  -c $(ui)/textbox.c -o $(objs)/textbox.o
@@ -64,7 +64,7 @@ $(objs)/module.o: $(ui)/module.c $(ui)/module.h \
 	$(mkdirs)
 	$(CC) $(CFLAGS)  -c $(ui)/module.c -o $(objs)/module.o
 
-$(objs)/turtlebox.o: $(elems)/turtlebox.c $(elems)/turtlebox.h \
+$(objs)/turtlebox.o: $(ui)/turtlebox.c $(ui)/turtlebox.h \
 	    $(ui)/vectorbox.h $(ui)/inputbox.h \
 	    $(ui)/common.h $(clay)/clay.h
 	$(mkdirs)
@@ -113,7 +113,7 @@ $(objs)/lsys_parse_util.o: $(parser)/lsys_parse_util.c \
 	$(CC) $(CFLAGS)  -c $(parser)/lsys_parse_util.c -o $(objs)/lsys_parse_util.o
 
 $(parser)/lsystem_parser.c: $(parser)/lsystem_parser.peg
-	packcc $(parser)/lsystem_parser.peg -o $(parser)/lsystem_parser
+	packcc  -o $(parser)/lsystem_parser $(parser)/lsystem_parser.peg
 
 $(objs)/lsystem.o: $(lsys)/lsystem.c $(lsys)/lsystem.h
 	$(mkdirs)

@@ -15,16 +15,28 @@
 #include <stdio.h>
 #include <string.h>
 #define PCC_GETCHAR(auxil) parser_str_getch(auxil)
+
+#define PCC_ERROR(auxil) err_out(auxil)
+void err_out(ParserStr * auxil){
+    printf("Syntax Error at %d", auxil->pos);
+    exit(1);
+}
+/*
+static const char *dbg_str[] = { "Evaluating rule", "Matched rule", "Abandoning rule" };
+ define PCC_DEBUG(auxil, event, rule, level, pos, buffer, length) \
+    fprintf(stderr, "%*s%s %s @%zu [%.*s]\n", (int)((level) * 2), "", dbg_str[event], rule, pos, (int)(length), buffer)
+}*/
+
 }
 
 lrule <- (n:name _ ':')? _ (lc:context _ '<')? _ p:letter_with_binding _ ('>' _ rc:context)? _ (':' _ q:boolterm)? _ '->' _ res:result _ EOL? { $$ = mk_pd_rule(n, lc, p, rc, q, res, true); }
 
 name <- < [A-Za-z0-9_]+ > { $$ = mk_parse_data(PARSE_DATA_string); $$->string_val = strdup($1); $$->list_length = 1;}
 
-context <- l:context _ r:letter_with_binding {$$ = pd_node_append(l,r,true); }
+context <- l:context r:letter_with_binding {$$ = pd_node_append(l,r,true); }
          / l:letter_with_binding { $$ = l; }
 
-letter_with_binding <- < [A-Za-z0-9] > ('(' _ b:bindinglist _ ')')? { $$ = mk_pd_ruleword( *$1, b, true ); }
+letter_with_binding <- < [\x22-\x27\x2a-\x39\x3e-\x7e\x3b] > ('(' _ b:bindinglist _ ')')? { $$ = mk_pd_ruleword( *$1, b, true ); }
 
 bindinglist <- bl:bindinglist _ ',' _ b:binding? {$$ = pd_node_append(bl,b,true);}
              / b:binding { $$ = b; }
@@ -34,7 +46,7 @@ binding <- l:letter { $$ = l; }
 result <- l:result _ r:letter_with_term  { $$ = pd_node_append(l,r,true); }
         / l:letter_with_term { $$ = l; }
 
-letter_with_term <- < [A-Za-z] > ('(' _ t:termlist _ ')')? { $$ = mk_pd_resultword( *$1, t, true); }
+letter_with_term <- < [\x22-\x27\x2a-\x39\x3e-\x7e\x3b] > ('(' _ t:termlist _ ')')? { $$ = mk_pd_resultword( *$1, t, true); }
 
 termlist <- l:termlist _ ',' _ r:term { $$ = pd_node_append(l, r, true); }  
          / t:term { $$ = t; }

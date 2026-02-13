@@ -267,26 +267,116 @@ unsigned int char2idx(char c){
 }
 
 typedef struct {
+    bool valid;
     bool is_set[26];
     double value[26];
 } BindingValueList;
+
+int jump_brack_left(LString * input, unsigned int idx){
+    if (input->content[idx].name != ']') return -1;
+    unsigned int stack = 0;
+    while(idx > 0){
+        if (input->content[idx].name == ']'){
+            stack += 1;
+        } else if (input->content[idx].name == '['){
+            stack -= 1;
+        }
+        if(stack == 0 && input->content[idx-1].name != ']') return idx-1;
+        idx -= 1;
+    }
+    return -1;
+}
+
+int jump_brack_right(LString * input, unsigned int idx){
+    if (input->content[idx].name != '[') return -1;
+    unsigned int stack = 0;
+    while(idx < input->length -1){
+        if (input->content[idx].name == '['){
+            stack += 1;
+        } else if (input->content[idx].name == ']'){
+            stack -= 1;
+        }
+        if(stack == 0 && input->content[idx+1].name != '[') return idx+1;
+        idx += 1;
+    }
+    return -1;
+}
+
+bool check_inside_brack_right(LRule rule, LString * input, unsigned int idx, unsigned int ctx_idx){
+    idx++;
+    unsigned int len = rule.r_context_size;
+    while(ctx_idx < len && idx < input->length){
+        if (input->content[idx].name == '['){
+            if(check_inside_brack_right(rule, input, idx, ctx_idx)) return true;
+            idx = jump_brack_right(input, idx);
+        }else if (input->content[idx].name == ']'){
+            return false;
+        }else {
+            if (rule.r_context[ctx_idx].name != input->content[idx].name) return false;
+            idx++;
+            ctx_idx++;
+        }
+    }
+    if (ctx_idx == len && idx <= input->length) {
+        return true;
+    }
+    return false;
+}
+
+BindingValueList bindings_inside_brack_right(LRule rule, LString * input, BindingValueList b, unsigned int idx, unsigned int ctx_idx){
+    b.valid = true;
+    idx++;
+    unsigned int len = rule.r_context_size;
+    BindingValueList temp; 
+
+    while(ctx_idx < len && idx < input->length){
+        if (input->content[idx].name == '['){
+            temp = bindings_inside_brack_right(rule, input, b, idx, ctx_idx);
+            if(temp.valid) return temp;
+            idx = jump_brack_right(input, idx);
+        }else if (input->content[idx].name == ']'){
+            return (BindingValueList){.valid = false};
+        }else {
+            if (rule.r_context[ctx_idx].name != input->content[idx].name) return (BindingValueList){.valid = false};
+            for (int i = 0; i < rule.r_context[ctx_idx].num_bindings; i++){
+                unsigned int bind_idx = char2idx(rule.r_context[ctx_idx].bindings[i]);
+                if (input->content[idx].num_values > i){
+                    if (b.is_set[bind_idx]){
+                        TraceLog(LOG_WARNING, "Double Binding in right context. Overriding."); 
+                    }
+                    b.is_set[bind_idx] = true;
+                    b.value[bind_idx] = input->content[idx].values[i];
+                }
+            }
+            idx++;
+            ctx_idx++;
+        }
+    }
+    if (ctx_idx == len && idx <= input->length) {
+        return b;
+    }
+        return (BindingValueList){.valid = false};
+}
 
 bool check_letterwise_apply(LRule rule, LString * input, unsigned int idx){
     LRuleWord p = rule.premise;
     LWord w = input->content[idx];
     if (p.name != w.name) return false;
+    unsigned int word_idx;
+    unsigned int jmp_idx;
+    LRuleWord lc;
+    LRuleWord rc;
+    word_idx = idx;
     for (unsigned int i = 0; i < rule.l_context_size; i++){
-        LRuleWord lc = rule.l_context[i];
-        unsigned int word_idx = idx - (rule.l_context_size - i);
-        LWord w = input->content[word_idx]; 
+        word_idx -= 1; 
+        if (word_idx < 0) return false;
+        jmp_idx = jump_brack_left(input, word_idx);
+        if (jmp_idx != -1) word_idx = jmp_idx;
+        lc = rule.l_context[i];
+        w = input->content[word_idx]; 
         if (w.name != lc.name) return false;
     }
-    for (unsigned int i = 0; i < rule.r_context_size; i++){
-        LRuleWord rc = rule.r_context[i];
-        unsigned int word_idx = idx + i + 1;
-        LWord w = input->content[word_idx]; 
-        if (w.name != rc.name) return false;
-    }
+    return check_inside_brack_right(rule, input, idx, 0);
     return true;
 }
 
@@ -309,28 +399,31 @@ BindingValueList evaluate_words_bindings(BindingValueList b, LRuleWord rw, LWord
 }
 
 BindingValueList evaluate_bindings(LRule rule, LString * input, unsigned int idx){
-    BindingValueList b = { {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    BindingValueList b = {true, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
                          , {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} };
     LRuleWord p = rule.premise;
     LWord w = input->content[idx];
     b = evaluate_words_bindings(b, p, w);
-
+    LRuleWord lc;
+    LRuleWord rc;
+    unsigned int word_idx = idx;
+    unsigned int jmp_idx;
     if (rule.l_context_size > idx) return b;
     if (idx + rule.r_context_size >= input->length) return b;
 
     for (unsigned int i = 0; i < rule.l_context_size; i++){
-        LRuleWord lc = rule.l_context[i];
-        unsigned int word_idx = idx - (rule.l_context_size - i);
-        LWord w = input->content[word_idx]; 
+        word_idx -=1;
+        if (word_idx < 0) break;
+        jmp_idx = jump_brack_left(input, word_idx);
+        if (jmp_idx != -1) word_idx = jmp_idx;
+        lc = rule.l_context[i];
+        w = input->content[word_idx]; 
         b = evaluate_words_bindings(b, lc, w);
     }
-    for (unsigned int i = 0; i < rule.r_context_size; i++){
-        LRuleWord rc = rule.r_context[i];
-        unsigned int word_idx = idx + i + 1;
-        LWord w = input->content[word_idx]; 
-        b = evaluate_words_bindings(b, rc, w);
-    }
-    return b;
+    word_idx = idx;
+    BindingValueList b2 = bindings_inside_brack_right(rule, input, b, idx, 0);
+    if (b2.valid == false) return b; 
+    return b2;
 }
 
 typedef enum{

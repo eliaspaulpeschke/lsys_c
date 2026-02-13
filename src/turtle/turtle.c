@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "turtle.h"
+#include "../lsystem/lsystem.h"
 #include <raymath.h>
 
 void rotate_turtle(Turtle * turtle, bool ccw){
@@ -9,6 +10,16 @@ void rotate_turtle(Turtle * turtle, bool ccw){
         turtle->heading = Vector2Rotate(turtle->heading, turtle->rads);
     } else { 
         turtle->heading = Vector2Rotate(turtle->heading, -turtle->rads);   }
+}
+
+void rotate_turtle_degs(Turtle * turtle, double degs){
+        turtle->heading = Vector2Rotate(turtle->heading, degs);
+}
+
+void move_turtle_len(Turtle * turtle, double len){
+    Vector2 new = Vector2Add(turtle->pos, Vector2Scale(turtle->heading, len));
+    DrawLineV(turtle->pos, new, turtle->color);
+    turtle->pos = new;
 }
 
 void move_turtle(Turtle * turtle){
@@ -55,20 +66,33 @@ Turtle mk_base_turtle(){
                     };
 }
 
-void turtle_draw(char * text, unsigned int len, Turtle turtle){
+void turtle_draw(LString * text, unsigned int len, Turtle turtle){
   Turtle * turt = malloc(sizeof(Turtle));
   memcpy(turt, &turtle, sizeof(Turtle));
-  if (len > strlen(text)) len = strlen(text);
-  for (int i = 0; i < len; i++) {
-      switch (text[i]) {
+  if (len > text->length) len = text->length;
+  for (int i = 0; i < text->length; i++) {
+      LWord cnt = text->content[i];
+      switch (cnt.name) {
           case 'F':
-              move_turtle(turt);
+              if (cnt.num_values > 0){
+                  move_turtle_len(turt, cnt.values[0]);
+              } else {
+                  move_turtle(turt);
+              }
               break;
           case '+':
-              rotate_turtle(turt, true);
+              if (cnt.num_values > 0){
+                  rotate_turtle_degs(turt, cnt.values[0]);
+              } else {
+                  rotate_turtle(turt, true);
+              }
               break;
           case '-':
-              rotate_turtle(turt, false);
+              if (cnt.num_values > 0){
+                  rotate_turtle_degs(turt, -cnt.values[0]);
+              } else {
+                  rotate_turtle(turt, false);
+              }
               break;
           case '[':
               turt = push_turtle(turt); 
@@ -76,23 +100,14 @@ void turtle_draw(char * text, unsigned int len, Turtle turtle){
           case ']':
               turt = pop_turtle(turt);
               break;
-          case 'r':
-              if (turt->color.r > 9) turt->color.r -= 10;
-              break;
-          case 'g':
-              if (turt->color.g > 9) turt->color.g -= 10;
-              break;
-          case 'b':
-              if (turt->color.b > 9) turt->color.b -= 10;
-              break;
-          case 'R':
-              if (turt->color.r < 246) turt->color.r += 10;
-              break;
-          case 'G':
-              if (turt->color.g < 246) turt->color.g += 10;
-              break;
-          case 'B':
-              if (turt->color.b < 246) turt->color.b += 10;
+          case 'C':
+              if (cnt.num_values == 1){
+                  turtle_set_color(turt, (Color){.r = cnt.values[0], .g = cnt.values[0], .b = cnt.values[0], .a=255});
+              } else if (cnt.num_values == 3){
+                  turtle_set_color(turt, (Color){.r = cnt.values[0], .g = cnt.values[1], .b = cnt.values[2], .a=255});
+              } else if (cnt.num_values == 4){
+                  turtle_set_color(turt, (Color){.r = cnt.values[0], .g = cnt.values[1], .b = cnt.values[2], .a=cnt.values[3]});
+              }
               break;
           default: 
               break;
@@ -101,7 +116,7 @@ void turtle_draw(char * text, unsigned int len, Turtle turtle){
   free(turt);
 }
 
-void standard_turtle_draw(char * text, Color col, float rads, Vector2 pos){ 
+void standard_turtle_draw(LString* text){ 
   Turtle turtle = mk_base_turtle();
-  turtle_draw(text, strlen(text), turtle);
+  turtle_draw(text, text->length, turtle);
 }

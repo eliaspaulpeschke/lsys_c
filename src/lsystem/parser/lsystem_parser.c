@@ -16,6 +16,17 @@
 #include <string.h>
 #define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 
+#define PCC_ERROR(auxil) err_out(auxil)
+void err_out(ParserStr * auxil){
+    printf("Syntax Error at %d", auxil->pos);
+    exit(1);
+}
+/*
+static const char *dbg_str[] = { "Evaluating rule", "Matched rule", "Abandoning rule" };
+ define PCC_DEBUG(auxil, event, rule, level, pos, buffer, length) \
+    fprintf(stderr, "%*s%s %s @%zu [%.*s]\n", (int)((level) * 2), "", dbg_str[event], rule, pos, (int)(length), buffer)
+}*/
+
 #if !defined __has_attribute || defined _MSC_VER
 #define __attribute__(x)
 #endif
@@ -2079,7 +2090,6 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_context(pcc_context_t *ctx) {
         MARK_VAR_AS_USED
         const size_t n = chunk->thunks.len;
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule_context, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule_letter_with_binding, &chunk->thunks, &(chunk->values.buf[1]))) goto L0002;
         {
             pcc_thunk_t *const thunk = pcc_thunk__create_leaf(ctx, pcc_action_context_0, 2, 0);
@@ -2136,9 +2146,10 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_letter_with_binding(pcc_context_t *c
             const size_t n = pcc_get_char_as_utf32(ctx, &u);
             if (n == 0) goto L0000;
             if (!(
-                (u >= 0x000041 && u <= 0x00005a) ||
-                (u >= 0x000061 && u <= 0x00007a) ||
-                (u >= 0x000030 && u <= 0x000039)
+                (u >= 0x000022 && u <= 0x000027) ||
+                (u >= 0x00002a && u <= 0x000039) ||
+                (u >= 0x00003e && u <= 0x00007e) ||
+                u == 0x00003b
             )) goto L0000;
             ctx->cur += n;
         }
@@ -2357,8 +2368,10 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_letter_with_term(pcc_context_t *ctx)
             const size_t n = pcc_get_char_as_utf32(ctx, &u);
             if (n == 0) goto L0000;
             if (!(
-                (u >= 0x000041 && u <= 0x00005a) ||
-                (u >= 0x000061 && u <= 0x00007a)
+                (u >= 0x000022 && u <= 0x000027) ||
+                (u >= 0x00002a && u <= 0x000039) ||
+                (u >= 0x00003e && u <= 0x00007e) ||
+                u == 0x00003b
             )) goto L0000;
             ctx->cur += n;
         }
