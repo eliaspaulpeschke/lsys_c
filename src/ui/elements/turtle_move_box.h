@@ -6,7 +6,7 @@
 #include "../module.h"
 #include "raylib.h"
 
-typedef  struct {
+typedef struct {
     bool error;
     Turtlebox turtlebox;
     Move_container movecontainer;

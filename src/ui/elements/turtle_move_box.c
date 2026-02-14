@@ -19,7 +19,11 @@ void free_turtle_move_box(TurtleMoveBox tb){
 
 bool update_turtle_move_box(TurtleMoveBox * tb){
     if (update_move_container(&tb->movecontainer, false)) return true;
-    if (update_turtlebox(&tb->turtlebox)) return true;
+    if (update_turtlebox(&tb->turtlebox)) {
+        tb->turtle_out.output.turtle = tb->turtlebox.turtle;
+        tb->turtle_out.output.valid = true;
+        return true;
+    }
     return false;
 }
 
