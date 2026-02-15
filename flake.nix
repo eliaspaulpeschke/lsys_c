@@ -57,6 +57,8 @@
               raylib
             ];
             packages = with pkgs; [
+              ninja
+              python3
               raylib
               packcc
               clang-tools

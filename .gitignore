@@ -4,3 +4,6 @@ test
 aristid
 build/**/*
 build
+build.ninja
+.ninja_log
+
