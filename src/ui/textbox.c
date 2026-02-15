@@ -29,7 +29,6 @@ Textbox mk_textbox(unsigned int max_len){
                        , .posB = 1023
                        , .max_len = max_len
                        , .clay_id_num = NUM_TEXTBOX_IDS 
-                           + NAMESPACE_TEXTBOX 
                        };
     memset(tb.bufA, '\0', tb.lenA);
     memset(tb.bufB, '\0', tb.lenB);

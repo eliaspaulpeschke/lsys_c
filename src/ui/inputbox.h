@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "raylib.h"
-static unsigned int NUM_INPUT_IDS = 0;
 
 typedef struct {
     bool error;

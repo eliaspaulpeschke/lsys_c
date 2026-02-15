@@ -5,6 +5,8 @@
 #include "raylib.h"
 #include "inputbox.h"
 
+static unsigned int NUM_INPUT_IDS = 0;
+
 Inputbox mk_inputbox(unsigned int max_len /*default 64*/){
     if (max_len == 0) max_len = 64;
     char * text = malloc(max_len+1);
@@ -14,7 +16,7 @@ Inputbox mk_inputbox(unsigned int max_len /*default 64*/){
                      , .text = text
                      , .max_len = max_len
                      , .cursor = 0
-                     , .clay_id_num = NUM_INPUT_IDS + NAMESPACE_INPUTBOX 
+                     , .clay_id_num = NUM_INPUT_IDS 
                      , .changed = true
                      };
     NUM_INPUT_IDS += 1;
@@ -24,7 +26,7 @@ Inputbox mk_inputbox(unsigned int max_len /*default 64*/){
 
 void set_inputbox_text(Inputbox ipb, char * text){
     unsigned int len = strlen(text);
-    if (len > ipb.max_len) len = ipb.max_len;
+    if(len > ipb.max_len) len = ipb.max_len;
     memset(ipb.text, '\0', ipb.max_len+1);
     memcpy(ipb.text, text, len);
 }

@@ -9,7 +9,7 @@ Move_container mk_move_container(){
     Move_container cont = (Move_container) {
           .pos = (Vector2) {0.0, 0.0}
         , .size = (Vector2) {0.0, 0.0}
-        , .clay_id_idx = NUM_MOVE_CONTAINERS + NAMESPACE_MOVE_CONT
+        , .clay_id_idx = NUM_MOVE_CONTAINERS 
     };
     NUM_MOVE_CONTAINERS += 1;
     return cont;

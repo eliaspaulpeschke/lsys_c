@@ -35,9 +35,8 @@ Clay_String module_type_name(MODULE_DATA_TYPE type){
 
 Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type){
     if (NUM_MODULE_IDS >= MAX_MODULES || type == MODULE_NONE) return (Module){ .type = MODULE_NONE };
-    unsigned int id = NAMESPACE_MODULE + NUM_MODULE_IDS;
+    unsigned int id = NUM_MODULE_IDS;
     NUM_MODULE_IDS += 1;
-    TraceLog(LOG_DEBUG, "Creating mod %d", id); 
     Module mod =   { .type = type
                    , .data_type = data_type
                    , .clay_id_num = id

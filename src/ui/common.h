@@ -4,12 +4,6 @@
 #include <raylib.h>
 #include "string.h"
  
-#define NAMESPACE_SIZE 999 
-#define NAMESPACE_TEXTBOX 1000
-#define NAMESPACE_INPUTBOX 2000
-#define NAMESPACE_MODULE 3000
-#define NAMESPACE_MOVE_CONT 4000
-
 #define COL_LIGHT         (Clay_Color) {220, 220, 230, 255}
 #define COL_ACCENT        (Clay_Color) {90, 100, 230, 255}
 #define COL_DARK          (Clay_Color) {80, 80, 80, 255}

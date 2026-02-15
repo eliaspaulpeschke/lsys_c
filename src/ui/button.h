@@ -2,6 +2,7 @@
 #define BUTTON_H
 #include "stdbool.h"
 
+
 typedef struct {
     unsigned int clay_id_num;
     char * label;
@@ -9,7 +10,7 @@ typedef struct {
 }ButtonElem;
 
 
-ButtonElem mk_button(char * label);
+ButtonElem mk_button(char * label, void (*on_click)());
 //void free_button();
 
 bool update_button(ButtonElem * btn);
