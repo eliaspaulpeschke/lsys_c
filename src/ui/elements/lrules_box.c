@@ -1,5 +1,9 @@
 #include "lrules_box.h"
 #include "../common.h"
+#include "../../lsystem/parser/lsystem_parser.h"
+#include "raylib.h"
+
+void on_click_parse_btn(void * user_data);
 
 LRulesBox mk_lrules_box(){
     Textbox tb = mk_textbox(2048);
@@ -8,9 +12,20 @@ LRulesBox mk_lrules_box(){
         .textbox = tb 
        , .movecontainer = mk_move_container()
        , .lsys_out = mk_module(MODULE_OUTPUT, MODULE_DATA_TYPE_ruleset)
+       , .button_parse = mk_button("parse", on_click_parse_btn)
     };
-    lb.movecontainer.size = (Vector2){.x = 160, .y=510};
+    lb.movecontainer.size = (Vector2){.x = 384, .y=512};
     return lb;
+}
+
+void lrules_box_parse(LRulesBox * lb){
+    LRuleset rules = parse_string_to_ruleset(lb->textbox.text, 32);
+    lb->lsys_out.output.ruleset = rules;
+}
+
+void on_click_parse_btn(void * user_data){
+    LRulesBox * lb = (LRulesBox *)user_data;
+    lrules_box_parse(lb);
 }
 
 void free_lrules_box(LRulesBox lb){
@@ -18,15 +33,29 @@ void free_lrules_box(LRulesBox lb){
 }
 
 bool update_lrules_box(LRulesBox * lb){
-    if (update_move_container(&lb->movecontainer, false)) return true;
+    if (update_move_container(&lb->movecontainer, true)) return true;
     if (update_textbox(&lb->textbox, false)) return true;
+    if (update_button(&lb->button_parse, lb)) return true;
     return false;
 }
 
 void layout_lrules_box(LRulesBox lb, Font * fonts){
-    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer, false)){
-            CLAY_AUTO_ID({.border = {.color = COL_DARK, .width = CLAY_BORDER_OUTSIDE(1)}}){
-            layout_module(&lb.lsys_out);
+    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer, true)){
+            CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                                     , .layoutDirection = CLAY_LEFT_TO_RIGHT }
+                         , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+                CLAY_AUTO_ID({ .layout = { .sizing = { CLAY_SIZING_FIXED(lb.movecontainer.size.x - 16 - 64)
+                                                     , CLAY_SIZING_FIXED(lb.movecontainer.size.y - 16)}}}){
+                    layout_textbox(lb.textbox, fonts);
+                };
+                CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                                         , .layoutDirection = CLAY_TOP_TO_BOTTOM
+                                         , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                             , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+                    layout_module(&lb.lsys_out);
+                    layout_button(lb.button_parse);
+                };
             }
+            layout_move_container_sizer(lb.movecontainer);
         };
 }

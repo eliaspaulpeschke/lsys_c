@@ -83,7 +83,6 @@ bool update_inputbox(Inputbox * ipb){
 
 void layout_inputbox(Inputbox ipb, Font * font, bool focus, bool padd, char 
         * label){
-    Clay_String text = (Clay_String){ .isStaticallyAllocated = false, .length = strlen(ipb.text), .chars = ipb.text};
     Clay_BorderElementConfig border_focused = (Clay_BorderElementConfig){.width = {2,2,2,2,0}, .color = COL_ACCENT};
     Clay_BorderElementConfig border_normal = (Clay_BorderElementConfig){.width = {1,1,1,1,0}, .color = COL_DARK};
     Vector2 cursorPos = get_cursor_offset(ipb.text, ipb.cursor, font, 16,0, 1.0);
@@ -115,7 +114,7 @@ void layout_inputbox(Inputbox ipb, Font * font, bool focus, bool padd, char
                                             , .zIndex = 1000}
                               , .backgroundColor = ipb_hovered || focus ? COL_DARK : COL_TRANSPARENT}){};
 
-                CLAY_TEXT(text, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+                TEXT_STANDARD(ipb.text);
             };
         };
 }

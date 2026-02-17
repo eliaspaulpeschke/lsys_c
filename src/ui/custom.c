@@ -1,15 +1,14 @@
 #include "custom.h"
-#include "elements/turtle_move_box.h"
-#include "textbox.h"
+#include "elements/lrules_box.h"
 #include <string.h>
 #include <stdlib.h>
 
-CustomElementData mk_textbox_elem(unsigned int max_len){
+CustomElementData mk_rulesbox_elem(){
     CustomElementData ced = (CustomElementData) {
-                   .type = CUSTOM_ELEM_T_textbox,
-                   .textbox = mk_textbox(max_len)
+                   .type = CUSTOM_ELEM_T_rulesbox,
+                   .rulesbox = mk_lrules_box()
                    };
-    if (!ced.textbox.text) {
+    if (ced.rulesbox.error) {
         return ERR_CUSTOM_ELEM;
     }
     return ced;
@@ -27,8 +26,8 @@ CustomElementData mk_turtlebox_elem(){
 
 void free_custom_elem(CustomElementData ced){
     switch (ced.type) {
-        case CUSTOM_ELEM_T_textbox:
-            free_textbox(ced.textbox);
+        case CUSTOM_ELEM_T_rulesbox:
+            free_lrules_box(ced.rulesbox);
             return;
         case CUSTOM_ELEM_T_turtle_box:
             free_turtle_move_box(ced.turtlebox);

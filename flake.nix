@@ -63,6 +63,9 @@
               packcc
               clang-tools
             ] ++ (if stdenv.hostPlatform.system == "aarch64-darwin" then [ ] else [ gdb ]);
+            shellHook = ''
+              alias build="python3 build.py"
+            '';
           };
       });
     };

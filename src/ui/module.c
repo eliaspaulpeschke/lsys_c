@@ -216,15 +216,13 @@ void layout_module(Module * mod){
           , .backgroundColor = COL_LIGHT
           }){
         Clay_OnHover(&handle_module_hover, mod); 
-        CLAY_TEXT(module_kind_name(*mod)
-                 , CLAY_TEXT_CONFIG( {.fontSize = 14, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+        TEXT_STANDARD_CLAYSTR(module_kind_name(*mod));
         CLAY_AUTO_ID({ .layout = {.sizing = {CLAY_SIZING_FIXED(8), CLAY_SIZING_FIXED(8)}}
                      , .backgroundColor = COL_DARK
                      , .cornerRadius = {8,8,8,8}
                      , .border = {.width = CLAY_BORDER_OUTSIDE(2), .color = COL_ACCENT}});
-        CLAY_TEXT(module_type_name(mod->data_type)
-                 , CLAY_TEXT_CONFIG( {.fontSize = 14, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
-    };
+        TEXT_STANDARD_CLAYSTR(module_type_name(mod->data_type));
+            };
 
     if (mod->type == MODULE_INPUT && mod->input.connection != NULL) {
         Clay_ElementData data = Clay_GetElementData(Clay_GetElementIdWithIndex(

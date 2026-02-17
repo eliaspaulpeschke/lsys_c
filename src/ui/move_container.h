@@ -1,7 +1,7 @@
 #ifndef MOVE_CONTAINER_H
 #define MOVE_CONTAINER_H
 
-#define MOVE_CONTAINER_Z_INDEX 10
+#define MOVE_CONTAINER_Z_INDEX 0
 #include "../clay/clay.h"
 #include "raylib.h"
 

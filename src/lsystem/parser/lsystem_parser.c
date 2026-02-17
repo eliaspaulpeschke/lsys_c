@@ -3475,8 +3475,8 @@ void lsys_destroy(lsys_context_t *ctx) {
     pcc_context__destroy(ctx);
 }
 
-LRuleset * parse_string_to_ruleset(char * in, unsigned int max_rules){
-    if (max_rules <= 0) return NULL;
+LRuleset parse_string_to_ruleset(char * in, unsigned int max_rules){
+    if (max_rules <= 0) return (LRuleset){0, NULL};
     ParserStr * aux = mk_parser_str(in);
     ParseData * res;
     ParseData * out = malloc(sizeof(ParseData) * max_rules);
@@ -3490,11 +3490,11 @@ LRuleset * parse_string_to_ruleset(char * in, unsigned int max_rules){
         }
     }
     lsys_destroy(ctx);
-    LRuleset * result = malloc(sizeof(LRuleset));
-    result->num_rules = idx+1;
-    result->rules = malloc(sizeof(LRule) * (idx+1));
+    LRuleset result = (LRuleset){ .num_rules = 0, .rules = NULL};
+    result.num_rules = idx+1;
+    result.rules = malloc(sizeof(LRule) * (idx+1));
     for (unsigned int i = 0; i <= idx; i++){
-        result->rules[i] = *(out[i].lrule_val);
+        result.rules[i] = *(out[i].lrule_val);
     }
     free(out);
     return result;

@@ -94,7 +94,7 @@ void layout_turtlebox(Turtlebox tb, Font * fonts, char * label){
                                       , .y = CLAY_ALIGN_Y_TOP }
                   } 
       , .backgroundColor = COL_LIGHT
-      , .border = {.width = CLAY_BORDER_ALL(1), .color = COL_DARK}
+      , .border = {.width = {0,0,0,0,1}, .color = COL_DARK}
     }){
         add_label(label);
         layout_vector2box(tb.pos, fonts, "Position");

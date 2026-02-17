@@ -1,4 +1,5 @@
 #include "custom.h"
+#include "elements/lrules_box.h"
 #include "elements/turtle_move_box.h"
 #include "module.h"
 #include "raylib.h"
@@ -44,11 +45,12 @@ clay_ctx init_clay(){
     };
 }
 
-void add_textbox(clay_ctx * ctx){
+void add_rulesbox(clay_ctx * ctx){
+    TraceLog(LOG_DEBUG, "Adding Rules Box"); 
     if (ctx->num_custom_elems >= MAX_CUSTOM_ELEMS) return;
     CustomElementData * elem = malloc(sizeof(CustomElementData));
     if (!elem) return;
-    *elem = mk_textbox_elem(2048);
+    *elem = mk_rulesbox_elem();
     if (elem->error) {
         free(elem);
         return;
@@ -74,9 +76,9 @@ bool update_ui(clay_ctx * ctx){
     if (update_module_connections()) return true;
     if (update_connection_status()) return false;
 
-    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_textbox")))) {
+    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_rulesbox")))) {
         if (IsMouseButtonReleased(0)){
-            add_textbox(ctx);
+            add_rulesbox(ctx);
             return true;
         }
     }
@@ -87,11 +89,10 @@ bool update_ui(clay_ctx * ctx){
         }
     }
 
-
     for (int i = 0; i < ctx->num_custom_elems; i++){
         switch (ctx->ced[i]->type) {
-            case CUSTOM_ELEM_T_textbox:
-                if (update_textbox(&(ctx->ced[i]->textbox), false)) return true;
+            case CUSTOM_ELEM_T_rulesbox:
+                if (update_lrules_box(&(ctx->ced[i]->rulesbox))) return true;
                 break;
             case CUSTOM_ELEM_T_turtle_box:
                 if (update_turtle_move_box(&(ctx->ced[i]->turtlebox))) return true;
@@ -131,7 +132,7 @@ bool update_ui(clay_ctx * ctx){
 
 Clay_RenderCommandArray mk_layout(clay_ctx ctx){
     Clay_SetCurrentContext(ctx.ctx);
-//    Clay_SetDebugModeEnabled(true);
+    Clay_SetDebugModeEnabled(true);
     float width = (float)GetScreenWidth();
     float height = (float)GetScreenHeight();
     Vector2 mouse = GetMousePosition();
@@ -156,21 +157,21 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                                  , .border = { .width = {0,0,0,0,1}, .color = COL_DARK }
                                  , .backgroundColor = COL_LIGHT 
                                  }){
-            CLAY(CLAY_ID("add_textbox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
+            CLAY(CLAY_ID("add_rulesbox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
                                                      , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
                                          , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
-                CLAY_TEXT(CLAY_STRING("+"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+                TEXT_STANDARD_CLAYSTR(CLAY_STRING("+"));
             };
             CLAY(CLAY_ID("add_turtlebox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
                                                      , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
                                          , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
-                CLAY_TEXT(CLAY_STRING("T"), CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+                TEXT_STANDARD_CLAYSTR(CLAY_STRING("T"));
             };
         };
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
-                case CUSTOM_ELEM_T_textbox:
-                    layout_textbox(ctx.ced[i]->textbox, &ctx.fonts[0]);
+                case CUSTOM_ELEM_T_rulesbox:
+                    layout_lrules_box(ctx.ced[i]->rulesbox, ctx.fonts);
                     break;
                 case CUSTOM_ELEM_T_turtle_box:
                     layout_turtle_move_box(ctx.ced[i]->turtlebox, ctx.fonts);

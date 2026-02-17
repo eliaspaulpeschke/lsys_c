@@ -9,6 +9,13 @@
 #define COL_DARK          (Clay_Color) {80, 80, 80, 255}
 #define COL_TRANSPARENT   (Clay_Color) {0, 0, 0, 0}
 
+#define CLAYIFY(str) (Clay_String){ .isStaticallyAllocated = false, .length = strlen(str), .chars = str}
+
+#define TEXT_CFG_STANDARD CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 })
+
+#define TEXT_STANDARD(str) CLAY_TEXT(CLAYIFY(str), TEXT_CFG_STANDARD)
+#define TEXT_STANDARD_CLAYSTR(str) CLAY_TEXT(str, TEXT_CFG_STANDARD)
+
 static inline Vector2 get_cursor_offset(char * text, unsigned int len, Font *font, float font_size, float letter_spacing, float line_height) {
     // Measure string size for Font
     Vector2 textSize = { 0 };
@@ -39,8 +46,7 @@ static inline Vector2 get_cursor_offset(char * text, unsigned int len, Font *fon
 }
 
 static inline void add_label(char * label){
-        Clay_String str = (Clay_String) { .isStaticallyAllocated = false, .length = strlen(label), .chars = label }; 
-        CLAY_TEXT(str, CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+        TEXT_STANDARD(label);
 }
 
 #endif

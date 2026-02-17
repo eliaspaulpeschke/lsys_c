@@ -14,7 +14,7 @@ BUILD_DIR = PROJECT_DIR  / "build"
 SOURCES = [ x for x in SOURCE_DIR.glob("**/*.c") ]
 
 NINJA_PRELUDE = f"""
-cflags = -Wall -Wextra -ggdb
+cflags = -ggdb
 ldflags = -lraylib -lm
 bdir = {BUILD_DIR}
 
@@ -26,13 +26,13 @@ rule cc
     command = gcc -MD -MF $out.d $cflags -c $in -o $out
 
 rule peg
-    command = packcc -o {SOURCE_DIR}/lsystem/parser/lsystem_parser.c $in
+    command = packcc -o {SOURCE_DIR}/lsystem/parser/lsystem_parser $in
 
 """
 
 def handle_args():
     p = ArgumentParser()
-    p.add_argument("command")
+    p.add_argument("command", nargs="?", default="build")
     return p.parse_args()
 
 def format_dependency_build(path: Path, rulename: str = "cc", extra_deps: list[str] = []) -> str:

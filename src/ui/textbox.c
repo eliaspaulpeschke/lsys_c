@@ -287,6 +287,6 @@ void layout_textbox(Textbox tb, Font * font){
                                     , .clipTo = CLAY_CLIP_TO_ATTACHED_PARENT
                                     , .zIndex = 1}
                         , .backgroundColor = COL_ACCENT});
-              CLAY_TEXT( str , CLAY_TEXT_CONFIG({ .fontSize = 16, .fontId = 0, .textColor = {0,0,0,255}, .lineHeight = 16.0 }));
+              TEXT_STANDARD_CLAYSTR(str);
           };
   }

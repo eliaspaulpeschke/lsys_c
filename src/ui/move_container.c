@@ -24,6 +24,7 @@ Clay_ElementDeclaration move_cont_clay_decl(Move_container cont, bool resizable)
                 , .childGap = 8}
     , .floating = { .attachTo = CLAY_ATTACH_TO_ROOT, .offset = {.x = cont.pos.x, .y = cont.pos.y}
                   , .zIndex = MOVE_CONTAINER_Z_INDEX }
+    , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}
     , .backgroundColor = COL_LIGHT };
     return decl;
 }
@@ -51,7 +52,7 @@ bool update_move_container(Move_container * cont, bool resizable){
  
 if ((ptr || sizer) && IsMouseButtonDown(0)){
         Vector2 mouse = GetMouseDelta();
-        if (sizer) {
+        if (sizer && resizable) {
             cont->size = Vector2Add(mouse, cont->size);
         } else {
             cont->pos = Vector2Add(mouse, cont->pos);
