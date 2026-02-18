@@ -2,8 +2,49 @@
 #define LSYS_PARSE_UTIL_H
 #include "../lsystem.h"
 
-ParseData * mk_node_pd(LPayload payload);
+typedef struct {
+    bool has_errored;
+    char * error_text;
+} ParserErr;
 
+typedef struct {
+    char * str;
+    unsigned int len;
+    unsigned int pos;
+    ParserErr error;
+} ParserStr;
+
+typedef enum {
+    PARSE_DATA_empty = 0
+  , PARSE_DATA_string
+  , PARSE_DATA_LRuleWord
+  , PARSE_DATA_LAstNode
+  , PARSE_DATA_LResultWord
+  , PARSE_DATA_LRule
+  , PARSE_DATA_ParseData
+} ParseDataType;
+
+typedef struct ParseData{
+    ParseDataType type;
+    unsigned int list_length;
+    union {
+        char * string_val;
+        LRuleWord * lruleword_val;
+        LAstNode * lastnode_val;
+        LResultWord * lresultword_val;
+        LRule * lrule_val;
+        struct ParseData * parse_data_val;
+    };
+} ParseData;
+
+int parser_str_getch(ParserStr * str);
+ParserStr * mk_parser_str(char * str);
+
+void print_pd( ParseData * pd, char * offset);
+ParseData * mk_parse_data(ParseDataType type);
+bool is_parse_data_empty(ParseData * pd);
+
+ParseData * mk_node_pd(LPayload payload);
 bool pd_is_ast(ParseData * pd);
 bool pd_is_dbl(ParseData * pd);
 bool pd_is_bool(ParseData * pd);

@@ -20,7 +20,7 @@ Clay_ElementDeclaration move_cont_clay_decl(Move_container cont, bool resizable)
     Clay_Sizing fit = (Clay_Sizing){CLAY_SIZING_FIT(0),CLAY_SIZING_FIT(0)};
     Clay_ElementDeclaration decl = (Clay_ElementDeclaration) {
       .layout = { .sizing = resizable ? fix : fit 
-                , .padding = CLAY_PADDING_ALL(8)
+                //, .padding = CLAY_PADDING_ALL(8)
                 , .childGap = 8}
     , .floating = { .attachTo = CLAY_ATTACH_TO_ROOT, .offset = {.x = cont.pos.x, .y = cont.pos.y}
                   , .zIndex = MOVE_CONTAINER_Z_INDEX }

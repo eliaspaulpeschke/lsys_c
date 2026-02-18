@@ -7,6 +7,9 @@
 #define COL_LIGHT         (Clay_Color) {220, 220, 230, 255}
 #define COL_ACCENT        (Clay_Color) {90, 100, 230, 255}
 #define COL_DARK          (Clay_Color) {80, 80, 80, 255}
+#define COL_RED           (Clay_Color) {255, 80, 80, 255}
+#define COL_GREEN         (Clay_Color) {80, 255, 80, 255}
+
 #define COL_TRANSPARENT   (Clay_Color) {0, 0, 0, 0}
 
 #define CLAYIFY(str) (Clay_String){ .isStaticallyAllocated = false, .length = strlen(str), .chars = str}

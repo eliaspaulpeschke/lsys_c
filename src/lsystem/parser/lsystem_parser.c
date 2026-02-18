@@ -14,12 +14,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #define PCC_GETCHAR(auxil) parser_str_getch(auxil)
 
 #define PCC_ERROR(auxil) err_out(auxil)
 void err_out(ParserStr * auxil){
-    printf("Syntax Error at %d", auxil->pos);
-    exit(1);
+    auxil->error.error_text = calloc(32, sizeof(char));
+    snprintf(auxil->error.error_text, 32, "Syntax Error at %d", auxil->pos);
+    auxil->error.has_errored = true;
+    return;
 }
 /*
 static const char *dbg_str[] = { "Evaluating rule", "Matched rule", "Abandoning rule" };
@@ -3486,10 +3489,16 @@ LRuleset parse_string_to_ruleset(char * in, unsigned int max_rules){
     while (lsys_parse(ctx, &res)){
         if (idx < ((int)max_rules) -1){
             idx++;
+            if (aux->error.has_errored) break;
             out[idx] = *res;
         }
     }
     lsys_destroy(ctx);
+    if (aux->error.has_errored) {
+        printf("Error: %s", aux->error.error_text);
+        free(out);
+        return (LRuleset){0, NULL};
+    }
     LRuleset result = (LRuleset){ .num_rules = 0, .rules = NULL};
     result.num_rules = idx+1;
     result.rules = malloc(sizeof(LRule) * (idx+1));

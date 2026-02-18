@@ -72,5 +72,6 @@ Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type);
 void draw_module_connections();
 bool update_module_connections();
 bool update_connection_status();
-void layout_module(Module * mod);
+bool update_module(Module * mod);
+void layout_module(Module mod);
 #endif

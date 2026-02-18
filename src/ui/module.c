@@ -34,16 +34,20 @@ Clay_String module_type_name(MODULE_DATA_TYPE type){
 }
 
 Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type){
-    if (NUM_MODULE_IDS >= MAX_MODULES || type == MODULE_NONE) return (Module){ .type = MODULE_NONE };
+    if (NUM_MODULE_IDS >= MAX_MODULES || type == MODULE_NONE) 
+        return (Module){ .type = MODULE_NONE };
     unsigned int id = NUM_MODULE_IDS;
     NUM_MODULE_IDS += 1;
+    TraceLog(LOG_DEBUG, "Module with id %d created", id);  
     Module mod =   { .type = type
                    , .data_type = data_type
                    , .clay_id_num = id
                    };
     if (type == MODULE_INPUT) {
-        if (IDX_MOD_DRAWDATA >= MAX_MODULES) return (Module){ .type = MODULE_NONE };
-        mod.input.connection_draw_data = connection_drawdata + IDX_MOD_DRAWDATA;
+        if (IDX_MOD_DRAWDATA >= MAX_MODULES) 
+            return (Module){ .type = MODULE_NONE };
+        mod.input.connection_draw_data 
+            = connection_drawdata + IDX_MOD_DRAWDATA;
         IDX_MOD_DRAWDATA += 1;
     }
     return mod;
@@ -57,22 +61,22 @@ struct {
                               , .module = NULL
                               };
 
-void handle_module_hover(Clay_ElementId id, Clay_PointerData ptr, void * userData){
-    Module * mod = (Module*)(userData);
-    TraceLog(LOG_DEBUG, "Hovering mod %d", mod->clay_id_num); 
+bool handle_module_hover(void * userData){
+    Module * mod = (Module*)( userData );
+    TraceLog(LOG_DEBUG, "Hovering mod %u", mod->clay_id_num); 
     if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) {
         if (IsMouseButtonDown(0)) {
             TraceLog(LOG_DEBUG, "connecting"); 
             MODULES_CONNECTION_STATUS.connecting_status =  MOD_CONN_STATUS_CONNECTING;
             MODULES_CONNECTION_STATUS.module = mod; 
-            return;
+            return true;
         }
     } else {
         if (IsMouseButtonReleased(0)){
             TraceLog(LOG_DEBUG, "finishing connection"); 
             if (MODULES_CONNECTION_STATUS.module == NULL){
                 MODULES_CONNECTION_STATUS.connecting_status =  MOD_CONN_STATUS_IDLE;
-                return;
+                return true;
             }
             if (mod->data_type != MODULES_CONNECTION_STATUS.module->data_type || mod->type == MODULE_NONE) goto reset;
             if (mod->type == MODULE_INPUT){
@@ -123,11 +127,11 @@ void handle_module_hover(Clay_ElementId id, Clay_PointerData ptr, void * userDat
 
         }
     }
-    return;
+    return false;
     reset:
       MODULES_CONNECTION_STATUS.connecting_status =  MOD_CONN_STATUS_IDLE;
       MODULES_CONNECTION_STATUS.module = NULL;
-      return;
+      return true;
 }
 
 bool update_connection_status(){
@@ -205,9 +209,61 @@ void draw_module_connections(){
     }
 }
 
-void layout_module(Module * mod){
-    MODULE_DATA_TYPE data; 
-    CLAY(CLAY_IDI("module", mod->clay_id_num), {
+bool update_module(Module * mod){
+    if (mod == NULL) return false;
+    bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(
+                CLAY_STRING("module"), mod->clay_id_num));
+
+    bool result = hover ? handle_module_hover(mod) : false;
+
+    if (mod->type != MODULE_INPUT || mod->input.connection == NULL) {
+        return result;
+    } else if (mod->type == MODULE_INPUT && mod->input.connection == NULL) {
+        Connection_drawdata * cdd = mod->input.connection_draw_data;
+        cdd->active = false;
+    }
+
+    Clay_ElementData data = Clay_GetElementData(Clay_GetElementIdWithIndex(
+                CLAY_STRING("module"), mod->clay_id_num));
+    Clay_ElementData data2 = Clay_GetElementData(Clay_GetElementIdWithIndex(
+                CLAY_STRING("module"), mod->input.connection->clay_id_num));
+
+    if (!data.found || !data2.found ) return result;
+
+    Connection_drawdata * cdd = mod->input.connection_draw_data;
+    cdd->active = true;
+    cdd->start = (Vector2){data2.boundingBox.x + data2.boundingBox.width / 2
+            , data2.boundingBox.y + data2.boundingBox.height / 2};
+    cdd->points[1] = cdd->start;
+    cdd->points[0] = (Vector2){ cdd->start.x - 30.0f, cdd->start.y };
+    cdd->points[cdd->num_points-2] = (Vector2){ data.boundingBox.x + data.boundingBox.width / 2 
+            , data.boundingBox.y + data.boundingBox.height / 2};
+    cdd->points[cdd->num_points-1] = (Vector2){ cdd->points[cdd->num_points-2].x - 30.0f
+                                              , cdd->points[cdd->num_points-2].y };
+
+    return result;
+}
+
+void layout_module(Module mod){
+    MODULE_TYPE type = mod.type;
+    MODULE_DATA_TYPE data = mod.data_type; 
+    Clay_Color col = COL_ACCENT;
+    if (type == MODULE_INPUT) {
+        if (mod.input.connection != NULL) {
+            if (mod.input.connection->output.valid) {
+                col = COL_GREEN;
+            } else {
+                col = COL_RED;
+            }
+        }
+    } else {
+        if (mod.output.valid) {
+            col = COL_GREEN;
+        } else {
+            col = COL_RED;
+        }
+    }
+    CLAY(CLAY_IDI("module", mod.clay_id_num), {
             .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(48)}
                       , .padding = CLAY_PADDING_ALL(4)
                       , .layoutDirection = CLAY_TOP_TO_BOTTOM
@@ -215,33 +271,12 @@ void layout_module(Module * mod){
                       }
           , .backgroundColor = COL_LIGHT
           }){
-        Clay_OnHover(&handle_module_hover, mod); 
-        TEXT_STANDARD_CLAYSTR(module_kind_name(*mod));
+        TEXT_STANDARD_CLAYSTR(module_kind_name(mod));
         CLAY_AUTO_ID({ .layout = {.sizing = {CLAY_SIZING_FIXED(8), CLAY_SIZING_FIXED(8)}}
                      , .backgroundColor = COL_DARK
                      , .cornerRadius = {8,8,8,8}
-                     , .border = {.width = CLAY_BORDER_OUTSIDE(2), .color = COL_ACCENT}});
-        TEXT_STANDARD_CLAYSTR(module_type_name(mod->data_type));
+                     , .border = {.width = CLAY_BORDER_OUTSIDE(2), .color = col}});
+        TEXT_STANDARD_CLAYSTR(module_type_name(mod.data_type));
             };
 
-    if (mod->type == MODULE_INPUT && mod->input.connection != NULL) {
-        Clay_ElementData data = Clay_GetElementData(Clay_GetElementIdWithIndex(
-                    CLAY_STRING("module"), mod->clay_id_num));
-        Clay_ElementData data2 = Clay_GetElementData(Clay_GetElementIdWithIndex(
-                    CLAY_STRING("module"), mod->input.connection->clay_id_num));
-        if (!(data.found && data2.found)) return;
-        Connection_drawdata * cdd = mod->input.connection_draw_data;
-        cdd->active = true;
-        cdd->start = (Vector2){data2.boundingBox.x + data2.boundingBox.width / 2
-                , data2.boundingBox.y + data2.boundingBox.height / 2};
-        cdd->points[1] = cdd->start;
-        cdd->points[0] = (Vector2){ cdd->start.x - 30.0f, cdd->start.y };
-        cdd->points[cdd->num_points-2] = (Vector2){ data.boundingBox.x + data.boundingBox.width / 2 
-                , data.boundingBox.y + data.boundingBox.height / 2};
-        cdd->points[cdd->num_points-1] = (Vector2){ cdd->points[cdd->num_points-2].x - 30.0f
-                                                  , cdd->points[cdd->num_points-2].y };
-    } else if (mod->type == MODULE_INPUT && mod->input.connection == NULL){
-        Connection_drawdata * cdd = mod->input.connection_draw_data;
-        cdd->active = false;
-    }
 }

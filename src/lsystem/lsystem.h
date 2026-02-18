@@ -3,12 +3,6 @@
 #include <limits.h>
 #include <stdbool.h>
 
-typedef struct {
-    char * str;
-    unsigned int len;
-    unsigned int pos;
-} ParserStr;
-
 typedef enum {
      LPAYLOAD_empty = 0
    , LPAYLOAD_dbl
@@ -109,38 +103,12 @@ typedef struct LRule {
     LResultWord * result;
 } LRule;
 
-typedef enum {
-    PARSE_DATA_empty = 0
-  , PARSE_DATA_string
-  , PARSE_DATA_LRuleWord
-  , PARSE_DATA_LAstNode
-  , PARSE_DATA_LResultWord
-  , PARSE_DATA_LRule
-  , PARSE_DATA_ParseData
-} ParseDataType;
-
-typedef struct ParseData{
-    ParseDataType type;
-    unsigned int list_length;
-    union {
-        char * string_val;
-        LRuleWord * lruleword_val;
-        LAstNode * lastnode_val;
-        LResultWord * lresultword_val;
-        LRule * lrule_val;
-        struct ParseData * parse_data_val;
-    };
-} ParseData;
-
 typedef struct LRuleset {
     unsigned int num_rules;
     LRule * rules;
 } LRuleset;
 
 void print_LAst( LAstNode * node, char * offset); 
-void print_pd( ParseData * pd, char * offset);
-ParseData * mk_parse_data(ParseDataType type);
-bool is_parse_data_empty(ParseData * pd);
 LAstNode * mk_node(LPayload payload);
 
 void node_add_child(LAstNode * node, LAstNode * child);
@@ -149,9 +117,6 @@ void node_set_parent(LAstNode * node, LAstNode * parent);
 void init_ast_buffer();
 void reset_ast_buffer();
 void free_ast_buffer();
-
-int parser_str_getch(ParserStr * str);
-ParserStr * mk_parser_str(char * str);
 
 LString * apply_rules(LRuleset rules, LString * input);
 LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n);

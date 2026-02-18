@@ -48,9 +48,9 @@ int main(void)
         ClearBackground(BLACK);
         Clay_Raylib_Render(layout, clay_context.fonts, NULL);
         draw_module_connections();
-        BeginMode2D(camera);
+        //BeginMode2D(camera);
         // Turtle stuff was here
-        EndMode2D();
+        //EndMode2D();
         EndDrawing();
     }
     Clay_Raylib_Close();

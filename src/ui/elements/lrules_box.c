@@ -14,13 +14,25 @@ LRulesBox mk_lrules_box(){
        , .lsys_out = mk_module(MODULE_OUTPUT, MODULE_DATA_TYPE_ruleset)
        , .button_parse = mk_button("parse", on_click_parse_btn)
     };
+    lb.button_parse.size.x = 56;
     lb.movecontainer.size = (Vector2){.x = 384, .y=512};
     return lb;
 }
 
 void lrules_box_parse(LRulesBox * lb){
+    TraceLog(LOG_DEBUG, "Parsing : \"%s\"", lb->textbox.text);
+    if (lb->textbox.text == NULL || strlen(lb->textbox.text) == 0) {
+        lb->lsys_out.output.valid = false;
+        return;
+    }
     LRuleset rules = parse_string_to_ruleset(lb->textbox.text, 32);
+    if (rules.rules == NULL) {
+        lb->lsys_out.output.valid = false;
+        return;
+    }
     lb->lsys_out.output.ruleset = rules;
+    lb->lsys_out.output.valid = true;
+
 }
 
 void on_click_parse_btn(void * user_data){
@@ -33,6 +45,7 @@ void free_lrules_box(LRulesBox lb){
 }
 
 bool update_lrules_box(LRulesBox * lb){
+    if (update_module(&lb->lsys_out)) return true;
     if (update_move_container(&lb->movecontainer, true)) return true;
     if (update_textbox(&lb->textbox, false)) return true;
     if (update_button(&lb->button_parse, lb)) return true;
@@ -52,7 +65,7 @@ void layout_lrules_box(LRulesBox lb, Font * fonts){
                                          , .layoutDirection = CLAY_TOP_TO_BOTTOM
                                          , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
                              , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-                    layout_module(&lb.lsys_out);
+                    layout_module(lb.lsys_out);
                     layout_button(lb.button_parse);
                 };
             }

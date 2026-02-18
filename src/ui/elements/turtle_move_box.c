@@ -18,6 +18,7 @@ void free_turtle_move_box(TurtleMoveBox tb){
 }
 
 bool update_turtle_move_box(TurtleMoveBox * tb){
+    if (update_module(&tb->turtle_out)) return true;
     if (update_move_container(&tb->movecontainer, false)) return true;
     if (update_turtlebox(&tb->turtlebox)) {
         tb->turtle_out.output.turtle = tb->turtlebox.turtle;
@@ -31,7 +32,7 @@ void layout_turtle_move_box(TurtleMoveBox tb, Font * fonts){
     CLAY(move_cont_clay_id(tb.movecontainer), move_cont_clay_decl(tb.movecontainer, false)){
             layout_turtlebox(tb.turtlebox, fonts, "Turtle");
             CLAY_AUTO_ID({.border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-            layout_module(&tb.turtle_out);
+            layout_module(tb.turtle_out);
             }
         };
 }

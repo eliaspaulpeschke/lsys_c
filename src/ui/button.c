@@ -11,7 +11,7 @@ ButtonElem mk_button(char *label, void (*on_click)(void * user_data)){
         .clay_id_num = NUM_BUTTON_IDS
       , .label = label
       , .on_click = on_click
-      , .size = (Vector2){.x = 64, .y=24}
+      , .size = (Vector2){.x = 72, .y=32}
     };
     NUM_BUTTON_IDS++;
     return btn;
@@ -36,6 +36,13 @@ void layout_button(ButtonElem btn){
                       , .padding = CLAY_PADDING_ALL(4)
                       }
             }){
+            CLAY_AUTO_ID({ .layout = { .sizing = { CLAY_SIZING_FIXED(btn.size.x - 8), CLAY_SIZING_FIXED(btn.size.y - 8)}
+                                     , .padding = CLAY_PADDING_ALL(4) 
+                                     , .childAlignment = { CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER }
+                                     }
+                         , .border = { .color = Clay_Hovered() ? COL_ACCENT : COL_DARK, .width = {1,1,1,1,0} }
+            }){
             TEXT_STANDARD(btn.label);
+            };
     };
 }
