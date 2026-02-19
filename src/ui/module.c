@@ -22,7 +22,7 @@ Clay_String module_type_name(MODULE_DATA_TYPE type){
             return CLAY_STRING("rul");
         case MODULE_DATA_TYPE_floating:
             return CLAY_STRING("flo");
-        case MODULE_DATA_TYPE_axiom:
+        case MODULE_DATA_TYPE_lstring:
             return CLAY_STRING("axi");
         case MODULE_DATA_TYPE_integer:
             return CLAY_STRING("int");

@@ -1,44 +1,43 @@
 #ifndef VECTORBOX_H
 #define VECTORBOX_H
 
-#include "inputbox.h"
 #include "raylib.h"
+#include "valuebox.h"
 
 typedef struct {
     bool error;
-    Inputbox x;
+    ValueBox x;
     float value;
 } Vector1_box;
 
 typedef struct {
     bool error;
-    Inputbox x;
-    Inputbox y;
+    ValueBox x;
+    ValueBox y;
     Vector2 value;
 } Vector2_box;
 
 typedef struct {
     bool error;
-    Inputbox x;
-    Inputbox y;
-    Inputbox z;
+    ValueBox x;
+    ValueBox y;
+    ValueBox z;
     Vector3 value;
 } Vector3_box;
 
 typedef struct {
     bool error;
-    Inputbox x;
-    Inputbox y;
-    Inputbox z;
-    Inputbox w;
+    ValueBox x;
+    ValueBox y;
+    ValueBox z;
+    ValueBox w;
     Vector4 value;
 } Vector4_box;
 
-#define ERR_VECTOR_1_BOX (Vector1_box){true, ERR_INPUTBOX, 0 }
-#
-#define ERR_VECTOR_2_BOX (Vector2_box){true, ERR_INPUTBOX, ERR_INPUTBOX, {0,0} }
-#define ERR_VECTOR_3_BOX (Vector3_box){true, ERR_INPUTBOX,ERR_INPUTBOX, ERR_INPUTBOX, {0,0,0} }
-#define ERR_VECTOR_4_BOX (Vector4_box){true, ERR_INPUTBOX,ERR_INPUTBOX,ERR_INPUTBOX, ERR_INPUTBOX, {0,0,0,0} }
+#define ERR_VECTOR_1_BOX (Vector1_box){true, ERR_VALUEBOX, 0 }
+#define ERR_VECTOR_2_BOX (Vector2_box){true, ERR_VALUEBOX, ERR_VALUEBOX, {0,0} }
+#define ERR_VECTOR_3_BOX (Vector3_box){true, ERR_VALUEBOX, ERR_VALUEBOX, ERR_VALUEBOX, {0,0,0} }
+#define ERR_VECTOR_4_BOX (Vector4_box){true, ERR_VALUEBOX, ERR_VALUEBOX, ERR_VALUEBOX, ERR_VALUEBOX, {0,0,0,0} }
 
 Vector1_box mk_vector1box();
 Vector2_box mk_vector2box();

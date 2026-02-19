@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../clay/clay.h"
@@ -24,11 +25,23 @@ Inputbox mk_inputbox(unsigned int max_len /*default 64*/){
     return ipb;
 }
 
-void set_inputbox_text(Inputbox ipb, char * text){
+void set_inputbox_text(Inputbox * ipb, char * text){
     unsigned int len = strlen(text);
-    if(len > ipb.max_len) len = ipb.max_len;
-    memset(ipb.text, '\0', ipb.max_len+1);
-    memcpy(ipb.text, text, len);
+    if(len > ipb->max_len) len = ipb->max_len;
+    memset(ipb->text, '\0', ipb->max_len+1);
+    memcpy(ipb->text, text, len);
+    if (ipb->cursor > len){
+        ipb->cursor = len;
+    }
+}
+
+void sprintf_inputbox_text(Inputbox * ipb, const char * format, ...){
+    memset(ipb->text, '\0', ipb->max_len+1);
+    va_list argptr;
+    va_start(argptr, format);
+    vsnprintf(ipb->text, ipb->max_len, format, argptr);
+    va_end(argptr);
+    if (ipb->cursor > strlen(ipb->text)) ipb->cursor = strlen(ipb->text);
 }
 
 void free_inputbox(Inputbox ipb){

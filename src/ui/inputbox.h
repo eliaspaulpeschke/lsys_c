@@ -14,8 +14,8 @@ typedef struct {
 } Inputbox;
 
 #define ERR_INPUTBOX (Inputbox){true, NULL, 0, 0, 0, 0}
-
-void set_inputbox_text(Inputbox ipb, char * text);
+void sprintf_inputbox_text(Inputbox * ipb, const char * format, ...);
+void set_inputbox_text(Inputbox * ipb, char * text);
 
 Inputbox mk_inputbox(unsigned int max_len /*default 64*/);
 void free_inputbox(Inputbox ipb);

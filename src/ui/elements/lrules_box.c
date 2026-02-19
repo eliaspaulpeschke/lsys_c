@@ -15,7 +15,7 @@ LRulesBox mk_lrules_box(){
        , .button_parse = mk_button("parse", on_click_parse_btn)
     };
     lb.button_parse.size.x = 56;
-    lb.movecontainer.size = (Vector2){.x = 384, .y=512};
+    lb.movecontainer.size = (Vector2){.x = 256, .y=384};
     return lb;
 }
 
@@ -53,7 +53,7 @@ bool update_lrules_box(LRulesBox * lb){
 }
 
 void layout_lrules_box(LRulesBox lb, Font * fonts){
-    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer, true)){
+    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer, 0, true)){
             CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
                                      , .layoutDirection = CLAY_LEFT_TO_RIGHT }
                          , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){

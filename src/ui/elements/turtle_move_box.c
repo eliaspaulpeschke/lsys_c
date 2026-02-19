@@ -29,10 +29,10 @@ bool update_turtle_move_box(TurtleMoveBox * tb){
 }
 
 void layout_turtle_move_box(TurtleMoveBox tb, Font * fonts){
-    CLAY(move_cont_clay_id(tb.movecontainer), move_cont_clay_decl(tb.movecontainer, false)){
+    CLAY(move_cont_clay_id(tb.movecontainer), move_cont_clay_decl(tb.movecontainer, 8, false)){
             layout_turtlebox(tb.turtlebox, fonts, "Turtle");
             CLAY_AUTO_ID({.border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-            layout_module(tb.turtle_out);
-            }
+                layout_module(tb.turtle_out);
+            };
         };
 }

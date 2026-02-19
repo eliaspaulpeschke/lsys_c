@@ -22,7 +22,7 @@ typedef struct {
 typedef enum {
     MODULE_DATA_TYPE_turtle
   , MODULE_DATA_TYPE_ruleset
-  , MODULE_DATA_TYPE_axiom
+  , MODULE_DATA_TYPE_lstring
   , MODULE_DATA_TYPE_integer
   , MODULE_DATA_TYPE_floating
   , MODULE_DATA_TYPE_string
@@ -38,7 +38,7 @@ struct Module_output {
     union {
       Turtle turtle;
       LRuleset ruleset;
-      LString axiom;
+      LString lstring;
       int integer;
       float floating;
       char * string;
@@ -66,6 +66,8 @@ struct Module {
       Module_output output;
     };
 };
+
+#define ERR_MODULE (Module){MODULE_NONE}
 
 void setup_connection_drawdata();
 Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type); 

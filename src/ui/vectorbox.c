@@ -1,28 +1,27 @@
 #include "vectorbox.h"
-#include "inputbox.h"
+#include "valuebox.h"
 #include "raylib.h"
 #include <string.h>
 #include "../clay/clay.h"
 #include "common.h"
 
 Vector1_box mk_vector1box(){
-    Inputbox x = mk_inputbox(32);
+    ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_1_BOX;
     Vector1_box vb = (Vector1_box) {
           .error = false
         , .x = x 
         , .value = 0.0f
     };
-    set_inputbox_text(vb.x, "0.0");
     return vb;
 }
 
 Vector2_box mk_vector2box(){
-    Inputbox x = mk_inputbox(32);
+    ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_2_BOX;
-    Inputbox y = mk_inputbox(32);
+    ValueBox y = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (y.error == true) {
-        free_inputbox(x);
+        free_valuebox(x);
         return ERR_VECTOR_2_BOX;
     }
     Vector2_box vb = (Vector2_box) {
@@ -31,23 +30,21 @@ Vector2_box mk_vector2box(){
         , .y = y 
         , .value = (Vector2){0.0f, 0.0f}
     };
-    set_inputbox_text(vb.x, "0.0");
-    set_inputbox_text(vb.y, "0.0");
     return vb;
 }
 
 Vector3_box mk_vector3box(){
-    Inputbox x = mk_inputbox(32);
+    ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_3_BOX;
-    Inputbox y = mk_inputbox(32);
+    ValueBox y = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (y.error == true) {
-        free_inputbox(x);
+        free_valuebox(x);
         return ERR_VECTOR_3_BOX;
     }
-    Inputbox z = mk_inputbox(32);
+    ValueBox z = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (z.error == true) {
-        free_inputbox(x);
-        free_inputbox(y);
+        free_valuebox(x);
+        free_valuebox(y);
         return ERR_VECTOR_3_BOX;
     }
     Vector3_box vb = (Vector3_box) {
@@ -58,30 +55,27 @@ Vector3_box mk_vector3box(){
         , .value = (Vector3){0.0f, 0.0f, 0.0f}
     };
     return vb;
-    set_inputbox_text(vb.x, "0.0");
-    set_inputbox_text(vb.y, "0.0");
-    set_inputbox_text(vb.z, "0.0");
 }
 
 Vector4_box mk_vector4box(){
-    Inputbox x = mk_inputbox(32);
+    ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_4_BOX;
-    Inputbox y = mk_inputbox(32);
+    ValueBox y = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (y.error == true) {
-        free_inputbox(x);
+        free_valuebox(x);
         return ERR_VECTOR_4_BOX;
     }
-    Inputbox z = mk_inputbox(32);
+    ValueBox z = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (z.error == true) {
-        free_inputbox(x);
-        free_inputbox(y);
+        free_valuebox(x);
+        free_valuebox(y);
         return ERR_VECTOR_4_BOX;
     }
-    Inputbox w = mk_inputbox(32);
+    ValueBox w = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (w.error == true) {
-        free_inputbox(x);
-        free_inputbox(y);
-        free_inputbox(z);
+        free_valuebox(x);
+        free_valuebox(y);
+        free_valuebox(z);
         return ERR_VECTOR_4_BOX;
     }
     Vector4_box vb = (Vector4_box) {
@@ -92,33 +86,28 @@ Vector4_box mk_vector4box(){
         , .w = w
         , .value = (Vector4){0.0f, 0.0f, 0.0f, 0.0f}
     };
-    set_inputbox_text(vb.x, "0.0");
-    set_inputbox_text(vb.y, "0.0");
-    set_inputbox_text(vb.z, "0.0");
-    set_inputbox_text(vb.w, "0.0");
-
     return vb;
 }
 
 void free_vector1box(Vector1_box vb){
-    free_inputbox(vb.x);
+    free_valuebox(vb.x);
 }
 void free_vector2box(Vector2_box vb){
-    free_inputbox(vb.x);
-    free_inputbox(vb.y);
+    free_valuebox(vb.x);
+    free_valuebox(vb.y);
 }
 
 void free_vector3box(Vector3_box vb){
-    free_inputbox(vb.x);
-    free_inputbox(vb.y);
-    free_inputbox(vb.z);
+    free_valuebox(vb.x);
+    free_valuebox(vb.y);
+    free_valuebox(vb.z);
 }
 
 void free_vector4box(Vector4_box vb){
-    free_inputbox(vb.x);
-    free_inputbox(vb.y);
-    free_inputbox(vb.z);
-    free_inputbox(vb.w);
+    free_valuebox(vb.x);
+    free_valuebox(vb.y);
+    free_valuebox(vb.z);
+    free_valuebox(vb.w);
 }
 
 Clay_ElementDeclaration vector_box_conf = (Clay_ElementDeclaration){
@@ -136,43 +125,41 @@ Clay_ElementDeclaration vector_box_conf = (Clay_ElementDeclaration){
 void layout_vector1box(Vector1_box vb, Font * fonts, char * label){
     CLAY_AUTO_ID( vector_box_conf ) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false,false, "x: ");
+        layout_valuebox(vb.x, fonts, "x");
     };
 }
 void layout_vector2box(Vector2_box vb, Font * fonts, char * label){
     CLAY_AUTO_ID( vector_box_conf ) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false,false, "x: ");
-        layout_inputbox(vb.y, fonts, false,false, "y: ");
+        layout_valuebox(vb.x, fonts, "x");
+        layout_valuebox(vb.y, fonts, "y");
     };
 }
 
 void layout_vector3box(Vector3_box vb, Font * fonts, char * label){
     CLAY_AUTO_ID( vector_box_conf ) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false,false, "x: ");
-        layout_inputbox(vb.y, fonts, false,false, "y: ");
-        layout_inputbox(vb.z, fonts, false,false, "z: ");
+        layout_valuebox(vb.x, fonts, "x");
+        layout_valuebox(vb.y, fonts, "y");
+        layout_valuebox(vb.z, fonts, "z");
     };
 }
 
 void layout_vector4box(Vector4_box vb, Font * fonts, bool col, char * label){
     CLAY_AUTO_ID(vector_box_conf) {
         add_label(label);
-        layout_inputbox(vb.x, fonts, false,false, col ? "r: " : "x: ");
-        layout_inputbox(vb.y, fonts, false,false,col ? "g: " :  "y: ");
-        layout_inputbox(vb.z, fonts, false,false,col ? "b: " :  "z: ");
-        layout_inputbox(vb.w, fonts, false,false,col ? "a: " :  "u: ");
+        layout_valuebox(vb.x, fonts, col ? "r" : "x");
+        layout_valuebox(vb.y, fonts, col ? "g" : "y");
+        layout_valuebox(vb.z, fonts, col ? "b" : "z");
+        layout_valuebox(vb.w, fonts, col ? "a" : "w");
     };
 }
 
-bool update_vector_component(Inputbox * ipb, float * comp){
-  bool res = update_inputbox(ipb);
-  if (res) {
-     if (ipb->changed) {
-         ipb->changed = false;
-         *comp = strtof(ipb->text, NULL);
-     }
+bool update_vector_component(ValueBox * vb, float * comp){
+  bool res = update_valuebox(vb);
+  if (vb->changed) {
+     vb->changed = false;
+     *comp = vb->float_value.value;
   }
   return res;
 }

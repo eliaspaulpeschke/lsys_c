@@ -1,4 +1,5 @@
 #include "custom.h"
+#include "elements/apply_box.h"
 #include "elements/lrules_box.h"
 #include "elements/turtle_move_box.h"
 #include "module.h"
@@ -45,25 +46,11 @@ clay_ctx init_clay(){
     };
 }
 
-void add_rulesbox(clay_ctx * ctx){
-    TraceLog(LOG_DEBUG, "Adding Rules Box"); 
+void add_box(clay_ctx * ctx, CustomElementData (*mk_elem)() ){
     if (ctx->num_custom_elems >= MAX_CUSTOM_ELEMS) return;
     CustomElementData * elem = malloc(sizeof(CustomElementData));
     if (!elem) return;
-    *elem = mk_rulesbox_elem();
-    if (elem->error) {
-        free(elem);
-        return;
-    }
-    ctx->ced[ctx->num_custom_elems] = elem;
-    ctx->num_custom_elems += 1;
-}
-
-void add_turtle_box(clay_ctx * ctx){
-    if (ctx->num_custom_elems >= MAX_CUSTOM_ELEMS) return;
-    CustomElementData * elem = malloc(sizeof(CustomElementData));
-    if (!elem) return;
-    *elem = mk_turtlebox_elem();
+    *elem = mk_elem();
     if (elem->error) {
         free(elem);
         return;
@@ -74,17 +61,23 @@ void add_turtle_box(clay_ctx * ctx){
 
 bool update_ui(clay_ctx * ctx){
     if (update_module_connections()) return true;
-    if (update_connection_status()) return false;
+    update_connection_status();
 
     if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_rulesbox")))) {
         if (IsMouseButtonReleased(0)){
-            add_rulesbox(ctx);
+            add_box(ctx, mk_rulesbox_elem);
             return true;
         }
     }
     if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_turtlebox")))) {
         if (IsMouseButtonReleased(0)){
-            add_turtle_box(ctx);
+            add_box(ctx, mk_turtlebox_elem);
+            return true;
+        }
+    }
+    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_applybox")))) {
+        if (IsMouseButtonReleased(0)){
+            add_box(ctx, mk_applybox_elem);
             return true;
         }
     }
@@ -96,6 +89,9 @@ bool update_ui(clay_ctx * ctx){
                 break;
             case CUSTOM_ELEM_T_turtle_box:
                 if (update_turtle_move_box(&(ctx->ced[i]->turtlebox))) return true;
+                break; 
+            case CUSTOM_ELEM_T_apply_box:
+                if (update_applybox(&(ctx->ced[i]->applybox))) return true;
                 break; 
             default:
                 break;
@@ -167,6 +163,11 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                                          , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
                 TEXT_STANDARD_CLAYSTR(CLAY_STRING("T"));
             };
+            CLAY(CLAY_ID("add_applybox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
+                                                     , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
+                                         , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
+                TEXT_STANDARD_CLAYSTR(CLAY_STRING("A"));
+            };
         };
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
@@ -175,6 +176,9 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                     break;
                 case CUSTOM_ELEM_T_turtle_box:
                     layout_turtle_move_box(ctx.ced[i]->turtlebox, ctx.fonts);
+                    break;
+                case CUSTOM_ELEM_T_apply_box:
+                    layout_applybox(ctx.ced[i]->applybox, ctx.fonts);
                     break;
                 default:
                     break;

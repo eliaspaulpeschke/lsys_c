@@ -7,8 +7,11 @@ static int NUM_BUTTON_IDS = 0;
 static Clay_String ID_STRING = CLAY_STRING("button-element");
 
 ButtonElem mk_button(char *label, void (*on_click)(void * user_data)){
+    if (label == NULL) return ERR_BUTTON;
+    if (on_click == NULL) return ERR_BUTTON;
     ButtonElem btn = (ButtonElem){
-        .clay_id_num = NUM_BUTTON_IDS
+        .error = false
+      , .clay_id_num = NUM_BUTTON_IDS
       , .label = label
       , .on_click = on_click
       , .size = (Vector2){.x = 72, .y=32}
@@ -26,6 +29,7 @@ bool update_button(ButtonElem *btn, void * user_data){
     }
     return false;
 }
+
 
 void layout_button(ButtonElem btn){
     CLAY(CLAY_IDI("button-element", btn.clay_id_num), {
