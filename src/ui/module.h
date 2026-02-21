@@ -31,11 +31,13 @@ typedef enum {
 
 struct Module_input {
     Module * connection;
+    int generation;
     Connection_drawdata * connection_draw_data;
 };
 
 struct Module_output {
     bool valid;
+    int generation;
     union {
       Turtle turtle;
       LRuleset ruleset;

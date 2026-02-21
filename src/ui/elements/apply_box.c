@@ -17,8 +17,9 @@ void apply_on_click(void * user_data){
     }
     LString in_str = ab->lstring_in->input.connection->output.lstring;
     LRuleset rules = ab->rules_in->input.connection->output.ruleset; 
-    apply_rules(rules, &in_str);//, ab->times);
-    ab->lstring_out->output.lstring = in_str;
+    LString * out_str = apply_rules(rules, &in_str);//h, ab->times);
+    ab->lstring_out->output.lstring = *out_str;
+    free(out_str);
     ab->lstring_out->output.valid = true;
 }
 

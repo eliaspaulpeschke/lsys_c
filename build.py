@@ -14,7 +14,7 @@ BUILD_DIR = PROJECT_DIR  / "build"
 SOURCES = [ x for x in SOURCE_DIR.glob("**/*.c") ]
 
 NINJA_PRELUDE = f"""
-cflags = -ggdb
+cflags = -O0 -ggdb
 ldflags = -lraylib -lm
 bdir = {BUILD_DIR}
 

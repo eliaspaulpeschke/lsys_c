@@ -204,6 +204,7 @@ BindingValueList bindings_inside_brack_right(LRule rule, LString * input, Bindin
         return (BindingValueList){.valid = false};
 }
 
+
 bool check_letterwise_apply(LRule rule, LString * input, unsigned int idx){
     LRuleWord p = rule.premise;
     LWord w = input->content[idx];
@@ -223,7 +224,7 @@ bool check_letterwise_apply(LRule rule, LString * input, unsigned int idx){
         if (w.name != lc.name) return false;
     }
     return check_inside_brack_right(rule, input, idx, 0);
-    return true;
+//    return true;
 }
 
 BindingValueList evaluate_words_bindings(BindingValueList b, LRuleWord rw, LWord w){
@@ -372,15 +373,17 @@ void append_result(LString * output, LRule rule, LString * input, unsigned int i
     BindingValueList bindings = evaluate_bindings(rule, input, idx);
     for (unsigned int i = 0; i < rule.num_result_words; i++){
         LResultWord res = rule.result[i];
-        LWord out = (LWord){.name = res.name, .num_values = res.num_calculations};
-        double * outvals = malloc(sizeof(double) * res.num_calculations);
-        out.values=outvals;
-        for (unsigned int j = 0; j < res.num_calculations; j++){
-            EvaluationResult ev_res = evaluate_ast(bindings, res.calculations[j]);
-            if (ev_res.type != EVALUATION_RESULT_DBL) {
-                out.values[j] = 0;
-            } else {
-                out.values[j] = ev_res.dbl_val;
+        LWord out = (LWord){.name = res.name, .num_values = res.num_calculations, .values = NULL};
+        if (res.num_calculations >0){
+            double * outvals = calloc(res.num_calculations, sizeof(double));
+            out.values = outvals;
+            for (unsigned int j = 0; j < res.num_calculations; j++){
+                EvaluationResult ev_res = evaluate_ast(bindings, res.calculations[j]);
+                if (ev_res.type != EVALUATION_RESULT_DBL) {
+                    out.values[j] = 0;
+                } else {
+                    out.values[j] = ev_res.dbl_val;
+                }
             }
         }
         output->content[output->length] = out;
@@ -395,8 +398,7 @@ LString * apply_rules(LRuleset rules, LString * input){
     LString * output = malloc(sizeof(LString));
     output->capacity = input->length << 2;
     output->length = 0;
-    output->content = malloc(sizeof(LWord) * output->capacity);
-    memset(output->content, 0, output->capacity);
+    output->content = calloc(output->capacity, sizeof(LWord));
     bool found_rule = false;
     for(unsigned int word_idx = 0; word_idx < input->length; word_idx++){
         found_rule = false;
@@ -410,7 +412,7 @@ LString * apply_rules(LRuleset rules, LString * input){
                     LWord * temp = realloc(output->content, output->capacity << 1);
                     if (temp == NULL) return NULL;
                     output->content = temp;
-                    output->capacity = output->capacity << 2;
+                    output->capacity = output->capacity << 1;
                     cap_left = output->capacity - output->length;
                 }
                 append_result(output, rule, input, word_idx);
@@ -429,14 +431,15 @@ LString * apply_rules(LRuleset rules, LString * input){
 
 LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n){
     // TODO: this is a memory leak machine
-    LString * out = NULL;
+    LString * out;
 /*    LString * tmp = malloc(sizeof(LString));
     memcpy(tmp, input, sizeof(LString));
     tmp->content = malloc(sizeof(LWord) * tmp->capacity);
     memcpy(tmp->content, input->content, sizeof(LWord) * tmp->capacity);
 */
+    if (n == 0) return input;
     out = apply_rules(rules, input);
-    for (int i = 1; i < n; i++){
+    for (int i = 1; i < n - 1; i++){
         out = apply_rules(rules, out);
     }
     return out;

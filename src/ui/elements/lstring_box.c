@@ -62,8 +62,18 @@ void free_lstring_box(LStringBox lb){
     free(lb.lstring_out);
 }
 
-bool update_lstring_box(LStringBox * lb){
+void update_lstring_text(LStringBox * lb){
+    char * ls = lstring_to_string(&lb->lstring_in->input.connection->output.lstring);
+    if (ls != NULL){
+        textbox_set_text(&lb->textbox, ls);
+        free(ls);
+    }
+    lb->lstring_in->input.generation 
+    = lb->lstring_in->input.connection->output.generation;
 
+}
+
+bool update_lstring_box(LStringBox * lb){
     if (update_module(lb->lstring_out)) return true;
     if (update_module(lb->lstring_in)) return true;
     if (update_move_container(&lb->movecontainer, true, NULL)) return true;
@@ -71,12 +81,11 @@ bool update_lstring_box(LStringBox * lb){
     if (lb->lstring_in->input.connection != NULL) {
         if (!lb->lstring_in->input.connection->output.valid) 
                                                     return false;
-        char * ls = lstring_to_string(&lb->lstring_in->input.connection->output.lstring);
-        if (ls != NULL){
-            textbox_set_text(&lb->textbox, ls);
-            free(ls);
-        }
-    } else {
+//        if (  lb->lstring_in->input.generation 
+//           == lb->lstring_in->input.connection->output.generation) 
+//                                                    return false;
+        update_lstring_text(lb);
+        } else {
         if (update_textbox(&lb->textbox, false)) return true;
     }
     return false;
