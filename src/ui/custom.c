@@ -1,6 +1,5 @@
 #include "custom.h"
-#include "elements/apply_box.h"
-#include "elements/lrules_box.h"
+#include "elements/lstring_box.h"
 
 CustomElementData mk_rulesbox_elem(){
     CustomElementData ced = (CustomElementData) {
@@ -17,6 +16,17 @@ CustomElementData mk_applybox_elem(){
     CustomElementData ced = (CustomElementData) {
                    .type = CUSTOM_ELEM_T_apply_box,
                    .applybox = mk_applybox()
+                   };
+    if (ced.rulesbox.error) {
+        return ERR_CUSTOM_ELEM;
+    }
+    return ced;
+}
+
+CustomElementData mk_lstringbox_elem(){
+    CustomElementData ced = (CustomElementData) {
+                   .type = CUSTOM_ELEM_T_lstring_box,
+                   .lstringbox = mk_lstring_box()
                    };
     if (ced.rulesbox.error) {
         return ERR_CUSTOM_ELEM;
@@ -44,6 +54,9 @@ void free_custom_elem(CustomElementData ced){
             return;
         case CUSTOM_ELEM_T_apply_box:
             free_applybox(ced.applybox);
+            return;
+        case CUSTOM_ELEM_T_lstring_box:
+            free_lstring_box(ced.lstringbox);
             return;
         default:
             return;

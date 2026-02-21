@@ -5,7 +5,14 @@
 
 static unsigned int NUM_MOVE_CONTAINERS = 0;
 
-Move_container mk_move_container(){
+Move_container mk_move_container( void (*move_hook)
+                                    ( Vector2 delta
+                                    , void * user_data)
+                                , void (*resize_hook)
+                                    ( Vector2 old_size
+                                    , Vector2 new_size
+                                    , void * user_data)
+                                ){
     Move_container cont = (Move_container) {
           .pos = (Vector2) {0.0, 0.0}
         , .size = (Vector2) {0.0, 0.0}
@@ -46,16 +53,23 @@ void layout_move_container_sizer(Move_container cont){
     ;
 }
 
-bool update_move_container(Move_container * cont, bool resizable){
+bool update_move_container(Move_container * cont, bool resizable, void * user_data){
     bool ptr =Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container"), cont->clay_id_idx));
     bool sizer=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-sizer"), cont->clay_id_idx));
  
 if ((ptr || sizer) && IsMouseButtonDown(0)){
         Vector2 mouse = GetMouseDelta();
         if (sizer && resizable) {
+            Vector2 old = cont->size;
             cont->size = Vector2Add(mouse, cont->size);
+            if (cont->resize_hook != NULL){
+                cont->resize_hook(old, cont->size, user_data);
+            }
         } else {
             cont->pos = Vector2Add(mouse, cont->pos);
+            if (cont->move_hook != NULL){
+                cont->move_hook(mouse,user_data);
+            }
         }
         return true;
     }

@@ -10,7 +10,7 @@ typedef struct {
     bool error;
     Turtlebox turtlebox;
     Move_container movecontainer;
-    Module turtle_out;
+    Module * turtle_out;
 } TurtleMoveBox;
 
 TurtleMoveBox mk_turtle_move_box();

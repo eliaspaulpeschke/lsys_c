@@ -3,6 +3,7 @@
 #include "../clay/clay.h"
 #include <raylib.h>
 #include "string.h"
+
  
 #define COL_LIGHT         (Clay_Color) {220, 220, 230, 255}
 #define COL_ACCENT        (Clay_Color) {90, 100, 230, 255}
@@ -18,6 +19,13 @@
 
 #define TEXT_STANDARD(str) CLAY_TEXT(CLAYIFY(str), TEXT_CFG_STANDARD)
 #define TEXT_STANDARD_CLAYSTR(str) CLAY_TEXT(str, TEXT_CFG_STANDARD)
+
+#define SIZE_GROW_XY(n) .sizing = {CLAY_SIZING_GROW(n), CLAY_SIZING_GROW(n)}
+#define SIZE_FIX_XY(x,y) .sizing = {CLAY_SIZING_FIXED(x), CLAY_SIZING_FIXED(y)}
+#define  SIZE_COLUMN(w) .sizing = {CLAY_SIZING_FIXED(w), CLAY_SIZING_GROW(0)}
+
+#define LAYOUT_LR .layoutDirection = CLAY_LEFT_TO_RIGHT
+#define LAYOUT_TB .layoutDirection = CLAY_TOP_TO_BOTTOM
 
 static inline Vector2 get_cursor_offset(char * text, unsigned int len, Font *font, float font_size, float letter_spacing, float line_height) {
     // Measure string size for Font

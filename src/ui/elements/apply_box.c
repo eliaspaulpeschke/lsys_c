@@ -1,16 +1,23 @@
 #include "apply_box.h"
+#include "../common.h"
 
 void apply_on_click(void * user_data){
     ApplyBox * ab = (ApplyBox *) user_data;
-    if (ab->lstring_in.input.connection == NULL) return; 
-    if (ab->rules_in.input.connection == NULL) return;
-    if (!ab->lstring_in.input.connection->output.valid) return; 
-    if (!ab->rules_in.input.connection->output.valid) return;
-    LString lstr = ab->lstring_in.input.connection->output.lstring;
-    LRuleset rules = ab->rules_in.input.connection->output.ruleset; 
+    if (ab->lstring_in->input.connection == NULL) return; 
+    if (ab->rules_in->input.connection == NULL) return;
+    if (!ab->lstring_in->input.connection->output.valid) {
+        ab->lstring_out->output.valid = false;
+        return; 
+    }
+    if (!ab->rules_in->input.connection->output.valid){
+        ab->lstring_out->output.valid = false;
+        return; 
+    }
+    LString lstr = ab->lstring_in->input.connection->output.lstring;
+    LRuleset rules = ab->rules_in->input.connection->output.ruleset; 
     apply_rules_n(rules, &lstr, ab->times);
-    ab->lstring_out.output.lstring = lstr;
-    ab->lstring_out.output.valid = true;
+    ab->lstring_out->output.lstring = lstr;
+    ab->lstring_out->output.valid = true;
 }
 
 ApplyBox mk_applybox(){
@@ -19,22 +26,25 @@ ApplyBox mk_applybox(){
     ValueBox valuebox = mk_valuebox(VALUEBOX_TYPE_int, false);
     if (valuebox.error == true) return ERR_APPLYBOX;
     valuebox.int_value.min = 0;
-    Module lstring_in = mk_module(MODULE_INPUT, MODULE_DATA_TYPE_lstring);
-    if (lstring_in.type == MODULE_NONE) {
+    Module * lstring_in = mk_module(MODULE_INPUT, MODULE_DATA_TYPE_lstring);
+    if (lstring_in->type == MODULE_NONE) {
         free_valuebox(valuebox);
         return ERR_APPLYBOX;
     }
-    Module lstring_out = mk_module(MODULE_OUTPUT, MODULE_DATA_TYPE_lstring);
-    if (lstring_out.type == MODULE_NONE) {
+    Module * lstring_out = mk_module(MODULE_OUTPUT, MODULE_DATA_TYPE_lstring);
+    if (lstring_out->type == MODULE_NONE) {
         free_valuebox(valuebox);
+        free(lstring_in);
         return ERR_APPLYBOX;
     }
-    Module rules_in = mk_module(MODULE_INPUT, MODULE_DATA_TYPE_ruleset);
-    if (rules_in.type == MODULE_NONE) {
+    Module * rules_in = mk_module(MODULE_INPUT, MODULE_DATA_TYPE_ruleset);
+    if (rules_in->type == MODULE_NONE) {
         free_valuebox(valuebox);
+        free(lstring_in);
+        free(lstring_out);
         return ERR_APPLYBOX;
     }
-    Move_container container = mk_move_container();
+    Move_container container = mk_move_container(NULL, NULL);
     return (ApplyBox) {
           .error = false
         , .times = 0
@@ -49,6 +59,9 @@ ApplyBox mk_applybox(){
 
 void free_applybox(ApplyBox ab){
     free_valuebox(ab.valuebox);
+    free(ab.lstring_out);
+    free(ab.lstring_in);
+    free(ab.rules_in);
 }
 
 bool update_applybox(ApplyBox *ab){
@@ -56,21 +69,56 @@ bool update_applybox(ApplyBox *ab){
        ab->times = ab->valuebox.int_value.value;
        ab->valuebox.changed = false;
    }
-   if (update_module(&ab->lstring_in)) return true;
-   if (update_module(&ab->lstring_out)) return true;
-   if (update_module(&ab->rules_in)) return true;
+   if (update_module(ab->lstring_in)) return true;
+   if (update_module(ab->lstring_out)) return true;
+   if (update_module(ab->rules_in)) return true;
    if (update_valuebox(&ab->valuebox)) return true;
    if (update_button(&ab->btn_apply, ab)) return true;
-   if (update_move_container(&ab->container, true)) return true;
+   if (update_move_container(&ab->container, true, NULL)) return true;
    return false;
 }
 
 void layout_applybox(ApplyBox ab, Font * fonts){
     CLAY(move_cont_clay_id(ab.container), move_cont_clay_decl(ab.container, 8, false)){
-        layout_valuebox(ab.valuebox, fonts, "n: ");
-        layout_button(ab.btn_apply);
-        layout_module(ab.lstring_in);
-        layout_module(ab.rules_in);
-        layout_module(ab.lstring_out);
+        CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
+                                , LAYOUT_LR 
+                                }
+                     , .border = {.color = COL_DARK, .width = {0, 0, 0, 0, 1} }
+                     }){
+            CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
+                                    , LAYOUT_TB
+                                    , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                         }){
+                layout_module(*ab.lstring_in);
+                layout_module(*ab.rules_in);
+            }
+            CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
+                                    , LAYOUT_TB
+                                    , .padding = { .left = 8
+                                                 , .right = 8
+                                                 , .top = 4
+                                                 , .bottom = 0
+                                                 } 
+                                    , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
+                                    }
+                                
+                         }){
+                layout_valuebox(ab.valuebox, fonts, "n: ");
+                CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
+                                        , LAYOUT_TB 
+                                        , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_BOTTOM} 
+                                        }
+                             }){
+                    layout_button(ab.btn_apply);
+                };
+            };
+            CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
+                                    , LAYOUT_TB
+                                    , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
+                                    }
+                         }){
+                layout_module(*ab.lstring_out);
+            }
+        }
     }
 }

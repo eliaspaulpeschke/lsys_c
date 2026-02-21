@@ -12,6 +12,7 @@ typedef struct Module_input Module_input;
 typedef struct Module_output Module_output;
 typedef struct Module Module;
 
+
 typedef struct {
     bool active;
     Vector2 start;
@@ -61,16 +62,19 @@ struct Module {
     MODULE_TYPE type;
     MODULE_DATA_TYPE data_type;
     unsigned int clay_id_num;
+    int idx;
     union {
       Module_input input;
       Module_output output;
     };
 };
 
-#define ERR_MODULE (Module){MODULE_NONE}
+#define NO_MODULE (Module){MODULE_NONE}
+static Module NULL_MODULE = NO_MODULE;
+#define ERR_MODULE &NULL_MODULE
 
 void setup_connection_drawdata();
-Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type); 
+Module * mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type); 
 void draw_module_connections();
 bool update_module_connections();
 bool update_connection_status();

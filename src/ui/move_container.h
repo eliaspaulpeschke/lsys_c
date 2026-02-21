@@ -9,12 +9,21 @@ typedef struct {
     Vector2 pos;
     Vector2 size;
     unsigned int clay_id_idx;
+    void (*move_hook)(Vector2 delta, void * user_data);
+    void (*resize_hook)(Vector2 old_size, Vector2 new_size, void * user_data);
 } Move_container;
 
 Clay_ElementDeclaration move_cont_clay_decl(Move_container cont, int padding, bool resizable);
 
 Clay_ElementId move_cont_clay_id(Move_container cont);
-bool update_move_container(Move_container * cont, bool resizable);
+bool update_move_container(Move_container * cont, bool resizable, void * user_data);
 void layout_move_container_sizer(Move_container cont);
-Move_container mk_move_container();
+Move_container mk_move_container( void (*move_hook)
+                                    ( Vector2 delta
+                                    , void * user_data)
+                                , void (*resize_hook)
+                                    ( Vector2 old_size
+                                    , Vector2 new_size
+                                    , void * user_data)
+                                );
 #endif

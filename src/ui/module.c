@@ -6,9 +6,12 @@
 #include "module.h"
 
 static int NUM_MODULE_IDS = 0; // only count up
-static int IDX_MOD_DRAWDATA = 0;
+static int IDX_MODS = 0;
 
-Connection_drawdata connection_drawdata[MAX_MODULES];
+// TODO: recycle the memory, do not just count up
+static Connection_drawdata connection_drawdata[MAX_MODULES];
+static Module * module_list[MAX_MODULES];
+
 
 void setup_connection_drawdata(){
     memset(connection_drawdata, 0, sizeof(Connection_drawdata) * MAX_MODULES);
@@ -33,25 +36,27 @@ Clay_String module_type_name(MODULE_DATA_TYPE type){
     }
 }
 
-Module mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type){
+Module * mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type){
     if (NUM_MODULE_IDS >= MAX_MODULES || type == MODULE_NONE) 
-        return (Module){ .type = MODULE_NONE };
+        return ERR_MODULE;
+    if (IDX_MODS >= MAX_MODULES) 
+        return ERR_MODULE;
     unsigned int id = NUM_MODULE_IDS;
     NUM_MODULE_IDS += 1;
     TraceLog(LOG_DEBUG, "Module with id %d created", id);  
-    Module mod =   { .type = type
+    Module * mod = malloc(sizeof(Module));
+    *mod = (Module){ .type = type
                    , .data_type = data_type
                    , .clay_id_num = id
+                   , .idx = IDX_MODS
                    };
     if (type == MODULE_INPUT) {
-        if (IDX_MOD_DRAWDATA >= MAX_MODULES) 
-            return (Module){ .type = MODULE_NONE };
-        mod.input.connection_draw_data 
-            = connection_drawdata + IDX_MOD_DRAWDATA;
-        IDX_MOD_DRAWDATA += 1;
+        mod->input.connection_draw_data 
+            = connection_drawdata + IDX_MODS;
     }
+    module_list[IDX_MODS] = mod;
+    IDX_MODS += 1;
     return mod;
-
 }
 
 struct {
@@ -64,6 +69,11 @@ struct {
 bool handle_module_hover(void * userData){
     Module * mod = (Module*)( userData );
     TraceLog(LOG_DEBUG, "Hovering mod %u", mod->clay_id_num); 
+    if (mod->type == MODULE_INPUT && mod->input.connection != NULL && IsMouseButtonReleased(1)){
+        mod->input.connection = NULL;
+        mod->input.connection_draw_data->active = false;
+        return true;
+    }
     if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) {
         if (IsMouseButtonDown(0)) {
             TraceLog(LOG_DEBUG, "connecting"); 
@@ -136,7 +146,16 @@ bool handle_module_hover(void * userData){
 
 bool update_connection_status(){
     if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) return false;
-    if (IsMouseButtonUp(0)) {
+    if (IsMouseButtonReleased(0)){
+        for (int i = 0; i < IDX_MODS; i++){
+            Module * mod = module_list[i];
+            bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(
+                CLAY_STRING("module"), mod->clay_id_num));
+            bool result = hover ? handle_module_hover(mod) : false;
+            if (result) return true;
+        }
+
+    } else if (IsMouseButtonUp(0)) {
         MODULES_CONNECTION_STATUS.connecting_status = MOD_CONN_STATUS_IDLE;
         return false;
     }
@@ -162,7 +181,7 @@ bool update_module_connections(){
     if (rel || down) {
         Vector2 mouse = GetMousePosition();
         Vector2 delta = GetMouseDelta();
-        for (int i = 0; i < IDX_MOD_DRAWDATA; i++){
+        for (int i = 0; i < IDX_MODS; i++){
           Connection_drawdata * cdd = &connection_drawdata[i];
           if (!cdd->active) continue;
           if (rel){
@@ -197,14 +216,18 @@ void draw_module_connections(){
                     CLAY_STRING("module"), MODULES_CONNECTION_STATUS.module->clay_id_num));
         if (!data.found) return;
         Vector2 mouse = GetMousePosition();
-        DrawLineEx(mouse, (Vector2){data.boundingBox.x + data.boundingBox.width / 2, data.boundingBox.y + data.boundingBox.height/2},2, GREEN);
+        DrawLineEx(mouse, (Vector2){ data.boundingBox.x 
+                                     + data.boundingBox.width / 2
+                                   , data.boundingBox.y
+                                     + data.boundingBox.height/2}
+                                   , 2, GREEN);
     }
-    for (int i = 0; i < IDX_MOD_DRAWDATA; i++){
+    for (int i = 0; i < IDX_MODS; i++){
         Connection_drawdata cdd = connection_drawdata[i];
         if (!cdd.active) continue;
         DrawSplineCatmullRom(cdd.points, cdd.num_points, 2, DARKGREEN);
         for(int i = 1; i < cdd.num_points -1; i++){
-        DrawCircle(cdd.points[i].x, cdd.points[i].y, 4, GREEN);
+        DrawCircle(cdd.points[i].x, cdd.points[i].y, 3, GREEN);
         }
     }
 }

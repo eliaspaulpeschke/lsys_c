@@ -11,9 +11,9 @@ typedef struct {
     unsigned int times;
     ValueBox valuebox;
     ButtonElem btn_apply;
-    Module lstring_in;
-    Module rules_in;
-    Module lstring_out;
+    Module * lstring_in;
+    Module * rules_in;
+    Module * lstring_out;
     Move_container container;
 } ApplyBox;
 

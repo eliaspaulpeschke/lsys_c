@@ -1,6 +1,7 @@
 #include "custom.h"
 #include "elements/apply_box.h"
 #include "elements/lrules_box.h"
+#include "elements/lstring_box.h"
 #include "elements/turtle_move_box.h"
 #include "module.h"
 #include "raylib.h"
@@ -61,25 +62,25 @@ void add_box(clay_ctx * ctx, CustomElementData (*mk_elem)() ){
 
 bool update_ui(clay_ctx * ctx){
     if (update_module_connections()) return true;
-    update_connection_status();
+    if (update_connection_status()) return true;
+    if (IsMouseButtonReleased(0)){
+        if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_rulesbox")))) {
+                add_box(ctx, mk_rulesbox_elem);
+                return true;
+        }
+        if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_turtlebox")))) {
+                add_box(ctx, mk_turtlebox_elem);
+                return true;
+        }
+        if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_applybox")))) {
+                add_box(ctx, mk_applybox_elem);
+                return true;
+        }
+        if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_lstringbox")))) {
+                add_box(ctx, mk_lstringbox_elem);
+                return true;
+        }
 
-    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_rulesbox")))) {
-        if (IsMouseButtonReleased(0)){
-            add_box(ctx, mk_rulesbox_elem);
-            return true;
-        }
-    }
-    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_turtlebox")))) {
-        if (IsMouseButtonReleased(0)){
-            add_box(ctx, mk_turtlebox_elem);
-            return true;
-        }
-    }
-    if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_applybox")))) {
-        if (IsMouseButtonReleased(0)){
-            add_box(ctx, mk_applybox_elem);
-            return true;
-        }
     }
 
     for (int i = 0; i < ctx->num_custom_elems; i++){
@@ -92,6 +93,9 @@ bool update_ui(clay_ctx * ctx){
                 break; 
             case CUSTOM_ELEM_T_apply_box:
                 if (update_applybox(&(ctx->ced[i]->applybox))) return true;
+                break; 
+            case CUSTOM_ELEM_T_lstring_box:
+                if (update_lstring_box(&(ctx->ced[i]->lstringbox))) return true;
                 break; 
             default:
                 break;
@@ -126,6 +130,14 @@ bool update_ui(clay_ctx * ctx){
     return false;
 }
 
+void mk_addbtn(char * label, char * id){
+    CLAY(CLAY_SID(CLAYIFY(id)), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
+                                             , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
+                                 , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
+        TEXT_STANDARD(label);
+    };
+}
+
 Clay_RenderCommandArray mk_layout(clay_ctx ctx){
     Clay_SetCurrentContext(ctx.ctx);
     Clay_SetDebugModeEnabled(true);
@@ -153,22 +165,11 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                                  , .border = { .width = {0,0,0,0,1}, .color = COL_DARK }
                                  , .backgroundColor = COL_LIGHT 
                                  }){
-            CLAY(CLAY_ID("add_rulesbox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
-                                                     , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
-                                         , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
-                TEXT_STANDARD_CLAYSTR(CLAY_STRING("+"));
-            };
-            CLAY(CLAY_ID("add_turtlebox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
-                                                     , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
-                                         , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
-                TEXT_STANDARD_CLAYSTR(CLAY_STRING("T"));
-            };
-            CLAY(CLAY_ID("add_applybox"), { .layout = { .sizing = {CLAY_SIZING_FIXED(24), CLAY_SIZING_FIXED(24)}
-                                                     , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_CENTER} }
-                                         , .backgroundColor = Clay_Hovered() ? COL_ACCENT : COL_TRANSPARENT }) {
-                TEXT_STANDARD_CLAYSTR(CLAY_STRING("A"));
-            };
-        };
+                        mk_addbtn("R", "add_rulesbox");
+                        mk_addbtn("T", "add_turtlebox");
+                        mk_addbtn("A", "add_applybox");
+                        mk_addbtn("L", "add_lstringbox");
+                    };
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
                 case CUSTOM_ELEM_T_rulesbox:
@@ -180,6 +181,10 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                 case CUSTOM_ELEM_T_apply_box:
                     layout_applybox(ctx.ced[i]->applybox, ctx.fonts);
                     break;
+                case CUSTOM_ELEM_T_lstring_box:
+                    layout_lstring_box(ctx.ced[i]->lstringbox, ctx.fonts);
+                    break;
+
                 default:
                     break;
             }

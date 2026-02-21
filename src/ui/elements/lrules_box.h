@@ -11,7 +11,7 @@ typedef struct {
     bool error;
     Textbox textbox;
     Move_container movecontainer;
-    Module lsys_out;
+    Module * lsys_out;
     ButtonElem button_parse;
 } LRulesBox;
 
