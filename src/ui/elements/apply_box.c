@@ -1,5 +1,7 @@
 #include "apply_box.h"
 #include "../common.h"
+#include <raylib.h>
+#include <string.h>
 
 void apply_on_click(void * user_data){
     ApplyBox * ab = (ApplyBox *) user_data;
@@ -13,10 +15,10 @@ void apply_on_click(void * user_data){
         ab->lstring_out->output.valid = false;
         return; 
     }
-    LString lstr = ab->lstring_in->input.connection->output.lstring;
+    LString in_str = ab->lstring_in->input.connection->output.lstring;
     LRuleset rules = ab->rules_in->input.connection->output.ruleset; 
-    apply_rules_n(rules, &lstr, ab->times);
-    ab->lstring_out->output.lstring = lstr;
+    apply_rules(rules, &in_str);//, ab->times);
+    ab->lstring_out->output.lstring = in_str;
     ab->lstring_out->output.valid = true;
 }
 

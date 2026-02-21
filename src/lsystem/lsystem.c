@@ -389,6 +389,9 @@ void append_result(LString * output, LRule rule, LString * input, unsigned int i
 }
 
 LString * apply_rules(LRuleset rules, LString * input){
+    TraceLog(LOG_DEBUG, "Got lstring %s", lstring_to_string(input));
+
+    // TODO: this is a memory leak machine
     LString * output = malloc(sizeof(LString));
     output->capacity = input->length << 2;
     output->length = 0;
@@ -420,10 +423,12 @@ LString * apply_rules(LRuleset rules, LString * input){
             output->length++;
         }
     }
+    TraceLog(LOG_DEBUG, "Return lstring %s", lstring_to_string(output));
     return output;
 }
 
 LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n){
+    // TODO: this is a memory leak machine
     LString * out = NULL;
 /*    LString * tmp = malloc(sizeof(LString));
     memcpy(tmp, input, sizeof(LString));
@@ -431,7 +436,6 @@ LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n){
     memcpy(tmp->content, input->content, sizeof(LWord) * tmp->capacity);
 */
     out = apply_rules(rules, input);
-
     for (int i = 1; i < n; i++){
         out = apply_rules(rules, out);
     }
@@ -509,5 +513,50 @@ LString parse_lstring(char*input){
         }
         pos++;
     }
+    return out;
+}
+
+void sprintf_step(int * pos, int * len, char ** tgt, const char * format, ...){
+    va_list argptr;
+    bool through = false;
+    while (!through){
+
+        va_start(argptr, format);
+        int res = vsnprintf( (*tgt) + (*pos)
+                           , (*len) - (*pos)
+                           , format
+                           , argptr );
+        va_end(argptr);
+
+        if (res > (*len) - (*pos)) {
+            char * temp = realloc(*tgt, (*len) << 1);
+            if (temp == NULL) return;
+            *tgt = temp;
+            *len <<= 1;
+        } else {
+            through = true;
+            *pos += res;
+        }
+    }
+}
+
+char * lstring_to_string(LString * s){
+    int len = s->length << 2;
+    char * out = calloc(len, sizeof(char)); 
+    int pos = 0;
+
+    for (int i = 0; i < s->length; i++){
+        sprintf_step(&pos, &len, &out, "%c", s->content[i].name);
+        if (s->content[i].num_values <= 0) continue;
+        sprintf_step(&pos, &len, &out, "(");
+        for (int j = 0; j < s->content[i].num_values; j++){
+            sprintf_step(&pos, &len, &out, "%f", s->content[i].values[j]);
+            if(j < s->content[i].num_values -1){
+                sprintf_step(&pos, &len, &out, " ,");
+            }
+        }
+        sprintf_step(&pos, &len, &out, ")");
+    }
+
     return out;
 }

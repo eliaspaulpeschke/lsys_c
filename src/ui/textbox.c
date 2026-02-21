@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -111,6 +112,18 @@ void textbox_update_text(Textbox * tb){
         memcpy(tb->text+tb->posA,tb->bufB + tb->posB + 1, tb->lenB - tb->posB - 1);
         tb->text[len - 1] = '\0';
     }
+}
+
+void textbox_set_text(Textbox *tb, char *text){
+    int len = strlen(text);
+    if (tb->lenA < len) if (!realloc_bufA(tb, len)) return;
+    memset(tb->bufA, '\0', tb->lenA);
+    memset(tb->bufB, '\0', tb->lenB);
+    tb->posB = tb->lenB -1;
+    snprintf(tb->bufA, tb->lenA, "%s", text); 
+    tb->posA = strlen(tb->bufA);
+    tb->changed = true;
+    textbox_update_text(tb);
 }
 
 void textbox_paste(Textbox * tb){

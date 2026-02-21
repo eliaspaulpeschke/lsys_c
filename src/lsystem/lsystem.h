@@ -122,5 +122,6 @@ LString * apply_rules(LRuleset rules, LString * input);
 LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n);
 
 LString parse_lstring(char * input);
+char * lstring_to_string(LString * s);
 #endif
 

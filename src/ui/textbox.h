@@ -22,6 +22,7 @@ typedef struct {
 } Textbox;
 
 Textbox mk_textbox(unsigned int max_len);
+void textbox_set_text(Textbox * tb, char * text);
 void free_textbox(Textbox tb);
 void textbox_update_text(Textbox * tb);
 bool update_textbox(Textbox * tb, bool focused_anyway);
