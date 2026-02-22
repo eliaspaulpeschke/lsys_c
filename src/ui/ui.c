@@ -1,5 +1,6 @@
 #include "custom.h"
 #include "elements/apply_box.h"
+#include "elements/drawbox.h"
 #include "elements/lrules_box.h"
 #include "elements/lstring_box.h"
 #include "elements/turtle_move_box.h"
@@ -80,6 +81,11 @@ bool update_ui(clay_ctx * ctx){
                 add_box(ctx, mk_lstringbox_elem);
                 return true;
         }
+        if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_drawbox")))) {
+                add_box(ctx, mk_drawbox_elem);
+                return true;
+        }
+
 
     }
 
@@ -97,6 +103,10 @@ bool update_ui(clay_ctx * ctx){
             case CUSTOM_ELEM_T_lstring_box:
                 if (update_lstring_box(&(ctx->ced[i]->lstringbox))) return true;
                 break; 
+            case CUSTOM_ELEM_T_drawbox:
+                if (update_drawbox(&(ctx->ced[i]->drawbox))) return true;
+                break; 
+
             default:
                 break;
         }
@@ -169,6 +179,7 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                         mk_addbtn("T", "add_turtlebox");
                         mk_addbtn("A", "add_applybox");
                         mk_addbtn("L", "add_lstringbox");
+                        mk_addbtn("D", "add_drawbox");
                     };
         for (int i = 0; i < ctx.num_custom_elems; i++){
             switch (ctx.ced[i]->type) {
@@ -184,7 +195,9 @@ Clay_RenderCommandArray mk_layout(clay_ctx ctx){
                 case CUSTOM_ELEM_T_lstring_box:
                     layout_lstring_box(ctx.ced[i]->lstringbox, ctx.fonts);
                     break;
-
+                case CUSTOM_ELEM_T_drawbox:
+                    layout_drawbox(ctx.ced[i]->drawbox);
+                    break;
                 default:
                     break;
             }

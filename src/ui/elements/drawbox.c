@@ -1,0 +1,58 @@
+#include "drawbox.h"
+#include "../../clay/clay.h"
+#include "../../turtle/turtle.h"
+#include "../drawhook.h"
+#include <raylib.h>
+#include <stdlib.h>
+
+
+DrawBox mk_drawbox(){
+    Module * lstring_in = mk_module(MODULE_INPUT, MODULE_DATA_TYPE_lstring);
+    if (lstring_in->type == MODULE_NONE) return ERR_DRAWBOX;
+    Module * turtle_in = mk_module(MODULE_INPUT, MODULE_DATA_TYPE_turtle);
+    if (turtle_in->type == MODULE_NONE) {
+        free(lstring_in);
+        return ERR_DRAWBOX;
+    }
+    DrawBox db = (DrawBox){ .error = false
+                          , .lstring_in = lstring_in
+                          , .turtle_in = turtle_in
+                          , .cont = mk_move_container(NULL, NULL)
+                          };
+    return db;
+}
+
+void free_drawbox(DrawBox db){
+    free(db.turtle_in);
+    free(db.lstring_in);
+}
+
+void draw_draw_box(void * user_data){
+    TraceLog(LOG_DEBUG, "Drawing!!"); 
+    DrawBox * db = (DrawBox*) user_data;
+    Turtle turt = db->turtle_in->input.connection->output.turtle;
+    LString lstr = db->lstring_in->input.connection->output.lstring;
+    turtle_draw(&lstr, lstr.length, turt);
+}
+
+bool update_drawbox(DrawBox *db){
+    if (update_module(db->lstring_in)) return true;
+    if (update_module(db->turtle_in)) return true;
+    if (  db->lstring_in->input.connection != NULL
+       && db->turtle_in->input.connection != NULL
+       && db->lstring_in->input.connection->output.valid 
+       && db->turtle_in->input.connection->output.valid ){
+        TraceLog(LOG_DEBUG, "Adding Hook!!"); 
+         add_draw_hook(draw_draw_box, db);
+    }
+    if (update_move_container(&db->cont, false, NULL)) return true;
+    return false;
+}
+
+void layout_drawbox(DrawBox db){
+    CLAY( move_cont_clay_id(db.cont)
+        , move_cont_clay_decl(db.cont, 8, false) ){
+        layout_module(*db.lstring_in);
+        layout_module(*db.turtle_in);
+    };
+}

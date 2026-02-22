@@ -1,4 +1,5 @@
 #include "custom.h"
+#include "elements/drawbox.h"
 #include "elements/lstring_box.h"
 
 CustomElementData mk_rulesbox_elem(){
@@ -28,7 +29,7 @@ CustomElementData mk_lstringbox_elem(){
                    .type = CUSTOM_ELEM_T_lstring_box,
                    .lstringbox = mk_lstring_box()
                    };
-    if (ced.rulesbox.error) {
+    if (ced.lstringbox.error) {
         return ERR_CUSTOM_ELEM;
     }
     return ced;
@@ -41,6 +42,17 @@ CustomElementData mk_turtlebox_elem(){
                    , .turtlebox = mk_turtle_move_box()
                    };
     if (ced.turtlebox.error) return ERR_CUSTOM_ELEM;
+    return ced;
+}
+
+
+CustomElementData mk_drawbox_elem(){
+    CustomElementData ced = (CustomElementData) {
+                     .error = false
+                   , .type = CUSTOM_ELEM_T_drawbox
+                   , .drawbox = mk_drawbox()
+                   };
+    if (ced.drawbox.error) return ERR_CUSTOM_ELEM;
     return ced;
 }
 
@@ -57,6 +69,9 @@ void free_custom_elem(CustomElementData ced){
             return;
         case CUSTOM_ELEM_T_lstring_box:
             free_lstring_box(ced.lstringbox);
+            return;
+        case CUSTOM_ELEM_T_drawbox:
+            free_drawbox(ced.drawbox);
             return;
         default:
             return;

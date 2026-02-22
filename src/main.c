@@ -6,6 +6,7 @@
 #include "ui/ui.h"
 #include "ui/custom.h"
 #include "clay/clay_renderer_raylib.h"
+#include "ui/drawhook.h"
 
 int main(void)
 {
@@ -27,6 +28,8 @@ int main(void)
     int len = 0;
     while (!WindowShouldClose())    
     {
+
+         flush_draw_hooks();
          if (!update_ui(&clay_context)) {
             if (IsKeyDown(KEY_RIGHT)) {
                  camera.target.x += 3.0f;
@@ -42,15 +45,14 @@ int main(void)
                 camera.zoom -= 0.2f;
             }
         }
-
         Clay_RenderCommandArray layout = mk_layout(clay_context);
         BeginDrawing();
         ClearBackground(BLACK);
         Clay_Raylib_Render(layout, clay_context.fonts, NULL);
         draw_module_connections();
-        //BeginMode2D(camera);
-        // Turtle stuff was here
-        //EndMode2D();
+        BeginMode2D(camera);
+            draw_draw_hooks();
+        EndMode2D();
         EndDrawing();
     }
     Clay_Raylib_Close();

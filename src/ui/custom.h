@@ -1,5 +1,6 @@
 #ifndef CUSTOM_H
 #define CUSTOM_H
+#include "elements/drawbox.h"
 #include "elements/turtle_move_box.h"
 #include "elements/lrules_box.h"
 #include "elements/apply_box.h"
@@ -12,6 +13,7 @@ typedef enum {
     , CUSTOM_ELEM_T_turtle_box
     , CUSTOM_ELEM_T_lstring_box
     , CUSTOM_ELEM_T_apply_box
+    , CUSTOM_ELEM_T_drawbox
 } CustomElementType;
 
 typedef struct {
@@ -22,6 +24,7 @@ typedef struct {
         TurtleMoveBox turtlebox;
         ApplyBox applybox;
         LStringBox lstringbox;
+        DrawBox drawbox;
     };
 } CustomElementData;
 
@@ -29,7 +32,7 @@ CustomElementData mk_rulesbox_elem();
 CustomElementData mk_turtlebox_elem();
 CustomElementData mk_applybox_elem();
 CustomElementData mk_lstringbox_elem();
-
+CustomElementData mk_drawbox_elem();
 
 void free_custom_elem(CustomElementData ced);
 #endif

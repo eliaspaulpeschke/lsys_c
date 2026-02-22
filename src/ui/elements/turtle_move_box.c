@@ -14,6 +14,8 @@ TurtleMoveBox mk_turtle_move_box(){
        , .movecontainer = mk_move_container(NULL, NULL)
        , .turtle_out = turtle_out
        };
+    tb.turtle_out->output.turtle = tb.turtlebox.turtle;
+    tb.turtle_out->output.valid = true;
     tb.movecontainer.size = (Vector2){.x = 160, .y=510};
     return tb;
 }
