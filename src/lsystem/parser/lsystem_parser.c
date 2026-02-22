@@ -3501,7 +3501,7 @@ LRuleset parse_string_to_ruleset(char * in, unsigned int max_rules){
     }
     LRuleset result = (LRuleset){ .num_rules = 0, .rules = NULL};
     result.num_rules = idx+1;
-    result.rules = malloc(sizeof(LRule) * (idx+1));
+    result.rules = calloc(idx+1, sizeof(LRule));
     for (unsigned int i = 0; i <= idx; i++){
         result.rules[i] = *(out[i].lrule_val);
     }

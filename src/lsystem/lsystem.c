@@ -409,7 +409,7 @@ LString * apply_rules(LRuleset rules, LString * input){
                 unsigned int append_len = rule.num_result_words;
                 unsigned int cap_left = output->capacity - output->length;
                 while (append_len >= cap_left) {
-                    LWord * temp = realloc(output->content, output->capacity << 1);
+                    LWord * temp = realloc(output->content, output->capacity << 1 * sizeof(LWord));
                     if (temp == NULL) return NULL;
                     output->content = temp;
                     output->capacity = output->capacity << 1;
@@ -437,10 +437,19 @@ LString * apply_rules_n(LRuleset rules, LString * input, unsigned int n){
     tmp->content = malloc(sizeof(LWord) * tmp->capacity);
     memcpy(tmp->content, input->content, sizeof(LWord) * tmp->capacity);
 */
-    if (n == 0) return input;
+    if (n == 0) {
+      LString * tmp = malloc(sizeof(LString));
+      memcpy(tmp, input, sizeof(LString));
+      tmp->content = calloc(tmp->capacity, sizeof(LWord));
+      memcpy(tmp->content, input->content, sizeof(LWord) * tmp->capacity);
+      return tmp;
+    };
     out = apply_rules(rules, input);
-    for (int i = 1; i < n - 1; i++){
-        out = apply_rules(rules, out);
+    for (int i = 0; i < n - 1; i++){
+        LString * tmp = apply_rules(rules, out);
+        free(out->content);
+        free(out);
+        out = tmp;
     }
     return out;
 }
