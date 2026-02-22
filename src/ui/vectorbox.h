@@ -8,6 +8,7 @@ typedef struct {
     bool error;
     ValueBox x;
     float value;
+    float step;
 } Vector1_box;
 
 typedef struct {
@@ -15,6 +16,7 @@ typedef struct {
     ValueBox x;
     ValueBox y;
     Vector2 value;
+    float step;
 } Vector2_box;
 
 typedef struct {
@@ -23,6 +25,7 @@ typedef struct {
     ValueBox y;
     ValueBox z;
     Vector3 value;
+    float step;
 } Vector3_box;
 
 typedef struct {
@@ -32,6 +35,7 @@ typedef struct {
     ValueBox z;
     ValueBox w;
     Vector4 value;
+    float step;
 } Vector4_box;
 
 #define ERR_VECTOR_1_BOX (Vector1_box){true, ERR_VALUEBOX, 0 }
@@ -39,10 +43,10 @@ typedef struct {
 #define ERR_VECTOR_3_BOX (Vector3_box){true, ERR_VALUEBOX, ERR_VALUEBOX, ERR_VALUEBOX, {0,0,0} }
 #define ERR_VECTOR_4_BOX (Vector4_box){true, ERR_VALUEBOX, ERR_VALUEBOX, ERR_VALUEBOX, ERR_VALUEBOX, {0,0,0,0} }
 
-Vector1_box mk_vector1box();
-Vector2_box mk_vector2box();
-Vector3_box mk_vector3box();
-Vector4_box mk_vector4box();
+Vector1_box mk_vector1box(float step, bool is_unsigned);
+Vector2_box mk_vector2box(float step);
+Vector3_box mk_vector3box(float step);
+Vector4_box mk_vector4box(float step, bool col);
 
 void free_vector1box(Vector1_box vb);
 void free_vector2box(Vector2_box vb);

@@ -2,6 +2,7 @@
 #include "../../clay/clay.h"
 #include "../../turtle/turtle.h"
 #include "../drawhook.h"
+#include "../common.h"
 #include <raylib.h>
 #include <stdlib.h>
 
@@ -42,7 +43,6 @@ bool update_drawbox(DrawBox *db){
        && db->turtle_in->input.connection != NULL
        && db->lstring_in->input.connection->output.valid 
        && db->turtle_in->input.connection->output.valid ){
-        TraceLog(LOG_DEBUG, "Adding Hook!!"); 
          add_draw_hook(draw_draw_box, db);
     }
     if (update_move_container(&db->cont, false, NULL)) return true;
@@ -52,7 +52,10 @@ bool update_drawbox(DrawBox *db){
 void layout_drawbox(DrawBox db){
     CLAY( move_cont_clay_id(db.cont)
         , move_cont_clay_decl(db.cont, 8, false) ){
-        layout_module(*db.lstring_in);
-        layout_module(*db.turtle_in);
+        CLAY_AUTO_ID({.layout = {SIZE_GROW_XY(0), LAYOUT_TB}}){
+            layout_module(*db.lstring_in);
+            layout_module(*db.turtle_in);
+        };
+        CLAY_AUTO_ID({.layout = {SIZE_FIX_XY(80, 40)}}){};
     };
 }

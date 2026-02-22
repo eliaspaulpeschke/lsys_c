@@ -157,14 +157,12 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
         tb->posA += 1;
         tb->changed = true;
     } else if (key != KEY_NULL) {
-        TraceLog(LOG_DEBUG,"keying"); 
         int len_til_newline;
         int len_til_next_newline;
         unsigned int dist;
         switch (key) {
             case KEY_BACKSPACE:
                 if (tb->posA >= 0){
-                    TraceLog(LOG_DEBUG,"backspace"); 
                     if (tb->posA > 0) tb->posA -= 1;
                     tb->bufA[tb->posA] = '\0';
                     tb->changed = true;
@@ -179,13 +177,11 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
                     tb->bufA[tb->posA] = '\0';
                     tb->posB -= 1;
                     tb->changed = true;
-                    TraceLog(LOG_DEBUG,"left %d", tb->posB);
                 }
                 break;
             case KEY_RIGHT:
                 if (tb->posB < (tb->lenB - 1)) {
                     if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return true; 
-                    TraceLog(LOG_DEBUG,"right"); 
                     tb->bufA[tb->posA] = tb->bufB[tb->posB + 1];
                     tb->posB++;
                     tb->posA++;
@@ -215,7 +211,6 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
                 tb->posA -= dist;
                 tb->posB -= dist;
                 tb->changed = true;
-                TraceLog(LOG_DEBUG, "down"); 
                 break;
             case KEY_DOWN: ;
                 unsigned int len_til_prev_newline = -1;
@@ -250,7 +245,6 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
                 tb->posA += dist;
                 tb->posB += dist;
                 tb->changed = true;
-                TraceLog(LOG_DEBUG, "check me!!! up!"); 
                 break;
 
             case KEY_ENTER:
@@ -273,7 +267,6 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
                 }
                 break;
             default:
-                TraceLog(LOG_DEBUG,"your car"); 
                 return false;
             }
         }

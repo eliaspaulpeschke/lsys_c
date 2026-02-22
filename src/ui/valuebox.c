@@ -35,17 +35,17 @@ ValueBox mk_valuebox(VALUEBOX_TYPE type, bool wrap){
             return ERR_VALUEBOX;
         case VALUEBOX_TYPE_int:
             vb.int_value = (ValueBoxIntValue) 
-                             {0, INT_MAX, INT_MIN};
+                             {0, INT_MAX, INT_MIN, 1};
             sprintf_inputbox_text(&vb.inputbox, "0"); 
             break;
         case VALUEBOX_TYPE_float:
             vb.float_value = (ValueBoxFloatValue) 
-                             {0.0f, FLT_MAX, -FLT_MAX};
+                             {0.0f, FLT_MAX, -FLT_MAX, 1.0f};
             sprintf_inputbox_text(&vb.inputbox, "0.0"); 
             break;
         case VALUEBOX_TYPE_double:
             vb.double_value = (ValueBoxDoubleValue) 
-                             {0.0, DBL_MAX, -DBL_MAX};
+                             {0.0, DBL_MAX, -DBL_MAX, 1.0};
             sprintf_inputbox_text(&vb.inputbox, "0.0"); 
             break;
         default:
@@ -77,6 +77,7 @@ void value_from_text(ValueBox *vb){
                     if (int_val > vb->int_value.max) vb->int_value.value = vb->int_value.max;
                     if (int_val < vb->int_value.min) vb->int_value.value = vb->int_value.min;
                     vb->int_value.value = int_val;
+                    sprintf_inputbox_text(&vb->inputbox, "%d", vb->int_value.value); 
                 }
                 vb->changed = true;
                 return;
@@ -88,17 +89,19 @@ void value_from_text(ValueBox *vb){
                     if (float_val > vb->float_value.max) vb->float_value.value = vb->float_value.max;
                     if (float_val < vb->float_value.min) vb->float_value.value = vb->float_value.min;
                     vb->float_value.value = float_val;
+                    sprintf_inputbox_text(&vb->inputbox, "%f", vb->float_value.value); 
                 }
                 vb->changed = true;
                 return;
             case VALUEBOX_TYPE_double:
                 double_val = strtod(vb->inputbox.text, &endptr); 
                 if (endptr == vb->inputbox.text || errno != 0 ){
-                    sprintf_inputbox_text(&vb->inputbox, "%f", vb->float_value.value); 
+                    sprintf_inputbox_text(&vb->inputbox, "%f", vb->double_value.value); 
                 } else {
                     if (double_val > vb->double_value.max) vb->double_value.value = vb->double_value.max;
                     if (double_val < vb->double_value.min) vb->double_value.value = vb->double_value.min;
                     vb->double_value.value = double_val;
+                    sprintf_inputbox_text(&vb->inputbox, "%f", vb->double_value.value); 
                 }
                 vb->changed = true;
                 return;
@@ -115,7 +118,7 @@ void on_click_btn_plus(void * user_data){
         case VALUEBOX_TYPE_none:
             return;
         case VALUEBOX_TYPE_int:
-            vb->int_value.value += 1;
+            vb->int_value.value += vb->int_value.step;
             if (vb->int_value.value > vb->int_value.max) {
                 if (vb->wrap) { vb->int_value.value = vb->int_value.min; }
                 if (!vb->wrap) { vb->int_value.value = vb->int_value.max; }
@@ -124,7 +127,7 @@ void on_click_btn_plus(void * user_data){
             vb->changed = true;
             return;
         case VALUEBOX_TYPE_float:
-            vb->float_value.value += 1.0f;
+            vb->float_value.value += vb->float_value.step;
             if (vb->float_value.value > vb->float_value.max){
                 if (vb->wrap) { vb->float_value.value = vb->float_value.min; }
                 if (!vb->wrap) { vb->float_value.value = vb->float_value.max; }
@@ -133,7 +136,7 @@ void on_click_btn_plus(void * user_data){
             vb->changed = true;
             return;
         case VALUEBOX_TYPE_double:
-            vb->double_value.value += 1.0;
+            vb->double_value.value += vb->double_value.step;
             if (vb->double_value.value > vb->double_value.max){
                 if (vb->wrap) { vb->double_value.value = vb->double_value.min; }
                 if (!vb->wrap) { vb->double_value.value = vb->double_value.max; }
@@ -153,7 +156,7 @@ void on_click_btn_minus(void * user_data){
         case VALUEBOX_TYPE_none:
             return;
         case VALUEBOX_TYPE_int:
-            vb->int_value.value -= 1;
+            vb->int_value.value -= vb->int_value.step;
             if (vb->int_value.value < vb->int_value.min) {
                 if (vb->wrap) { vb->int_value.value = vb->int_value.max; }
                 if (!vb->wrap) { vb->int_value.value = vb->int_value.min; }
@@ -162,10 +165,8 @@ void on_click_btn_minus(void * user_data){
             vb->changed = true;
             return;
         case VALUEBOX_TYPE_float:
-            TraceLog(LOG_DEBUG, "minus float %f", vb->float_value.value);
-            vb->float_value.value -= 1.0f;
+            vb->float_value.value -= vb->float_value.step;
             if (vb->float_value.value < vb->float_value.min){
-                TraceLog(LOG_DEBUG, "smaller than min %f", vb->float_value.min);
                 if (vb->wrap) { vb->float_value.value = vb->float_value.max; }
                 if (!vb->wrap) { vb->float_value.value = vb->float_value.min; }
             }
@@ -174,7 +175,7 @@ void on_click_btn_minus(void * user_data){
             TraceLog(LOG_DEBUG, "after %f", vb->float_value.value);
             return;
         case VALUEBOX_TYPE_double:
-            vb->double_value.value -= 1.0;
+            vb->double_value.value -= vb->double_value.step; 
             if (vb->double_value.value < vb->double_value.min){
                 if (vb->wrap) { vb->double_value.value = vb->double_value.max; }
                 if (!vb->wrap) { vb->double_value.value = vb->double_value.min; }
@@ -190,17 +191,22 @@ void on_click_btn_minus(void * user_data){
 
 bool update_valuebox(ValueBox *vb){
     bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("valuebox"), vb->clay_id_num));
-
     if (hover) {
-        vb->active = true;
+//        vb->active = true;
         if (update_button(&vb->btn_plus, vb)) return true;
         if (update_button(&vb->btn_minus, vb)) return true;
-        if (update_inputbox(&vb->inputbox)) return true;
-    } else if (vb->active == true) {
+        if (update_inputbox(&vb->inputbox)) {
+            value_from_text(vb);
+            return true;
+        }
+      }
+ /*     else if (vb->active == true) {
         vb->active = false;
         if (!vb->inputbox.changed) return false;
+        vb->inputbox.changed = false;
+        vb->changed = true;
         value_from_text(vb);
-    }
+    } */
     return false;
 }
 

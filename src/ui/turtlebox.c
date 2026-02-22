@@ -7,27 +7,27 @@
 
 Turtlebox mk_turtlebox(){
     Turtle turtle = mk_base_turtle();
-    Vector2_box pos = mk_vector2box();
+    Vector2_box pos = mk_vector2box(1.0f);
     if (pos.error == true) return ERR_TURTLEBOX;
-    Vector2_box heading = mk_vector2box();
+    Vector2_box heading = mk_vector2box(1.0f);
     if (heading.error == true) {
         free_vector2box(pos);
         return ERR_TURTLEBOX;
     }
-    Vector1_box length = mk_vector1box();
+    Vector1_box length = mk_vector1box(1.0f, true);
     if (length.error == true) {
         free_vector2box(heading);
         free_vector2box(pos);
         return ERR_TURTLEBOX;
     }
-    Vector1_box turn_rads = mk_vector1box();
+    Vector1_box turn_rads = mk_vector1box(0.01f, false);
     if (turn_rads.error == true) {
         free_vector1box(length);
         free_vector2box(heading);
         free_vector2box(pos);
         return ERR_TURTLEBOX;
     }
-    Vector4_box color = mk_vector4box();
+    Vector4_box color = mk_vector4box(10.0f, true);
     if (color.error == true) {
         free_vector1box(length);
         free_vector1box(turn_rads);

@@ -33,6 +33,7 @@ void set_inputbox_text(Inputbox * ipb, char * text){
     if (ipb->cursor > len){
         ipb->cursor = len;
     }
+    ipb->changed = true;
 }
 
 void sprintf_inputbox_text(Inputbox * ipb, const char * format, ...){
@@ -42,6 +43,7 @@ void sprintf_inputbox_text(Inputbox * ipb, const char * format, ...){
     vsnprintf(ipb->text, ipb->max_len, format, argptr);
     va_end(argptr);
     if (ipb->cursor > strlen(ipb->text)) ipb->cursor = strlen(ipb->text);
+    ipb->changed = true;
 }
 
 void free_inputbox(Inputbox ipb){
@@ -79,6 +81,7 @@ bool update_inputbox(Inputbox * ipb){
                            , movelen);
                     ipb->text[ipb->cursor + movelen] = '\0';
                 }
+                ipb->changed = true;
                 return true;
             case KEY_LEFT:
                 if (ipb->cursor > 0) ipb->cursor--;

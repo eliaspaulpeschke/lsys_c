@@ -5,9 +5,13 @@
 #include "../clay/clay.h"
 #include "common.h"
 
-Vector1_box mk_vector1box(){
+Vector1_box mk_vector1box(float step, bool is_unsigned){
     ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_1_BOX;
+    x.float_value.step = step;
+    if (is_unsigned) {
+        x.float_value.min = 0.0f;
+    }
     Vector1_box vb = (Vector1_box) {
           .error = false
         , .x = x 
@@ -16,7 +20,7 @@ Vector1_box mk_vector1box(){
     return vb;
 }
 
-Vector2_box mk_vector2box(){
+Vector2_box mk_vector2box(float step){
     ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_2_BOX;
     ValueBox y = mk_valuebox(VALUEBOX_TYPE_float, false);
@@ -24,6 +28,8 @@ Vector2_box mk_vector2box(){
         free_valuebox(x);
         return ERR_VECTOR_2_BOX;
     }
+    x.float_value.step = step;
+    y.float_value.step = step;
     Vector2_box vb = (Vector2_box) {
           .error = false
         , .x = x 
@@ -33,7 +39,7 @@ Vector2_box mk_vector2box(){
     return vb;
 }
 
-Vector3_box mk_vector3box(){
+Vector3_box mk_vector3box(float step){
     ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_3_BOX;
     ValueBox y = mk_valuebox(VALUEBOX_TYPE_float, false);
@@ -47,6 +53,10 @@ Vector3_box mk_vector3box(){
         free_valuebox(y);
         return ERR_VECTOR_3_BOX;
     }
+    x.float_value.step = step;
+    y.float_value.step = step;
+    z.float_value.step = step;
+
     Vector3_box vb = (Vector3_box) {
           .error = false
         , .x = x 
@@ -57,7 +67,7 @@ Vector3_box mk_vector3box(){
     return vb;
 }
 
-Vector4_box mk_vector4box(){
+Vector4_box mk_vector4box(float step, bool col){
     ValueBox x = mk_valuebox(VALUEBOX_TYPE_float, false);
     if (x.error == true) return ERR_VECTOR_4_BOX;
     ValueBox y = mk_valuebox(VALUEBOX_TYPE_float, false);
@@ -77,6 +87,20 @@ Vector4_box mk_vector4box(){
         free_valuebox(y);
         free_valuebox(z);
         return ERR_VECTOR_4_BOX;
+    }
+    x.float_value.step = step;
+    y.float_value.step = step;
+    z.float_value.step = step;
+    w.float_value.step = step;
+    if (col) {
+        x.float_value.min = 0.0f;
+        y.float_value.min = 0.0f;
+        z.float_value.min = 0.0f;
+        w.float_value.min = 0.0f;
+        x.float_value.max = 255.0f;
+        y.float_value.max = 255.0f;
+        z.float_value.max = 255.0f;
+        w.float_value.max = 255.0f;
     }
     Vector4_box vb = (Vector4_box) {
           .error = false

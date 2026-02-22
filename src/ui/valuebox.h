@@ -15,18 +15,21 @@ typedef struct {
     int value;
     int max;
     int min;
+    int step;
 } ValueBoxIntValue;
 
 typedef struct {
     float value;
     float max;
     float min;
+    float step;
 } ValueBoxFloatValue;
 
 typedef struct {
     double value;
     double max;
     double min;
+    double step;
 } ValueBoxDoubleValue;
 
 typedef struct {
