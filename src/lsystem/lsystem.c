@@ -392,8 +392,6 @@ void append_result(LString * output, LRule rule, LString * input, unsigned int i
 }
 
 LString * apply_rules(LRuleset rules, LString * input){
-    TraceLog(LOG_DEBUG, "Got lstring %s", lstring_to_string(input));
-
     // TODO: this is a memory leak machine
     LString * output = malloc(sizeof(LString));
     output->capacity = input->length << 2;
@@ -425,7 +423,6 @@ LString * apply_rules(LRuleset rules, LString * input){
             output->length++;
         }
     }
-    TraceLog(LOG_DEBUG, "Return lstring %s", lstring_to_string(output));
     return output;
 }
 

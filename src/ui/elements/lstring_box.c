@@ -34,7 +34,6 @@ LStringBox mk_lstring_box(){
 
 void lstring_box_parse(LStringBox * lb){
     if (lb->lstring_in->input.connection != NULL) return;
-    TraceLog(LOG_DEBUG, "Parsing : \"%s\"", lb->textbox.text);
     if (lb->textbox.text == NULL || strlen(lb->textbox.text) == 0) {
         lb->lstring_out->output.valid = false;
         return;

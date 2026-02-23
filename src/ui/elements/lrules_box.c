@@ -25,7 +25,6 @@ LRulesBox mk_lrules_box(){
 }
 
 void lrules_box_parse(LRulesBox * lb){
-    TraceLog(LOG_DEBUG, "Parsing : \"%s\"", lb->textbox.text);
     if (lb->textbox.text == NULL || strlen(lb->textbox.text) == 0) {
         lb->lsys_out->output.valid = false;
         return;

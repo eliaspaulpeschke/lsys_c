@@ -4,12 +4,13 @@
 #include "../lsystem/lsystem.h"
 
 typedef struct Turtle {
-    Vector2 pos;
-    Vector2 heading;
+    struct Turtle * prev;
     float length;
     float rads;
+    Vector2 pos;
+    Vector2 heading;
     Color color;
-    struct Turtle * prev;
+    Vector2 positionQueue[4];
 } Turtle;
 
 void rotate_turtle(Turtle * turtle, bool ccw);

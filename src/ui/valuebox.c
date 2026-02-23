@@ -172,7 +172,6 @@ void on_click_btn_minus(void * user_data){
             }
             sprintf_inputbox_text(&vb->inputbox, "%f", vb->float_value.value); 
             vb->changed = true;
-            TraceLog(LOG_DEBUG, "after %f", vb->float_value.value);
             return;
         case VALUEBOX_TYPE_double:
             vb->double_value.value -= vb->double_value.step; 

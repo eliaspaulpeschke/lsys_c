@@ -1,9 +1,17 @@
 #include "string.h"
+#include <raylib.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "turtle.h"
 #include "../lsystem/lsystem.h"
 #include <raymath.h>
+
+void push_pos_queue(Turtle * turtle){
+    turtle->positionQueue[0] = turtle->positionQueue[1];
+    turtle->positionQueue[1] = turtle->positionQueue[2];
+    turtle->positionQueue[2] = turtle->positionQueue[3];
+    turtle->positionQueue[3] = turtle->pos;
+}
 
 void rotate_turtle(Turtle * turtle, bool ccw){
     if (ccw) {
@@ -18,20 +26,29 @@ void rotate_turtle_degs(Turtle * turtle, double degs){
 
 void move_turtle_len(Turtle * turtle, double len){
     Vector2 new = Vector2Add(turtle->pos, Vector2Scale(turtle->heading, len));
-    DrawLineV(turtle->pos, new, turtle->color);
+//    DrawLineV(turtle->pos, new, turtle->color);
+    DrawSplineSegmentBezierCubic(turtle->positionQueue[2], turtle->positionQueue[1],  new, turtle->pos, 1, turtle->color);
     turtle->pos = new;
+    push_pos_queue(turtle);
 }
 
 void move_turtle(Turtle * turtle){
     Vector2 new = Vector2Add(turtle->pos, Vector2Scale(turtle->heading, turtle->length));
-    DrawLineV(turtle->pos, new, turtle->color);
+    DrawSplineSegmentCatmullRom(turtle->positionQueue[1], turtle->positionQueue[2], turtle->pos, new, 1, turtle->color);
+//    DrawSplineSegmentBezierCubic(turtle->positionQueue[1], turtle->positionQueue[2], turtle->pos, new, 1, turtle->color);
+//    
+//    DrawLineV(turtle->pos, new, turtle->color);
     turtle->pos = new;
+    push_pos_queue(turtle);
+
 }
 
 void move_turtle_col(Turtle * turtle, Color col){
     Vector2 new = Vector2Add(turtle->pos, Vector2Scale(turtle->heading, turtle->length));
-    DrawLineV(turtle->pos, new, col);
+    DrawSplineSegmentBezierCubic(turtle->positionQueue[2], turtle->positionQueue[1],  new, turtle->pos, 1, turtle->color);
+ //   DrawLineV(turtle->pos, new, col);
     turtle->pos = new;
+    push_pos_queue(turtle);
 }
 
 void turtle_set_color(Turtle * turtle, Color col){
@@ -63,9 +80,13 @@ Turtle mk_base_turtle(){
                     , .prev = NULL
                     , .rads = PI/8
                     , .color = WHITE
+                    , .positionQueue = { (Vector2){0.0f, 0.0f}
+                                       , (Vector2){0.0f, 0.0f}
+                                       , (Vector2){0.0f, 0.0f}
+                                       , (Vector2){0.0f, 0.0f}
+                                       }
                     };
 }
-
 void turtle_draw(LString * text, unsigned int len, Turtle turtle){
   Turtle * turt = malloc(sizeof(Turtle));
   memcpy(turt, &turtle, sizeof(Turtle));

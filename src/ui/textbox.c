@@ -56,14 +56,12 @@ bool realloc_bufA(Textbox * tb, unsigned int extra){
       tb->lenA = newlen;
       success = true;
   } 
-  TraceLog(LOG_DEBUG, "realloc a %b", success);
   return success;
 } 
 
 bool realloc_bufB(Textbox * tb, unsigned int extra){
   unsigned int newlen = tb->lenB << 1;
   if (newlen < (tb->lenB + extra)) newlen += extra;  
-  TraceLog(LOG_DEBUG, "%u %u %u", tb->lenB, newlen, extra); 
   if (newlen + tb->lenA >= tb->max_len) return false;
   char * temp = malloc(newlen);
   bool success = false;
@@ -77,7 +75,6 @@ bool realloc_bufB(Textbox * tb, unsigned int extra){
      tb->lenB = newlen;
      success = true;
   }
-  TraceLog(LOG_DEBUG, "realloc b %b", success);
   return success;
 }
 
@@ -89,8 +86,6 @@ void print_tb(Textbox * tb){
     memcpy(testB, tb->bufB + tb->posB + 1, lb - 1);
     testA[tb->posA] = '\0';
     testB[lb - 1] = '\0';
-    TraceLog(LOG_DEBUG, "A: %s", testA); 
-    TraceLog(LOG_DEBUG, "B: %s", testB); 
     free(testA);
     free(testB);
 }
@@ -130,7 +125,6 @@ void textbox_paste(Textbox * tb){
     const char * clip = GetClipboardText();
     if (clip == NULL) return;
     unsigned int len = strlen(clip);
-    TraceLog(LOG_DEBUG, "paste \"%s\": %d", clip, len); 
     if (tb->lenA - tb->posA - 1< len) if (!realloc_bufA(tb, len)) return;
     memcpy(tb->bufA + tb->posA, clip, len);
     tb->posA += len;
@@ -237,7 +231,6 @@ bool update_textbox(Textbox * tb, bool focused_anyway){
                 if (len_til_newline < 0) return true;
                 if (len_til_next_newline < 0) len_til_next_newline = (tb->lenB - tb->posB) - len_til_newline;
                 dist = len_til_prev_newline > len_til_next_newline ? len_til_newline + len_til_next_newline -1 : line_len -1;
-                TraceLog(LOG_DEBUG, "dist %u %d %d", dist, len_til_newline, len_til_next_newline); 
                 if ((tb->lenA - tb->posA) < dist) if (!realloc_bufA(tb, dist)) return true;
                 //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
                 memcpy(tb->bufA + tb->posA, tb->bufB + tb->posB + 1, dist); 

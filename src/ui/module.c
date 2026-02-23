@@ -43,7 +43,6 @@ Module * mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type){
         return ERR_MODULE;
     unsigned int id = NUM_MODULE_IDS;
     NUM_MODULE_IDS += 1;
-    TraceLog(LOG_DEBUG, "Module with id %d created", id);  
     Module * mod = malloc(sizeof(Module));
     *mod = (Module){ .type = type
                    , .data_type = data_type
@@ -68,7 +67,6 @@ struct {
 
 bool handle_module_hover(void * userData){
     Module * mod = (Module*)( userData );
-    TraceLog(LOG_DEBUG, "Hovering mod %u", mod->clay_id_num); 
     if (mod->type == MODULE_INPUT && mod->input.connection != NULL && IsMouseButtonReleased(1)){
         mod->input.connection = NULL;
         mod->input.connection_draw_data->active = false;
@@ -76,14 +74,12 @@ bool handle_module_hover(void * userData){
     }
     if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) {
         if (IsMouseButtonDown(0)) {
-            TraceLog(LOG_DEBUG, "connecting"); 
             MODULES_CONNECTION_STATUS.connecting_status =  MOD_CONN_STATUS_CONNECTING;
             MODULES_CONNECTION_STATUS.module = mod; 
             return true;
         }
     } else {
         if (IsMouseButtonReleased(0)){
-            TraceLog(LOG_DEBUG, "finishing connection"); 
             if (MODULES_CONNECTION_STATUS.module == NULL){
                 MODULES_CONNECTION_STATUS.connecting_status =  MOD_CONN_STATUS_IDLE;
                 return true;
@@ -108,7 +104,6 @@ bool handle_module_hover(void * userData){
                 , end.boundingBox.y + end.boundingBox.height / 2};
                 cdd->points[3] = (Vector2){ cdd->points[2].x - 30.0f, cdd->points[2].y };
 
-                TraceLog(LOG_DEBUG, "conn in->out"); 
 
                 goto reset;
             }else if (mod->type == MODULE_OUTPUT){
@@ -129,7 +124,6 @@ bool handle_module_hover(void * userData){
                 cdd->points[3] = (Vector2){ end.boundingBox.x + end.boundingBox.width / 2
                 , end.boundingBox.y + end.boundingBox.height / 2};
                 cdd->points[2] = (Vector2){ cdd->points[3].x - 30.0f, cdd->points[3].y };                
-                TraceLog(LOG_DEBUG, "conn out->in"); 
 
 
                 goto reset;

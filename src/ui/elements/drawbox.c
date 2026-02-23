@@ -16,6 +16,7 @@ DrawBox mk_drawbox(){
         return ERR_DRAWBOX;
     }
     DrawBox db = (DrawBox){ .error = false
+                          , .update_handle = -1
                           , .lstring_in = lstring_in
                           , .turtle_in = turtle_in
                           , .cont = mk_move_container(NULL, NULL)
@@ -29,22 +30,28 @@ void free_drawbox(DrawBox db){
 }
 
 void draw_draw_box(void * user_data){
-    TraceLog(LOG_DEBUG, "Drawing!!"); 
     DrawBox * db = (DrawBox*) user_data;
     Turtle turt = db->turtle_in->input.connection->output.turtle;
     LString lstr = db->lstring_in->input.connection->output.lstring;
     turtle_draw(&lstr, lstr.length, turt);
 }
 
-bool update_drawbox(DrawBox *db){
-    if (update_module(db->lstring_in)) return true;
-    if (update_module(db->turtle_in)) return true;
+void always_update_drawbox(void * user_data){
+    DrawBox * db = (DrawBox *)user_data;
     if (  db->lstring_in->input.connection != NULL
        && db->turtle_in->input.connection != NULL
        && db->lstring_in->input.connection->output.valid 
        && db->turtle_in->input.connection->output.valid ){
          add_draw_hook(draw_draw_box, db);
     }
+}
+
+bool update_drawbox(DrawBox *db){
+    if (db->update_handle < 0) {
+        db->update_handle = add_update_hook(always_update_drawbox, db);
+    }
+    if (update_module(db->lstring_in)) return true;
+    if (update_module(db->turtle_in)) return true;
     if (update_move_container(&db->cont, false, NULL)) return true;
     return false;
 }

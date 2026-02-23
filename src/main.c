@@ -30,6 +30,7 @@ int main(void)
     {
 
          flush_draw_hooks();
+         update_update_hooks();
          if (!update_ui(&clay_context)) {
             if (IsKeyDown(KEY_RIGHT)) {
                  camera.target.x += 3.0f;
