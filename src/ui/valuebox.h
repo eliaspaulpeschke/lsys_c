@@ -2,6 +2,7 @@
 #define VALUEBOX_H
 #include "button.h"
 #include "inputbox.h"
+#include "module.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -16,6 +17,7 @@ typedef struct {
     int max;
     int min;
     int step;
+    Module int_in;
 } ValueBoxIntValue;
 
 typedef struct {
@@ -23,6 +25,7 @@ typedef struct {
     float max;
     float min;
     float step;
+    Module float_in;
 } ValueBoxFloatValue;
 
 typedef struct {
@@ -30,6 +33,7 @@ typedef struct {
     double max;
     double min;
     double step;
+    Module double_in;
 } ValueBoxDoubleValue;
 
 typedef struct {

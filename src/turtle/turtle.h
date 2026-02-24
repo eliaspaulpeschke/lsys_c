@@ -13,7 +13,19 @@ typedef struct Turtle {
     Vector2 positionQueue[4];
 } Turtle;
 
+typedef struct Turtle3D {
+    struct Turtle3D * prev;
+    float length;
+    float rads;
+    Vector3 pos;
+    Vector3 heading;
+    Vector3 up;
+    Color color;
+    Vector3 positionQueue[4];
+} Turtle3D;
+
 void rotate_turtle(Turtle * turtle, bool ccw);
+void rotate_turtle3D(Turtle * turtle, Vector3 axis);
 void move_turtle(Turtle * turtle);
 void move_turtle_col(Turtle * turtle, Color col);
 void turtle_set_color(Turtle * turtle, Color col);
