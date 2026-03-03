@@ -80,11 +80,11 @@ UpdateReturnValue update_move_container(Move_container * cont, bool resizable, v
                 cont->move_hook(mouse,user_data);
             }
         }
-        return (UpdateReturnValue){.grab_mouse = true, .interacted = true};
+        return UPDATE_GRAB;
     } else {
         cont->mouse_grabbed = false;
     }
-    return (UpdateReturnValue){.grab_mouse = false, .interacted = false};
+    return UPDATE_NONE;
 }
 
 Clay_ElementId move_cont_clay_id(Move_container cont){

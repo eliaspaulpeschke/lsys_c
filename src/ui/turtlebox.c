@@ -57,19 +57,19 @@ void free_turtlebox(Turtlebox tb){
 UpdateReturnValue update_turtlebox(Turtlebox *tb){
     if (update_vector2box(&tb->pos).interacted){
         tb->turtle.pos = tb->pos.value;
-        return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+        return UPDATE_INTERACT;
     }
     if (update_vector2box(&tb->heading).interacted){
         tb->turtle.heading = tb->heading.value;
-        return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+        return UPDATE_INTERACT;
     }
     if (update_vector1box(&tb->length).interacted){
         tb->turtle.length = tb->length.value;
-        return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+        return UPDATE_INTERACT;
     }
     if (update_vector1box(&tb->turn_rads).interacted){
         tb->turtle.rads = tb->turn_rads.value; 
-        return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+        return UPDATE_INTERACT;
     }
     if (update_vector4box(&tb->color).interacted){
         Vector4 c = tb->color.value;
@@ -79,9 +79,9 @@ UpdateReturnValue update_turtlebox(Turtlebox *tb){
             , .b = c.z
             , .a = c.w
         };
-        return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+        return UPDATE_INTERACT;
     }
-    return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
+    return UPDATE_NONE;
 }
 
 void layout_turtlebox(Turtlebox tb, Font * fonts, char * label){

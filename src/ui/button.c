@@ -24,10 +24,10 @@ UpdateReturnValue update_button(ButtonElem *btn, void * user_data){
     if (IsMouseButtonReleased(0)){
         if (Clay_PointerOver(Clay_GetElementIdWithIndex(ID_STRING, btn->clay_id_num))){
            btn->on_click(user_data);
-           return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+           return UPDATE_INTERACT;
         }
     }
-    return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
+    return UPDATE_NONE;
 }
 
 

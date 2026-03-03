@@ -72,22 +72,22 @@ void update_lstring_text(LStringBox * lb){
 
 }
 
-bool update_lstring_box(LStringBox * lb){
-    if (update_module(lb->lstring_out)) return true;
-    if (update_module(lb->lstring_in)) return true;
-    if (update_move_container(&lb->movecontainer, true, NULL)) return true;
-    if (update_button(&lb->button_parse, lb)) return true;
+UpdateReturnValue update_lstring_box(LStringBox * lb){
+    if (update_module(lb->lstring_out).interacted) return UPDATE_INTERACT;
+    if (update_module(lb->lstring_in).interacted) return UPDATE_INTERACT;
+    if (update_move_container(&lb->movecontainer, true, NULL).interacted) return UPDATE_INTERACT;
+    if (update_button(&lb->button_parse, lb).interacted) return UPDATE_INTERACT;
     if (lb->lstring_in->input.connection != NULL) {
         if (!lb->lstring_in->input.connection->output.valid) 
-                                                    return false;
+                                                    return UPDATE_NONE;
 //        if (  lb->lstring_in->input.generation 
 //           == lb->lstring_in->input.connection->output.generation) 
 //                                                    return false;
         update_lstring_text(lb);
         } else {
-        if (update_textbox(&lb->textbox, false)) return true;
+        if (update_textbox(&lb->textbox, false).interacted) return UPDATE_INTERACT;
     }
-    return false;
+    return UPDATE_NONE;
 }
 
 void layout_lstring_box(LStringBox lb, Font * fonts){

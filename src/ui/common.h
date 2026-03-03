@@ -27,7 +27,7 @@
 #define LAYOUT_LR .layoutDirection = CLAY_LEFT_TO_RIGHT
 #define LAYOUT_TB .layoutDirection = CLAY_TOP_TO_BOTTOM
 
-#define UPDDATE_INTERACT (UpdateReturnValue){true,false}
+#define UPDATE_INTERACT (UpdateReturnValue){true,false}
 #define UPDATE_GRAB (UpdateReturnValue){true, true}
 #define UPDATE_NONE (UpdateReturnValue){false,false}
 

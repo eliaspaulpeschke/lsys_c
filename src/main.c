@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "turtle/turtle.h"
+#include "ui/common.h"
 #include "ui/module.h"
 #include "ui/ui.h"
 #include "ui/custom.h"
@@ -26,12 +27,16 @@ int main(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     int len = 0;
+    bool grabbed = false;
+    UpdateReturnValue res = (UpdateReturnValue){false,false};
     while (!WindowShouldClose())    
     {
 
          flush_draw_hooks();
          update_update_hooks();
-         if (!update_ui(&clay_context)) {
+
+         res = update_ui(&clay_context);
+         if (!res.grab_mouse && !res.interacted) {
             if (IsKeyDown(KEY_RIGHT)) {
                  camera.target.x += 3.0f;
             }else if (IsKeyDown(KEY_LEFT)) {

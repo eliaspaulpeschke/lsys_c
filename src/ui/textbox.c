@@ -141,13 +141,13 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
     bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("textbox"), tb->clay_id_num));
 
     if (!ptr && !focused_anyway) 
-        return (UpdateReturnValue){false, false};
+        return UPDATE_NONE;
 
     char chr = GetCharPressed();
     bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
     KeyboardKey key = GetKeyPressed();
     if (chr != 0 && !ctrl){
-        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return (UpdateReturnValue){true,false}; 
+        if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return UPDATE_INTERACT; 
         tb->bufA[tb->posA] = chr;
         tb->posA += 1;
         tb->changed = true;
@@ -166,7 +166,7 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
                 break;
             case KEY_LEFT:
                 if (tb->posA > 0){
-                    if (tb->posB == 0) if (!realloc_bufB(tb, 1)) return (UpdateReturnValue){true,false};
+                    if (tb->posB == 0) if (!realloc_bufB(tb, 1)) return UPDATE_INTERACT;
                     tb->posA -= 1;
                     tb->bufB[tb->posB] = tb->bufA[tb->posA];
                     tb->bufA[tb->posA] = '\0';
@@ -176,7 +176,7 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
                 break;
             case KEY_RIGHT:
                 if (tb->posB < (tb->lenB - 1)) {
-                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return (UpdateReturnValue){true,false}; 
+                    if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return UPDATE_INTERACT; 
                     tb->bufA[tb->posA] = tb->bufB[tb->posB + 1];
                     tb->posB++;
                     tb->posA++;
@@ -196,10 +196,10 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
                         } 
                     }
                 }
-                if (len_til_newline < 0) return (UpdateReturnValue){true,false};
+                if (len_til_newline < 0) return UPDATE_INTERACT;
                 if (len_til_next_newline < 0) len_til_next_newline = tb->posA - len_til_newline + 1;
                 dist = len_til_newline >= len_til_next_newline ? len_til_newline : len_til_next_newline;
-                if (tb->posB < dist) if (!realloc_bufB(tb, dist)) return (UpdateReturnValue){true,false};
+                if (tb->posB < dist) if (!realloc_bufB(tb, dist)) return UPDATE_INTERACT;
                 //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
                 memcpy(tb->bufB + (tb->posB - dist), tb->bufA + (tb->posA - dist)-1, dist+1); 
                 memset(tb->bufA + (tb->posA - dist), '\0', dist);
@@ -229,10 +229,10 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
                     }
                 } 
                 unsigned int line_len = len_til_prev_newline + len_til_newline;
-                if (len_til_newline < 0) return (UpdateReturnValue){true,false};
+                if (len_til_newline < 0) return UPDATE_INTERACT;
                 if (len_til_next_newline < 0) len_til_next_newline = (tb->lenB - tb->posB) - len_til_newline;
                 dist = len_til_prev_newline > len_til_next_newline ? len_til_newline + len_til_next_newline -1 : line_len -1;
-                if ((tb->lenA - tb->posA) < dist) if (!realloc_bufA(tb, dist)) return (UpdateReturnValue){true,false};
+                if ((tb->lenA - tb->posA) < dist) if (!realloc_bufA(tb, dist)) return UPDATE_INTERACT;
                 //the -1 and +1 probably make more sense somewhere above but I have a fever and cannot figure it out
                 memcpy(tb->bufA + tb->posA, tb->bufB + tb->posB + 1, dist); 
                 memset(tb->bufB + tb->posB + 1, '\0', dist);
@@ -242,7 +242,7 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
                 break;
 
             case KEY_ENTER:
-                if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return (UpdateReturnValue){true,false}; 
+                if (tb->posA >= tb->lenA) if (!realloc_bufA(tb, 1)) return UPDATE_INTERACT; 
                 tb->bufA[tb->posA] = '\n';
                 tb->posA += 1;
                 tb->changed = true;
@@ -261,11 +261,11 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
                 }
                 break;
             default:
-                return (UpdateReturnValue){true,false};
+                return UPDATE_NONE;
             }
         }
     textbox_update_text(tb);
-    return (UpdateReturnValue){true,false};
+    return UPDATE_INTERACT;
 }
 
 void layout_textbox(Textbox tb, Font * font){

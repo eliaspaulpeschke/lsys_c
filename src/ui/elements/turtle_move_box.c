@@ -24,15 +24,15 @@ void free_turtle_move_box(TurtleMoveBox tb){
     free_turtlebox(tb.turtlebox);
 }
 
-bool update_turtle_move_box(TurtleMoveBox * tb){
-    if (update_module(tb->turtle_out)) return true;
-    if (update_move_container(&tb->movecontainer, false, NULL)) return true;
-    if (update_turtlebox(&tb->turtlebox)) {
+UpdateReturnValue update_turtle_move_box(TurtleMoveBox * tb){
+    if (update_module(tb->turtle_out).interacted) return UPDATE_INTERACT;
+    if (update_move_container(&tb->movecontainer, false, NULL).interacted) return UPDATE_INTERACT;
+    if (update_turtlebox(&tb->turtlebox).interacted) {
         tb->turtle_out->output.turtle = tb->turtlebox.turtle;
         tb->turtle_out->output.valid = true;
-        return true;
+        return UPDATE_INTERACT;
     }
-    return false;
+    return UPDATE_NONE;
 }
 
 void layout_turtle_move_box(TurtleMoveBox tb, Font * fonts){

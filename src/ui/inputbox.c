@@ -58,16 +58,16 @@ UpdateReturnValue update_inputbox(Inputbox * ipb){
              || IsKeyDown(KEY_RIGHT_CONTROL);
     KeyboardKey key = GetKeyPressed();
     if (chr != 0 && !ctrl){
-        if (ipb->cursor >= ipb->max_len -1) return (UpdateReturnValue){true,false};
+        if (ipb->cursor >= ipb->max_len -1) return UPDATE_INTERACT;
         if (ipb->text[ipb->cursor] != '\0') {
             unsigned int movelen = strlen(ipb->text + ipb->cursor);
-            if (ipb->cursor + movelen + 1 >= ipb->max_len) return (UpdateReturnValue){true,false};
+            if (ipb->cursor + movelen + 1 >= ipb->max_len) return UPDATE_INTERACT;
             memmove(ipb->text + ipb->cursor + 1, ipb->text + ipb->cursor, movelen);
         }
         ipb->text[ipb->cursor] = chr;
         ipb->cursor++;
         ipb->changed = true;
-        return (UpdateReturnValue){true,false};
+        return UPDATE_INTERACT;
     } else if (key != KEY_NULL) {
         switch (key) {
             case KEY_BACKSPACE:
@@ -82,19 +82,19 @@ UpdateReturnValue update_inputbox(Inputbox * ipb){
                     ipb->text[ipb->cursor + movelen] = '\0';
                 }
                 ipb->changed = true;
-                return (UpdateReturnValue){true,false};
+                return UPDATE_INTERACT;
             case KEY_LEFT:
                 if (ipb->cursor > 0) ipb->cursor--;
-                return (UpdateReturnValue){true,false};
+                return UPDATE_INTERACT;
             case KEY_RIGHT:
-                if (ipb->text[ipb->cursor] == '\0') return true;
+                if (ipb->text[ipb->cursor] == '\0') return UPDATE_INTERACT;
                 if (ipb->cursor < ipb->max_len -1) ipb->cursor++;
-                return (UpdateReturnValue){true,false};
+                return UPDATE_INTERACT;
             default: 
                 break;
         }
     }
-    return (UpdateReturnValue){false,false};
+    return UPDATE_NONE;
 }
 
 void layout_inputbox(Inputbox ipb, Font * font, bool focus, bool padd, char 

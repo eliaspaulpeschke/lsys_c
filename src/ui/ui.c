@@ -61,83 +61,97 @@ void add_box(clay_ctx * ctx, CustomElementData (*mk_elem)() ){
     ctx->num_custom_elems += 1;
 }
 
-bool update_ui(clay_ctx * ctx){
-    if (update_module_connections()) return true;
-    if (update_connection_status()) return true;
+UpdateReturnValue update_main_panel(clay_ctx * ctx){
     if (IsMouseButtonReleased(0)){
         if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_rulesbox")))) {
                 add_box(ctx, mk_rulesbox_elem);
-                return true;
+                return UPDATE_INTERACT;
         }
         if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_turtlebox")))) {
                 add_box(ctx, mk_turtlebox_elem);
-                return true;
+                return UPDATE_INTERACT;
         }
         if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_applybox")))) {
                 add_box(ctx, mk_applybox_elem);
-                return true;
+                return UPDATE_INTERACT;
         }
         if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_lstringbox")))) {
                 add_box(ctx, mk_lstringbox_elem);
-                return true;
+                return UPDATE_INTERACT;
         }
         if (Clay_PointerOver(Clay_GetElementId(CLAY_STRING("add_drawbox")))) {
                 add_box(ctx, mk_drawbox_elem);
-                return true;
+                return UPDATE_INTERACT;
         }
-
-
     }
+    return UPDATE_NONE;
+}
+
+static int GRAB_IDX = -1;
+
+#define MOUSEGRAB(idx, expr) if (GRAB_IDX == -1 || GRAB_IDX == idx) { \
+    UpdateReturnValue res = expr; \
+    if (res.grab_mouse) { \
+        GRAB_IDX = idx; \
+    } else { \
+        GRAB_IDX = -1; \
+    } \
+    if (res.interacted) return res; \
+}
+
+UpdateReturnValue update_ui(clay_ctx * ctx){
+    MOUSEGRAB(1, update_module_connections())
+    MOUSEGRAB(2, update_connection_status())
+    MOUSEGRAB(3, update_main_panel(ctx))
 
     for (int i = 0; i < ctx->num_custom_elems; i++){
         switch (ctx->ced[i]->type) {
             case CUSTOM_ELEM_T_rulesbox:
-                if (update_lrules_box(&(ctx->ced[i]->rulesbox))) return true;
+                MOUSEGRAB(100+i, update_lrules_box(&(ctx->ced[i]->rulesbox)))
                 break;
             case CUSTOM_ELEM_T_turtle_box:
-                if (update_turtle_move_box(&(ctx->ced[i]->turtlebox))) return true;
+                MOUSEGRAB(100+i,update_turtle_move_box(&(ctx->ced[i]->turtlebox)))
                 break; 
             case CUSTOM_ELEM_T_apply_box:
-                if (update_applybox(&(ctx->ced[i]->applybox))) return true;
+                MOUSEGRAB(100+i,update_applybox(&(ctx->ced[i]->applybox)))
                 break; 
             case CUSTOM_ELEM_T_lstring_box:
-                if (update_lstring_box(&(ctx->ced[i]->lstringbox))) return true;
+                MOUSEGRAB(100+i,update_lstring_box(&(ctx->ced[i]->lstringbox)))
                 break; 
             case CUSTOM_ELEM_T_drawbox:
-                if (update_drawbox(&(ctx->ced[i]->drawbox))) return true;
+                MOUSEGRAB(100+i,update_drawbox(&(ctx->ced[i]->drawbox)))
                 break; 
-
             default:
                 break;
         }
     } 
 
-    KeyboardKey pressed[3] = {GetKeyPressed(), GetKeyPressed(), GetKeyPressed()};
+//  KeyboardKey pressed[3] = {GetKeyPressed(), GetKeyPressed(), GetKeyPressed()};
     
-    if (!IsKeyDown(KEY_LEFT_CONTROL)) return false;
-    unsigned int switch_idx = 0;
-    bool shift = false;
-    if (pressed[0] == KEY_LEFT_SHIFT 
-        || pressed[0] == KEY_RIGHT_SHIFT) {
-        switch_idx = 1;
-        shift = true;
-    } shift = shift 
-             || IsKeyDown(KEY_LEFT_SHIFT) 
-             || IsKeyDown(KEY_RIGHT_SHIFT);
+//  if (!IsKeyDown(KEY_LEFT_CONTROL)) return false;
+//  unsigned int switch_idx = 0;
+//  bool shift = false;
+//  if (pressed[0] == KEY_LEFT_SHIFT 
+//      || pressed[0] == KEY_RIGHT_SHIFT) {
+//      switch_idx = 1;
+//      shift = true;
+//  } shift = shift 
+//           || IsKeyDown(KEY_LEFT_SHIFT) 
+//           || IsKeyDown(KEY_RIGHT_SHIFT);
 
-    switch (pressed[switch_idx]){
-        case KEY_ENTER:
-            if (ctx->focus_index < ((int)ctx->num_custom_elems - 1)
-                && (!shift)){
-                ctx->focus_index += 1;
-            }else{
-                ctx->focus_index = -1;
-            }
-            return true;
-        default: 
-            return false;
-    }
-    return false;
+//  switch (pressed[switch_idx]){
+//      case KEY_ENTER:
+//          if (ctx->focus_index < ((int)ctx->num_custom_elems - 1)
+//              && (!shift)){
+//              ctx->focus_index += 1;
+//          }else{
+//              ctx->focus_index = -1;
+//          }
+//          return true;
+//      default: 
+//          return false;
+//  }
+     return UPDATE_NONE;
 }
 
 void mk_addbtn(char * label, char * id){

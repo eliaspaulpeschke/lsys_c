@@ -193,15 +193,12 @@ UpdateReturnValue update_valuebox(ValueBox *vb){
     if (hover) {
 //        vb->active = true;
         if (update_button(&vb->btn_plus, vb).interacted)
-            return (UpdateReturnValue)
-              {.interacted = true, .grab_mouse = false};
+            return UPDATE_INTERACT;
         if (update_button(&vb->btn_minus, vb).interacted) 
-            return (UpdateReturnValue)
-              {.interacted = true, .grab_mouse = false};
+            return UPDATE_INTERACT;
         if (update_inputbox(&vb->inputbox).interacted) {
             value_from_text(vb);
-            return (UpdateReturnValue)
-              {.interacted = true, .grab_mouse = false};
+            return UPDATE_INTERACT;
         }
       }
  /*     else if (vb->active == true) {
@@ -211,8 +208,7 @@ UpdateReturnValue update_valuebox(ValueBox *vb){
         vb->changed = true;
         value_from_text(vb);
     } */
-    return (UpdateReturnValue)
-              {.interacted = true, .grab_mouse = false};
+    return UPDATE_NONE;
 ;
 }
 

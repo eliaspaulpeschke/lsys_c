@@ -140,21 +140,21 @@ bool handle_module_hover(void * userData){
 
 UpdateReturnValue update_connection_status(){
     if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) 
-        return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
+        return UPDATE_NONE;
     if (IsMouseButtonReleased(0)){
         for (int i = 0; i < IDX_MODS; i++){
             Module * mod = module_list[i];
             bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(
                 CLAY_STRING("module"), mod->clay_id_num));
             bool result = hover ? handle_module_hover(mod) : false;
-            if (result) return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+            if (result) return UPDATE_INTERACT;
         }
 
     } else if (IsMouseButtonUp(0)) {
         MODULES_CONNECTION_STATUS.connecting_status = MOD_CONN_STATUS_IDLE;
-        return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
+        return UPDATE_NONE;
     }
-    return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
+    return UPDATE_INTERACT;
 }
 
 Clay_String module_kind_name(Module mod){
@@ -193,13 +193,13 @@ UpdateReturnValue update_module_connections(){
               for(int i = 1; i < cdd->num_points -1 ; i++){ //last point is end, first point is start
                   if(Vector2Distance(mouse, cdd->points[i]) < 30.0f){
                       cdd->points[i] = Vector2Add(cdd->points[i], delta);
-                      return (UpdateReturnValue){.interacted = true, .grab_mouse = true};
+                      return UPDATE_GRAB;
                   }
               }
           }
         }
     }
-    return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
+    return UPDATE_NONE;
 }
 
 
@@ -228,7 +228,7 @@ void draw_module_connections(){
 }
 
 UpdateReturnValue update_module(Module * mod){
-    if (mod == NULL) return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
+    if (mod == NULL) return UPDATE_NONE;
     bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(
                 CLAY_STRING("module"), mod->clay_id_num));
 

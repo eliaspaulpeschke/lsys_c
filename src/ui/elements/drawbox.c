@@ -46,14 +46,14 @@ void always_update_drawbox(void * user_data){
     }
 }
 
-bool update_drawbox(DrawBox *db){
+UpdateReturnValue update_drawbox(DrawBox *db){
     if (db->update_handle < 0) {
         db->update_handle = add_update_hook(always_update_drawbox, db);
     }
-    if (update_module(db->lstring_in)) return true;
-    if (update_module(db->turtle_in)) return true;
-    if (update_move_container(&db->cont, false, NULL)) return true;
-    return false;
+    if (update_module(db->lstring_in).interacted) return UPDATE_INTERACT;
+    if (update_module(db->turtle_in).interacted) return UPDATE_INTERACT;
+    if (update_move_container(&db->cont, false, NULL).interacted) return UPDATE_INTERACT;
+    return UPDATE_NONE;
 }
 
 void layout_drawbox(DrawBox db){
