@@ -1,6 +1,7 @@
 #ifndef VALUEBOX_H
 #define VALUEBOX_H
 #include "button.h"
+#include "common.h"
 #include "inputbox.h"
 #include "module.h"
 #include <stdbool.h>
@@ -56,7 +57,7 @@ typedef struct {
 #define ERR_VALUEBOX (ValueBox) {true, VALUEBOX_TYPE_none, 0}
 void free_valuebox(ValueBox vb);
 ValueBox mk_valuebox(VALUEBOX_TYPE type, bool wrap);
-bool update_valuebox(ValueBox * vb);
+UpdateReturnValue update_valuebox(ValueBox * vb);
 void layout_valuebox(ValueBox vb, Font * fonts, char * label);
 
 #endif

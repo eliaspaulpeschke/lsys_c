@@ -27,6 +27,15 @@
 #define LAYOUT_LR .layoutDirection = CLAY_LEFT_TO_RIGHT
 #define LAYOUT_TB .layoutDirection = CLAY_TOP_TO_BOTTOM
 
+#define UPDDATE_INTERACT (UpdateReturnValue){true,false}
+#define UPDATE_GRAB (UpdateReturnValue){true, true}
+#define UPDATE_NONE (UpdateReturnValue){false,false}
+
+typedef struct {
+    bool interacted;
+    bool grab_mouse;
+} UpdateReturnValue;
+
 static inline Vector2 get_cursor_offset(char * text, unsigned int len, Font *font, float font_size, float letter_spacing, float line_height) {
     // Measure string size for Font
     Vector2 textSize = { 0 };

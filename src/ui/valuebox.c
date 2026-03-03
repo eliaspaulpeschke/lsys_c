@@ -188,15 +188,20 @@ void on_click_btn_minus(void * user_data){
 }
 
 
-bool update_valuebox(ValueBox *vb){
+UpdateReturnValue update_valuebox(ValueBox *vb){
     bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("valuebox"), vb->clay_id_num));
     if (hover) {
 //        vb->active = true;
-        if (update_button(&vb->btn_plus, vb)) return true;
-        if (update_button(&vb->btn_minus, vb)) return true;
-        if (update_inputbox(&vb->inputbox)) {
+        if (update_button(&vb->btn_plus, vb).interacted)
+            return (UpdateReturnValue)
+              {.interacted = true, .grab_mouse = false};
+        if (update_button(&vb->btn_minus, vb).interacted) 
+            return (UpdateReturnValue)
+              {.interacted = true, .grab_mouse = false};
+        if (update_inputbox(&vb->inputbox).interacted) {
             value_from_text(vb);
-            return true;
+            return (UpdateReturnValue)
+              {.interacted = true, .grab_mouse = false};
         }
       }
  /*     else if (vb->active == true) {
@@ -206,7 +211,9 @@ bool update_valuebox(ValueBox *vb){
         vb->changed = true;
         value_from_text(vb);
     } */
-    return false;
+    return (UpdateReturnValue)
+              {.interacted = true, .grab_mouse = false};
+;
 }
 
 Clay_TextElementConfig * btn_text(Clay_Color col) {

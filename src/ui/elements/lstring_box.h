@@ -18,7 +18,7 @@ typedef struct {
 
 LStringBox mk_lstring_box();
 void free_lstring_box(LStringBox lb);
-bool update_lstring_box(LStringBox * lb);
+UpdateReturnValue update_lstring_box(LStringBox * lb);
 void layout_lstring_box(LStringBox lb, Font * fonts);
 #define LSTRING_BOX_ERR (LStringBox){.error=true}
 

@@ -3,6 +3,7 @@
 #include "../clay/clay.h"
 #include <stdbool.h>
 #include <raylib.h>
+#include "common.h"
 #include "custom.h"
 
 #define MAX_CUSTOM_ELEMS 64
@@ -17,7 +18,7 @@ typedef struct {
 } clay_ctx;
 
 clay_ctx init_clay();
-bool update_ui(clay_ctx * ctx);
+UpdateReturnValue update_ui(clay_ctx * ctx);
 Clay_RenderCommandArray mk_layout(clay_ctx ctx);
 
 #endif

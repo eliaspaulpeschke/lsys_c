@@ -67,18 +67,18 @@ void free_applybox(ApplyBox ab){
     free(ab.rules_in);
 }
 
-bool update_applybox(ApplyBox *ab){
+UpdateReturnValue update_applybox(ApplyBox *ab){
    if (ab->valuebox.changed) {
        ab->times = ab->valuebox.int_value.value;
        ab->valuebox.changed = false;
    }
-   if (update_module(ab->lstring_in)) return true;
-   if (update_module(ab->lstring_out)) return true;
-   if (update_module(ab->rules_in)) return true;
-   if (update_valuebox(&ab->valuebox)) return true;
-   if (update_button(&ab->btn_apply, ab)) return true;
-   if (update_move_container(&ab->container, true, NULL)) return true;
-   return false;
+   if (update_module(ab->lstring_in).interacted) return (UpdateReturnValue){true,false};
+   if (update_module(ab->lstring_out).interacted) return (UpdateReturnValue){true,false};
+   if (update_module(ab->rules_in).interacted) return (UpdateReturnValue){true,false};
+   if (update_valuebox(&ab->valuebox).interacted) return (UpdateReturnValue){true,false};
+   if (update_button(&ab->btn_apply, ab).interacted) return (UpdateReturnValue){true,false};
+   if (update_move_container(&ab->container, true, NULL).interacted) return (UpdateReturnValue){true,false};
+   return (UpdateReturnValue){false,false};
 }
 
 void layout_applybox(ApplyBox ab, Font * fonts){

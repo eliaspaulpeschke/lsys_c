@@ -1,6 +1,7 @@
 #ifndef MODULE_H
 #define MODULE_H
 #include <stdbool.h>
+#include "common.h"
 #include "raylib.h"
 #include "../turtle/turtle.h"
 #include "../lsystem/lsystem.h"
@@ -78,8 +79,8 @@ static Module NULL_MODULE = NO_MODULE;
 void setup_connection_drawdata();
 Module * mk_module(MODULE_TYPE type, MODULE_DATA_TYPE data_type); 
 void draw_module_connections();
-bool update_module_connections();
-bool update_connection_status();
-bool update_module(Module * mod);
+UpdateReturnValue update_module_connections();
+UpdateReturnValue update_connection_status();
+UpdateReturnValue update_module(Module * mod);
 void layout_module(Module mod);
 #endif

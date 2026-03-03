@@ -2,6 +2,7 @@
 #define TURTLEBOX_H
 
 #include "../turtle/turtle.h"
+#include "common.h"
 #include "vectorbox.h"
 #include "inputbox.h"
 
@@ -19,7 +20,7 @@ typedef struct {
 
 
 Turtlebox mk_turtlebox();
-bool update_turtlebox(Turtlebox * tb);
+UpdateReturnValue update_turtlebox(Turtlebox * tb);
 void layout_turtlebox(Turtlebox tb, Font * fonts, char * label);
 void free_turtlebox(Turtlebox tb);
 

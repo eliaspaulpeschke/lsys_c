@@ -50,28 +50,28 @@ void free_inputbox(Inputbox ipb){
     free(ipb.text);
 }
 
-bool update_inputbox(Inputbox * ipb){
+UpdateReturnValue update_inputbox(Inputbox * ipb){
     bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("inputbox"), ipb->clay_id_num));
-    if (!ptr) return false;
+    if (!ptr) return (UpdateReturnValue){false,false};
     char chr = GetCharPressed();
     bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) 
              || IsKeyDown(KEY_RIGHT_CONTROL);
     KeyboardKey key = GetKeyPressed();
     if (chr != 0 && !ctrl){
-        if (ipb->cursor >= ipb->max_len -1) return true;
+        if (ipb->cursor >= ipb->max_len -1) return (UpdateReturnValue){true,false};
         if (ipb->text[ipb->cursor] != '\0') {
             unsigned int movelen = strlen(ipb->text + ipb->cursor);
-            if (ipb->cursor + movelen + 1 >= ipb->max_len) return true;
+            if (ipb->cursor + movelen + 1 >= ipb->max_len) return (UpdateReturnValue){true,false};
             memmove(ipb->text + ipb->cursor + 1, ipb->text + ipb->cursor, movelen);
         }
         ipb->text[ipb->cursor] = chr;
         ipb->cursor++;
         ipb->changed = true;
-        return true;
+        return (UpdateReturnValue){true,false};
     } else if (key != KEY_NULL) {
         switch (key) {
             case KEY_BACKSPACE:
-                if (ipb->cursor <= 0) return true;
+                if (ipb->cursor <= 0) return (UpdateReturnValue){true,false};
                 ipb->cursor--;
                 ipb->text[ipb->cursor] = '\0';
                 if (ipb->text[ipb->cursor+1] != '\0') {
@@ -82,19 +82,19 @@ bool update_inputbox(Inputbox * ipb){
                     ipb->text[ipb->cursor + movelen] = '\0';
                 }
                 ipb->changed = true;
-                return true;
+                return (UpdateReturnValue){true,false};
             case KEY_LEFT:
                 if (ipb->cursor > 0) ipb->cursor--;
-                return true;
+                return (UpdateReturnValue){true,false};
             case KEY_RIGHT:
                 if (ipb->text[ipb->cursor] == '\0') return true;
                 if (ipb->cursor < ipb->max_len -1) ipb->cursor++;
-                return true;
+                return (UpdateReturnValue){true,false};
             default: 
                 break;
         }
     }
-    return false;
+    return (UpdateReturnValue){false,false};
 }
 
 void layout_inputbox(Inputbox ipb, Font * font, bool focus, bool padd, char 

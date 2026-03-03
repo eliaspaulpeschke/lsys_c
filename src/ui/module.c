@@ -138,22 +138,23 @@ bool handle_module_hover(void * userData){
       return true;
 }
 
-bool update_connection_status(){
-    if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) return false;
+UpdateReturnValue update_connection_status(){
+    if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) 
+        return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
     if (IsMouseButtonReleased(0)){
         for (int i = 0; i < IDX_MODS; i++){
             Module * mod = module_list[i];
             bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(
                 CLAY_STRING("module"), mod->clay_id_num));
             bool result = hover ? handle_module_hover(mod) : false;
-            if (result) return true;
+            if (result) return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
         }
 
     } else if (IsMouseButtonUp(0)) {
         MODULES_CONNECTION_STATUS.connecting_status = MOD_CONN_STATUS_IDLE;
-        return false;
+        return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
     }
-    return true;
+    return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
 }
 
 Clay_String module_kind_name(Module mod){
@@ -169,7 +170,7 @@ Clay_String module_kind_name(Module mod){
     }
 }
 
-bool update_module_connections(){
+UpdateReturnValue update_module_connections(){
     bool down = IsMouseButtonDown(0);
     bool rel = IsMouseButtonReleased(0);
     if (rel || down) {
@@ -192,13 +193,13 @@ bool update_module_connections(){
               for(int i = 1; i < cdd->num_points -1 ; i++){ //last point is end, first point is start
                   if(Vector2Distance(mouse, cdd->points[i]) < 30.0f){
                       cdd->points[i] = Vector2Add(cdd->points[i], delta);
-                      return true;
+                      return (UpdateReturnValue){.interacted = true, .grab_mouse = true};
                   }
               }
           }
         }
     }
-    return false;
+    return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
 }
 
 
@@ -226,15 +227,15 @@ void draw_module_connections(){
     }
 }
 
-bool update_module(Module * mod){
-    if (mod == NULL) return false;
+UpdateReturnValue update_module(Module * mod){
+    if (mod == NULL) return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
     bool hover = Clay_PointerOver(Clay_GetElementIdWithIndex(
                 CLAY_STRING("module"), mod->clay_id_num));
 
     bool result = hover ? handle_module_hover(mod) : false;
 
     if (mod->type != MODULE_INPUT || mod->input.connection == NULL) {
-        return result;
+        return (UpdateReturnValue){.interacted = result, .grab_mouse = result}; //TODO: Maybe grab_mouse is wrong here.
     } else if (mod->type == MODULE_INPUT && mod->input.connection == NULL) {
         Connection_drawdata * cdd = mod->input.connection_draw_data;
         cdd->active = false;
@@ -245,7 +246,7 @@ bool update_module(Module * mod){
     Clay_ElementData data2 = Clay_GetElementData(Clay_GetElementIdWithIndex(
                 CLAY_STRING("module"), mod->input.connection->clay_id_num));
 
-    if (!data.found || !data2.found ) return result;
+    if (!data.found || !data2.found ) return (UpdateReturnValue){.interacted = result, .grab_mouse = result};
 
     Connection_drawdata * cdd = mod->input.connection_draw_data;
     cdd->active = true;
@@ -258,7 +259,7 @@ bool update_module(Module * mod){
     cdd->points[cdd->num_points-1] = (Vector2){ cdd->points[cdd->num_points-2].x - 30.0f
                                               , cdd->points[cdd->num_points-2].y };
 
-    return result;
+    return (UpdateReturnValue){.interacted = result, .grab_mouse = result};
 }
 
 void layout_module(Module mod){

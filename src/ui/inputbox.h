@@ -2,6 +2,7 @@
 #define INPUTBOX_H
 #include <stdbool.h>
 #include <stdlib.h>
+#include "common.h"
 #include "raylib.h"
 
 typedef struct {
@@ -19,6 +20,6 @@ void set_inputbox_text(Inputbox * ipb, char * text);
 
 Inputbox mk_inputbox(unsigned int max_len /*default 64*/);
 void free_inputbox(Inputbox ipb);
-bool update_inputbox(Inputbox * ipb);
+UpdateReturnValue update_inputbox(Inputbox * ipb);
 void layout_inputbox(Inputbox ipb, Font * font, bool focus, bool padd, char * label);
 #endif

@@ -14,7 +14,9 @@ Move_container mk_move_container( void (*move_hook)
                                     , void * user_data)
                                 ){
     Move_container cont = (Move_container) {
-          .pos = (Vector2) {0.0, 0.0}
+          .mouse_grabbed = false
+        , .state = MOVE_CONTAINER_STATE_NONE
+        , .pos = (Vector2) {0.0, 0.0}
         , .size = (Vector2) {0.0, 0.0}
         , .clay_id_idx = NUM_MOVE_CONTAINERS 
     };
@@ -53,27 +55,36 @@ void layout_move_container_sizer(Move_container cont){
     ;
 }
 
-bool update_move_container(Move_container * cont, bool resizable, void * user_data){
-    bool ptr =Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container"), cont->clay_id_idx));
-    bool sizer=Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-sizer"), cont->clay_id_idx));
+UpdateReturnValue update_move_container(Move_container * cont, bool resizable, void * user_data){
+    bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container"), cont->clay_id_idx));
+    bool sizer = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-sizer"), cont->clay_id_idx));
  
-if ((ptr || sizer) && IsMouseButtonDown(0)){
+    if ((ptr || sizer || cont->mouse_grabbed) && IsMouseButtonDown(0)){
         Vector2 mouse = GetMouseDelta();
-        if (sizer && resizable) {
+        if (resizable && 
+            (sizer || (cont->state == 
+                       MOVE_CONTAINER_STATE_RESIZE))) {
+            cont->state =
+                       MOVE_CONTAINER_STATE_RESIZE;
             Vector2 old = cont->size;
             cont->size = Vector2Add(mouse, cont->size);
             if (cont->resize_hook != NULL){
                 cont->resize_hook(old, cont->size, user_data);
             }
-        } else {
+        } else if ( ptr || (cont->state ==
+                    MOVE_CONTAINER_STATE_MOVE)){
+            cont->state =
+                       MOVE_CONTAINER_STATE_MOVE;
             cont->pos = Vector2Add(mouse, cont->pos);
             if (cont->move_hook != NULL){
                 cont->move_hook(mouse,user_data);
             }
         }
-        return true;
+        return (UpdateReturnValue){.grab_mouse = true, .interacted = true};
+    } else {
+        cont->mouse_grabbed = false;
     }
-return false;
+    return (UpdateReturnValue){.grab_mouse = false, .interacted = false};
 }
 
 Clay_ElementId move_cont_clay_id(Move_container cont){

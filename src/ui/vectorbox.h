@@ -1,6 +1,7 @@
 #ifndef VECTORBOX_H
 #define VECTORBOX_H
 
+#include "common.h"
 #include "raylib.h"
 #include "valuebox.h"
 
@@ -58,8 +59,8 @@ void layout_vector2box(Vector2_box vb, Font * fonts, char * label);
 void layout_vector3box(Vector3_box vb, Font * fonts, char * label);
 void layout_vector4box(Vector4_box vb, Font * fonts, bool col, char * label);
 
-bool update_vector1box(Vector1_box * vb);
-bool update_vector2box(Vector2_box * vb);
-bool update_vector3box(Vector3_box * vb);
-bool update_vector4box(Vector4_box * vb);
+UpdateReturnValue update_vector1box(Vector1_box * vb);
+UpdateReturnValue update_vector2box(Vector2_box * vb);
+UpdateReturnValue update_vector3box(Vector3_box * vb);
+UpdateReturnValue update_vector4box(Vector4_box * vb);
 #endif

@@ -1,6 +1,7 @@
 #ifndef TEXTBOX_H
 #define TEXTBOX_H
 #include <stdbool.h>
+#include "common.h"
 #include "raylib.h"
 
 #define ERR_TEXTBOX (Textbox){true,0,0,0,0,0,0,0,0,0,0,0,0}
@@ -25,7 +26,7 @@ Textbox mk_textbox(unsigned int max_len);
 void textbox_set_text(Textbox * tb, char * text);
 void free_textbox(Textbox tb);
 void textbox_update_text(Textbox * tb);
-bool update_textbox(Textbox * tb, bool focused_anyway);
+UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway);
 void layout_textbox(Textbox tb, Font * font);
 #endif
 

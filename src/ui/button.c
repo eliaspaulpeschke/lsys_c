@@ -20,14 +20,14 @@ ButtonElem mk_button(char *label, void (*on_click)(void * user_data)){
     return btn;
 }
 
-bool update_button(ButtonElem *btn, void * user_data){
+UpdateReturnValue update_button(ButtonElem *btn, void * user_data){
     if (IsMouseButtonReleased(0)){
         if (Clay_PointerOver(Clay_GetElementIdWithIndex(ID_STRING, btn->clay_id_num))){
            btn->on_click(user_data);
-           return true;
+           return (UpdateReturnValue){.interacted = true, .grab_mouse = false};
         }
     }
-    return false;
+    return (UpdateReturnValue){.interacted = false, .grab_mouse = false};
 }
 
 

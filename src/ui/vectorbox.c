@@ -179,37 +179,47 @@ void layout_vector4box(Vector4_box vb, Font * fonts, bool col, char * label){
     };
 }
 
-bool update_vector_component(ValueBox * vb, float * comp){
-  bool res = update_valuebox(vb);
+UpdateReturnValue update_vector_component(ValueBox * vb, float * comp){
+  UpdateReturnValue res = update_valuebox(vb);
   if (vb->changed) {
      vb->changed = false;
      *comp = vb->float_value.value;
   }
   return res;
 }
-bool update_vector1box(Vector1_box *vb){
-    if (update_vector_component(&(vb->x), &(vb->value))) return true;
-    return false;
+UpdateReturnValue update_vector1box(Vector1_box *vb){
+    if (update_vector_component(&(vb->x), &(vb->value)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    return (UpdateReturnValue) {.interacted = false, .grab_mouse = false};
 }
 
 
-bool update_vector2box(Vector2_box *vb){
-    if (update_vector_component(&(vb->x), &(vb->value.x))) return true;
-    if (update_vector_component(&(vb->y), &(vb->value.y))) return true;
-    return false;
+UpdateReturnValue update_vector2box(Vector2_box *vb){
+    if (update_vector_component(&(vb->x), &(vb->value.x)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    if (update_vector_component(&(vb->y), &(vb->value.y)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    return (UpdateReturnValue) {.interacted = false, .grab_mouse = false};
 }
 
-bool update_vector3box(Vector3_box *vb){
-    if (update_vector_component(&(vb->x), &(vb->value.x))) return true;
-    if (update_vector_component(&(vb->y), &(vb->value.y))) return true;
-    if (update_vector_component(&(vb->z), &(vb->value.z))) return true;
-    return false;
+UpdateReturnValue update_vector3box(Vector3_box *vb){
+    if (update_vector_component(&(vb->x), &(vb->value.x)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    if (update_vector_component(&(vb->y), &(vb->value.y)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    if (update_vector_component(&(vb->z), &(vb->value.z)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    return (UpdateReturnValue) {.interacted = false, .grab_mouse = false};
 }
 
-bool update_vector4box(Vector4_box *vb){
-    if (update_vector_component(&(vb->x), &(vb->value.x))) return true;
-    if (update_vector_component(&(vb->y), &(vb->value.y))) return true;
-    if (update_vector_component(&(vb->z), &(vb->value.z))) return true;
-    if (update_vector_component(&(vb->w), &(vb->value.w))) return true;
-    return false;
+UpdateReturnValue update_vector4box(Vector4_box *vb){
+    if (update_vector_component(&(vb->x), &(vb->value.x)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    if (update_vector_component(&(vb->y), &(vb->value.y)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    if (update_vector_component(&(vb->z), &(vb->value.z)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    if (update_vector_component(&(vb->w), &(vb->value.w)).interacted) 
+        return (UpdateReturnValue) {.interacted = true, .grab_mouse = false};
+    return (UpdateReturnValue) {.interacted = false, .grab_mouse = false};
 }

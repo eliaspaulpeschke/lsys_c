@@ -17,7 +17,7 @@ typedef struct {
 
 LRulesBox mk_lrules_box();
 void free_lrules_box(LRulesBox tb);
-bool update_lrules_box(LRulesBox * tb);
+UpdateReturnValue update_lrules_box(LRulesBox * tb);
 void layout_lrules_box(LRulesBox tb, Font * fonts);
 #define LRULES_BOX_ERR (LRulesBox){.error=true}
 

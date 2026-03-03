@@ -22,7 +22,7 @@ typedef struct {
 ApplyBox mk_applybox();
 void free_applybox(ApplyBox ab);
 
-bool update_applybox(ApplyBox * ab);
+UpdateReturnValue update_applybox(ApplyBox * ab);
 void layout_applybox(ApplyBox ab, Font * fonts);
 
 #endif

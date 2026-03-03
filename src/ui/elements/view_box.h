@@ -14,6 +14,6 @@ typedef struct {
 
 ViewBox mk_viewbox();
 void free_viewbox(ViewBox vb);
-bool update_viewbox(ViewBox * vb);
+UpdateReturnValue update_viewbox(ViewBox * vb);
 void layout_viewbox(ViewBox vb);
 #endif

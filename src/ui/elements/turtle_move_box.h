@@ -15,7 +15,7 @@ typedef struct {
 
 TurtleMoveBox mk_turtle_move_box();
 void free_turtle_move_box(TurtleMoveBox tb);
-bool update_turtle_move_box(TurtleMoveBox * tb);
+UpdateReturnValue update_turtle_move_box(TurtleMoveBox * tb);
 void layout_turtle_move_box(TurtleMoveBox tb, Font * fonts);
 #define TURTLE_MOVE_BOX_ERR (TurtleMoveBox){.error=true}
 

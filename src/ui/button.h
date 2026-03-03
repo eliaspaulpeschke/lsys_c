@@ -1,5 +1,6 @@
 #ifndef BUTTON_H
 #define BUTTON_H
+#include "common.h"
 #include "raylib.h"
 #include "stdbool.h"
 #include "../clay/clay.h"
@@ -19,6 +20,6 @@ typedef struct {
 ButtonElem mk_button(char * label, void (*on_click)(void * user_data));
 //void free_button();
 
-bool update_button(ButtonElem * btn, void * user_data);
+UpdateReturnValue update_button(ButtonElem * btn, void * user_data);
 void layout_button(ButtonElem btn);
 #endif

@@ -14,7 +14,7 @@ typedef struct {
 
 DrawBox mk_drawbox();
 void free_drawbox(DrawBox db);
-bool update_drawbox(DrawBox * db);
+UpdateReturnValue update_drawbox(DrawBox * db);
 void layout_drawbox(DrawBox db);
 
 #define ERR_DRAWBOX (DrawBox) {true, -1, {0}, ERR_MODULE, ERR_MODULE}
