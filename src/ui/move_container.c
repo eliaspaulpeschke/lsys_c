@@ -15,6 +15,7 @@ Move_container mk_move_container( void (*move_hook)
                                 ){
     Move_container cont = (Move_container) {
           .mouse_grabbed = false
+        , .minimized = false
         , .state = MOVE_CONTAINER_STATE_NONE
         , .pos = (Vector2) {0.0, 0.0}
         , .size = (Vector2) {0.0, 0.0}
@@ -24,18 +25,37 @@ Move_container mk_move_container( void (*move_hook)
     return cont;
 }
 
-Clay_ElementDeclaration move_cont_clay_decl(Move_container cont, int padding, bool resizable){
+Clay_ElementDeclaration move_cont_clay_decl_inner(Move_container cont, int padding, bool resizable){
     Clay_Sizing fix = (Clay_Sizing){CLAY_SIZING_FIXED(cont.size.x),CLAY_SIZING_FIXED(cont.size.y)};
     Clay_Sizing fit = (Clay_Sizing){CLAY_SIZING_FIT(0),CLAY_SIZING_FIT(0)};
     Clay_ElementDeclaration decl = (Clay_ElementDeclaration) {
-      .layout = { .sizing = resizable ? fix : fit 
+      .layout = { resizable ? fix : fit 
                 , .padding = CLAY_PADDING_ALL(padding) 
+                , .layoutDirection = CLAY_LEFT_TO_RIGHT
                 , .childGap = 8}
-    , .floating = { .attachTo = CLAY_ATTACH_TO_ROOT, .offset = {.x = cont.pos.x, .y = cont.pos.y}
-                  , .zIndex = MOVE_CONTAINER_Z_INDEX }
     , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}
     , .backgroundColor = COL_LIGHT };
     return decl;
+
+}
+
+
+Clay_ElementDeclaration move_cont_clay_decl(Move_container cont){
+    Clay_ElementDeclaration decl = (Clay_ElementDeclaration) {
+      .layout = { SIZE_FIT 
+                , .padding = CLAY_PADDING_ALL(0) 
+                , .layoutDirection = CLAY_TOP_TO_BOTTOM
+                , .childGap = 8}
+    , .floating = { .attachTo = CLAY_ATTACH_TO_ROOT, .offset = {.x = cont.pos.x, .y = cont.pos.y}
+                  , .zIndex = cont.state == MOVE_CONTAINER_STATE_NONE ? MOVE_CONTAINER_Z_INDEX : MOVE_CONTAINER_Z_INDEX + 1
+                  /*, .pointerCaptureMode = CLAY_POINTER_CAPTURE_MODE_PASSTHROUGH */}
+    , .backgroundColor = COL_LIGHT };
+    return decl;
+}
+
+void layout_move_container_bar(Move_container cont){
+    CLAY(CLAY_IDI("move-container-bar", cont.clay_id_idx), { .layout = {.sizing = {.width = CLAY_SIZING_GROW(0), .height= CLAY_SIZING_FIXED(16)} }, .backgroundColor = COL_ACCENT}){
+    }
 }
 
 void layout_move_container_sizer(Move_container cont){
@@ -43,7 +63,7 @@ void layout_move_container_sizer(Move_container cont){
         .layout = { .sizing = { CLAY_SIZING_FIXED(32),CLAY_SIZING_FIXED(32) } 
                   , .childAlignment = {.x = CLAY_ALIGN_X_CENTER , .y = CLAY_ALIGN_Y_CENTER} }
       , .floating = { .attachTo = CLAY_ATTACH_TO_PARENT, .offset = {.x = cont.size.x - 24, .y = cont.size.y - 24}
-                  , .zIndex = MOVE_CONTAINER_Z_INDEX}
+                  , .zIndex = cont.state == MOVE_CONTAINER_STATE_NONE ? MOVE_CONTAINER_Z_INDEX : MOVE_CONTAINER_Z_INDEX + 999}
       , .backgroundColor = COL_TRANSPARENT }
         ){
         CLAY_AUTO_ID({
@@ -58,9 +78,17 @@ void layout_move_container_sizer(Move_container cont){
 UpdateReturnValue update_move_container(Move_container * cont, bool resizable, void * user_data){
     bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container"), cont->clay_id_idx));
     bool sizer = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-sizer"), cont->clay_id_idx));
- 
+
+    bool bar = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-bar"), cont->clay_id_idx));
+
+    if (bar && IsMouseButtonReleased(0) ){
+        cont->minimized = !cont->minimized;
+        return UPDATE_INTERACT;
+    }
+
     if ((ptr || sizer || cont->mouse_grabbed) && IsMouseButtonDown(0)){
         Vector2 mouse = GetMouseDelta();
+        cont->mouse_grabbed = true;
         if (resizable && 
             (sizer || (cont->state == 
                        MOVE_CONTAINER_STATE_RESIZE))) {
@@ -83,6 +111,7 @@ UpdateReturnValue update_move_container(Move_container * cont, bool resizable, v
         return UPDATE_GRAB;
     } else {
         cont->mouse_grabbed = false;
+        cont->state = MOVE_CONTAINER_STATE_NONE;
     }
     return UPDATE_NONE;
 }

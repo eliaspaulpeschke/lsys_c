@@ -23,13 +23,15 @@
 #define SIZE_GROW_XY(n) .sizing = {CLAY_SIZING_GROW(n), CLAY_SIZING_GROW(n)}
 #define SIZE_FIX_XY(x,y) .sizing = {CLAY_SIZING_FIXED(x), CLAY_SIZING_FIXED(y)}
 #define  SIZE_COLUMN(w) .sizing = {CLAY_SIZING_FIXED(w), CLAY_SIZING_GROW(0)}
+#define  SIZE_FIT .sizing = {CLAY_SIZING_FIT(), CLAY_SIZING_FIT()}
+
 
 #define LAYOUT_LR .layoutDirection = CLAY_LEFT_TO_RIGHT
 #define LAYOUT_TB .layoutDirection = CLAY_TOP_TO_BOTTOM
 
-#define UPDATE_INTERACT (UpdateReturnValue){true,false}
-#define UPDATE_GRAB (UpdateReturnValue){true, true}
-#define UPDATE_NONE (UpdateReturnValue){false,false}
+#define UPDATE_INTERACT (UpdateReturnValue){.interacted = true, .grab_mouse = false}
+#define UPDATE_GRAB (UpdateReturnValue){.interacted = true, .grab_mouse = true}
+#define UPDATE_NONE (UpdateReturnValue){.interacted = false, .grab_mouse = false}
 
 typedef struct {
     bool interacted;

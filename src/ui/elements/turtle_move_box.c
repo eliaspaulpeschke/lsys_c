@@ -25,21 +25,40 @@ void free_turtle_move_box(TurtleMoveBox tb){
 }
 
 UpdateReturnValue update_turtle_move_box(TurtleMoveBox * tb){
-    if (update_module(tb->turtle_out).interacted) return UPDATE_INTERACT;
-    if (update_move_container(&tb->movecontainer, false, NULL).interacted) return UPDATE_INTERACT;
-    if (update_turtlebox(&tb->turtlebox).interacted) {
+     UpdateReturnValue res;
+    if ((res = update_module(tb->turtle_out)).interacted) return res;
+    if ((res = update_turtlebox(&tb->turtlebox)).interacted) {
         tb->turtle_out->output.turtle = tb->turtlebox.turtle;
         tb->turtle_out->output.valid = true;
-        return UPDATE_INTERACT;
+        return res;
     }
+    if ((res = update_move_container(&tb->movecontainer, false, NULL)).interacted) return res;
     return UPDATE_NONE;
 }
 
 void layout_turtle_move_box(TurtleMoveBox tb, Font * fonts){
-    CLAY(move_cont_clay_id(tb.movecontainer), move_cont_clay_decl(tb.movecontainer, 8, false)){
+/*    CLAY(move_cont_clay_id(tb.movecontainer), move_cont_clay_decl(tb.movecontainer, 8, false)){
             layout_turtlebox(tb.turtlebox, fonts, "Turtle");
             CLAY_AUTO_ID({.border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
                 layout_module(*tb.turtle_out);
             };
         };
+        */
+
+    LAYOUT_MOVE_CONTAINER(tb.movecontainer, 
+
+            layout_turtlebox(tb.turtlebox, fonts, "Turtle");
+            CLAY_AUTO_ID({.border = 
+                {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+                layout_module(*tb.turtle_out);
+            };
+
+           , 
+
+           CLAY_AUTO_ID({.border = 
+               {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+                layout_module(*tb.turtle_out);
+            };
+
+    , 8, false);
 }

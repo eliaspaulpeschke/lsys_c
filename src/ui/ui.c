@@ -90,8 +90,8 @@ UpdateReturnValue update_main_panel(clay_ctx * ctx){
 static int GRAB_IDX = -1;
 
 #define MOUSEGRAB(idx, expr) if (GRAB_IDX == -1 || GRAB_IDX == idx) { \
-    UpdateReturnValue res = expr; \
-    if (res.grab_mouse) { \
+    res = expr; \
+    if (res.grab_mouse == true) { \
         GRAB_IDX = idx; \
     } else { \
         GRAB_IDX = -1; \
@@ -100,6 +100,7 @@ static int GRAB_IDX = -1;
 }
 
 UpdateReturnValue update_ui(clay_ctx * ctx){
+    UpdateReturnValue res;
     MOUSEGRAB(1, update_module_connections())
     MOUSEGRAB(2, update_connection_status())
     MOUSEGRAB(3, update_main_panel(ctx))

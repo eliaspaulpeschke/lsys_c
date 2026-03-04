@@ -49,15 +49,16 @@ void free_lrules_box(LRulesBox lb){
 }
 
 UpdateReturnValue update_lrules_box(LRulesBox * lb){
-    if (update_module(lb->lsys_out).interacted) return UPDATE_INTERACT;
-    if (update_move_container(&lb->movecontainer, true, NULL).interacted) return UPDATE_INTERACT;
-    if (update_textbox(&lb->textbox, false).interacted) return UPDATE_INTERACT;
-    if (update_button(&lb->button_parse, lb).interacted) return UPDATE_INTERACT;
+    UpdateReturnValue res;
+    if ((res = update_module(lb->lsys_out)).interacted) return res;
+    if ((res = update_textbox(&lb->textbox, false)).interacted) return res;
+    if ((res = update_button(&lb->button_parse, lb)).interacted) return res;
+    if ((res = update_move_container(&lb->movecontainer, true, NULL)).interacted) return res;
     return UPDATE_NONE;
 }
 
 void layout_lrules_box(LRulesBox lb, Font * fonts){
-    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer, 0, true)){
+    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer)){
             CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
                                      , .layoutDirection = CLAY_LEFT_TO_RIGHT }
                          , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){

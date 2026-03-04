@@ -151,6 +151,8 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
         tb->bufA[tb->posA] = chr;
         tb->posA += 1;
         tb->changed = true;
+        textbox_update_text(tb);
+        return UPDATE_INTERACT;
     } else if (key != KEY_NULL) {
         int len_til_newline;
         int len_til_next_newline;
@@ -263,9 +265,10 @@ UpdateReturnValue update_textbox(Textbox * tb, bool focused_anyway){
             default:
                 return UPDATE_NONE;
             }
+            textbox_update_text(tb);
+            return UPDATE_INTERACT;
         }
-    textbox_update_text(tb);
-    return UPDATE_INTERACT;
+    return UPDATE_NONE;
 }
 
 void layout_textbox(Textbox tb, Font * font){

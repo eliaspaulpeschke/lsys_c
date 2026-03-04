@@ -68,21 +68,22 @@ void free_applybox(ApplyBox ab){
 }
 
 UpdateReturnValue update_applybox(ApplyBox *ab){
+    UpdateReturnValue res;
    if (ab->valuebox.changed) {
        ab->times = ab->valuebox.int_value.value;
        ab->valuebox.changed = false;
    }
-   if (update_module(ab->lstring_in).interacted) return UPDATE_INTERACT;
-   if (update_module(ab->lstring_out).interacted) return UPDATE_INTERACT;
-   if (update_module(ab->rules_in).interacted) return UPDATE_INTERACT;
-   if (update_valuebox(&ab->valuebox).interacted) return UPDATE_INTERACT;
-   if (update_button(&ab->btn_apply, ab).interacted) return UPDATE_INTERACT;
-   if (update_move_container(&ab->container, true, NULL).interacted) return UPDATE_INTERACT;
+   if ((res = update_module(ab->lstring_in)).interacted) return res;
+   if ((res = update_module(ab->lstring_out)).interacted) return res;
+   if ((res = update_module(ab->rules_in)).interacted) return res;
+   if ((res = update_valuebox(&ab->valuebox)).interacted) return res;
+   if ((res = update_button(&ab->btn_apply, ab)).interacted) return res;
+   if ((res = update_move_container(&ab->container, true, NULL)).interacted) return res;
    return UPDATE_NONE;
 }
 
 void layout_applybox(ApplyBox ab, Font * fonts){
-    CLAY(move_cont_clay_id(ab.container), move_cont_clay_decl(ab.container, 8, false)){
+    CLAY(move_cont_clay_id(ab.container), move_cont_clay_decl(ab.container)){
         CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
                                 , LAYOUT_LR 
                                 }

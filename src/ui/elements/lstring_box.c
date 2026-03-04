@@ -73,10 +73,11 @@ void update_lstring_text(LStringBox * lb){
 }
 
 UpdateReturnValue update_lstring_box(LStringBox * lb){
-    if (update_module(lb->lstring_out).interacted) return UPDATE_INTERACT;
-    if (update_module(lb->lstring_in).interacted) return UPDATE_INTERACT;
-    if (update_move_container(&lb->movecontainer, true, NULL).interacted) return UPDATE_INTERACT;
-    if (update_button(&lb->button_parse, lb).interacted) return UPDATE_INTERACT;
+    UpdateReturnValue res;
+    if ((res = update_module(lb->lstring_out)).interacted) return res;
+    if ((res = update_module(lb->lstring_in)).interacted) return res;
+    if ((res = update_move_container(&lb->movecontainer, true, NULL)).interacted) return res;
+    if ((res = update_button(&lb->button_parse, lb)).interacted) return res;
     if (lb->lstring_in->input.connection != NULL) {
         if (!lb->lstring_in->input.connection->output.valid) 
                                                     return UPDATE_NONE;
@@ -85,13 +86,13 @@ UpdateReturnValue update_lstring_box(LStringBox * lb){
 //                                                    return false;
         update_lstring_text(lb);
         } else {
-        if (update_textbox(&lb->textbox, false).interacted) return UPDATE_INTERACT;
+        if ((res = update_textbox(&lb->textbox, false)).interacted) return res;
     }
     return UPDATE_NONE;
 }
 
 void layout_lstring_box(LStringBox lb, Font * fonts){
-    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer, 0, true)){
+    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer)){
             CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
                                      , .layoutDirection = CLAY_LEFT_TO_RIGHT }
                          , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
