@@ -25,13 +25,33 @@
 #define  SIZE_COLUMN(w) .sizing = {CLAY_SIZING_FIXED(w), CLAY_SIZING_GROW(0)}
 #define  SIZE_FIT .sizing = {CLAY_SIZING_FIT(), CLAY_SIZING_FIT()}
 
-
 #define LAYOUT_LR .layoutDirection = CLAY_LEFT_TO_RIGHT
 #define LAYOUT_TB .layoutDirection = CLAY_TOP_TO_BOTTOM
 
 #define UPDATE_INTERACT (UpdateReturnValue){.interacted = true, .grab_mouse = false}
 #define UPDATE_GRAB (UpdateReturnValue){.interacted = true, .grab_mouse = true}
 #define UPDATE_NONE (UpdateReturnValue){.interacted = false, .grab_mouse = false}
+
+#define MOUSEGRAB(idx, grab_var, expr) if (grab_var == -1 || grab_var == idx) { \
+    res = expr; \
+    if (res.grab_mouse == true) { \
+        grab_var = idx; \
+    } else { \
+        grab_var = -1; \
+    } \
+    if (res.interacted) return res; \
+}
+
+#define MOUSEGRAB_DEBUG(idx, grab_var, expr, where) if (grab_var == -1 || grab_var == idx) { \
+    res = expr; \
+    TraceLog(LOG_DEBUG, "grab %s, i: %b, g: %b", where, res.interacted, res.grab_mouse); \
+    if (res.grab_mouse == true) { \
+        grab_var = idx; \
+    } else { \
+        grab_var = -1; \
+    } \
+    if (res.interacted) return res; \
+}
 
 typedef struct {
     bool interacted;

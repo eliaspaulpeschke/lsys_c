@@ -58,12 +58,16 @@ UpdateReturnValue update_drawbox(DrawBox *db){
 }
 
 void layout_drawbox(DrawBox db){
-    CLAY( move_cont_clay_id(db.cont)
-        , move_cont_clay_decl(db.cont) ){
-        CLAY_AUTO_ID({.layout = {SIZE_GROW_XY(0), LAYOUT_TB}}){
+    LAYOUT_MOVE_CONTAINER(db.cont,
+            CLAY_AUTO_ID({.layout = {SIZE_GROW_XY(0), LAYOUT_TB}}){
             layout_module(*db.lstring_in);
             layout_module(*db.turtle_in);
         };
         CLAY_AUTO_ID({.layout = {SIZE_FIX_XY(80, 40)}}){};
-    };
+    ,
+        CLAY_AUTO_ID({.layout = {SIZE_GROW_XY(0), LAYOUT_TB}}){
+            layout_module(*db.lstring_in);
+            layout_module(*db.turtle_in);
+        };
+    , 8, false);
 }

@@ -72,6 +72,7 @@ bool handle_module_hover(void * userData){
         mod->input.connection_draw_data->active = false;
         return true;
     }
+
     if (MODULES_CONNECTION_STATUS.connecting_status == MOD_CONN_STATUS_IDLE) {
         if (IsMouseButtonDown(0)) {
             MODULES_CONNECTION_STATUS.connecting_status =  MOD_CONN_STATUS_CONNECTING;
@@ -154,7 +155,7 @@ UpdateReturnValue update_connection_status(){
         MODULES_CONNECTION_STATUS.connecting_status = MOD_CONN_STATUS_IDLE;
         return UPDATE_NONE;
     }
-    return UPDATE_INTERACT;
+    return UPDATE_GRAB;
 }
 
 Clay_String module_kind_name(Module mod){
@@ -173,31 +174,31 @@ Clay_String module_kind_name(Module mod){
 UpdateReturnValue update_module_connections(){
     bool down = IsMouseButtonDown(0);
     bool rel = IsMouseButtonReleased(0);
-    if (rel || down) {
-        Vector2 mouse = GetMousePosition();
-        Vector2 delta = GetMouseDelta();
-        for (int i = 0; i < IDX_MODS; i++){
-          Connection_drawdata * cdd = &connection_drawdata[i];
-          if (!cdd->active) continue;
-          if (rel){
-              if (Vector2Distance(mouse, cdd->points[cdd->num_points-2]) < 10.0f){
-                  if (cdd->num_points < MAX_CONN_POINTS) {
-                      cdd->points[cdd->num_points] = cdd->points[cdd->num_points -1];
-                      cdd->points[cdd->num_points -1] = cdd->points[cdd->num_points-2];
-                      connection_drawdata[i].num_points++;
-                      cdd->points[cdd->num_points-3] = Vector2Lerp(cdd->points[0], cdd->points[cdd->num_points -1], 0.5f);
-                  }
+    if (!(rel || down)) return UPDATE_NONE;
+    Vector2 mouse = GetMousePosition();
+    Vector2 delta = GetMouseDelta();
+    for (int i = 0; i < IDX_MODS; i++){
+      Connection_drawdata * cdd = &connection_drawdata[i];
+      if (!cdd->active) continue;
+      if (rel){
+          if (Vector2Distance(mouse, cdd->points[cdd->num_points-2]) < 10.0f){
+              if (cdd->num_points < MAX_CONN_POINTS) {
+                  cdd->points[cdd->num_points] = cdd->points[cdd->num_points -1];
+                  cdd->points[cdd->num_points -1] = cdd->points[cdd->num_points-2];
+                  connection_drawdata[i].num_points++;
+                  cdd->points[cdd->num_points-3] = Vector2Lerp(cdd->points[0], cdd->points[cdd->num_points -1], 0.5f);
               }
           }
-          else if (down){
-              for(int i = 1; i < cdd->num_points -1 ; i++){ //last point is end, first point is start
-                  if(Vector2Distance(mouse, cdd->points[i]) < 30.0f){
-                      cdd->points[i] = Vector2Add(cdd->points[i], delta);
-                      return UPDATE_GRAB;
-                  }
+          return UPDATE_INTERACT;
+      }
+      else if (down){
+          for(int i = 1; i < cdd->num_points -1 ; i++){ //last point is end, first point is start
+              if(Vector2Distance(mouse, cdd->points[i]) < 30.0f){
+                  cdd->points[i] = Vector2Add(cdd->points[i], delta);
+                  return UPDATE_GRAB;
               }
           }
-        }
+      }
     }
     return UPDATE_NONE;
 }

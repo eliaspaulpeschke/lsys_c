@@ -46,19 +46,17 @@ void layout_turtle_move_box(TurtleMoveBox tb, Font * fonts){
         */
 
     LAYOUT_MOVE_CONTAINER(tb.movecontainer, 
-
+            // MAXIMIZED
             layout_turtlebox(tb.turtlebox, fonts, "Turtle");
             CLAY_AUTO_ID({.border = 
                 {.color = COL_DARK, .width = {0,0,0,0,1}}}){
                 layout_module(*tb.turtle_out);
             };
-
            , 
-
+           // MINIMIZED 
            CLAY_AUTO_ID({.border = 
                {.color = COL_DARK, .width = {0,0,0,0,1}}}){
                 layout_module(*tb.turtle_out);
             };
-
     , 8, false);
 }

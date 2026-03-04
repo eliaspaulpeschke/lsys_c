@@ -50,7 +50,7 @@ CLAY(move_cont_clay_id(cont), move_cont_clay_decl(cont)){\
         } else {\
             maximized_content;\
         } \
-        if (resizable) {\
+        if (resizable && !cont.minimized) {\
             layout_move_container_sizer(cont); \
         } \
     }\

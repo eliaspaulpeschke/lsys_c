@@ -91,29 +91,43 @@ UpdateReturnValue update_lstring_box(LStringBox * lb){
     return UPDATE_NONE;
 }
 
-void layout_lstring_box(LStringBox lb, Font * fonts){
-    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer)){
-            CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
-                                     , .layoutDirection = CLAY_LEFT_TO_RIGHT }
-                         , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-                CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
-                                         , .layoutDirection = CLAY_TOP_TO_BOTTOM
-                                         , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
-                             , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-                    layout_module(*lb.lstring_in);
-                };
-                CLAY_AUTO_ID({ .layout = { .sizing = { CLAY_SIZING_FIXED(lb.movecontainer.size.x - 16 - 64 - 64)
-                                                     , CLAY_SIZING_FIXED(lb.movecontainer.size.y - 16)}}}){
-                    layout_textbox(lb.textbox, fonts);
-                };
-                CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
-                                         , .layoutDirection = CLAY_TOP_TO_BOTTOM
-                                         , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
-                             , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-                    layout_module(*lb.lstring_out);
-                    layout_button(lb.button_parse);
-                };
-            }
-            layout_move_container_sizer(lb.movecontainer);
-        };
+void layout_lstring_box_max(LStringBox lb, Font * fonts){
+  CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                           , .layoutDirection = CLAY_LEFT_TO_RIGHT }
+               , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+      CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                               , .layoutDirection = CLAY_TOP_TO_BOTTOM
+                               , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                   , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+          layout_module(*lb.lstring_in);
+      };
+      CLAY_AUTO_ID({ .layout = { .sizing = { CLAY_SIZING_FIXED(lb.movecontainer.size.x - 16 - 64 - 64)
+                                           , CLAY_SIZING_FIXED(lb.movecontainer.size.y - 16)}}}){
+          layout_textbox(lb.textbox, fonts);
+      };
+      CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                               , .layoutDirection = CLAY_TOP_TO_BOTTOM
+                               , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                   , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+          layout_module(*lb.lstring_out);
+          layout_button(lb.button_parse);
+      };
+  }
+}
+
+void layout_lstring_box(LStringBox lb, Font *fonts){
+    LAYOUT_MOVE_CONTAINER(lb.movecontainer, 
+
+        //MAXIMIZED
+        layout_lstring_box_max(lb,fonts);
+
+    ,
+
+        //MINIMIZED
+        layout_module(*lb.lstring_in);
+        layout_module(*lb.lstring_out);
+
+    , 8, true);
+
+
 }

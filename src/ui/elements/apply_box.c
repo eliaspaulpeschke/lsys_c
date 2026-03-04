@@ -82,47 +82,71 @@ UpdateReturnValue update_applybox(ApplyBox *ab){
    return UPDATE_NONE;
 }
 
-void layout_applybox(ApplyBox ab, Font * fonts){
-    CLAY(move_cont_clay_id(ab.container), move_cont_clay_decl(ab.container)){
-        CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
-                                , LAYOUT_LR 
-                                }
-                     , .border = {.color = COL_DARK, .width = {0, 0, 0, 0, 1} }
-                     }){
-            CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
-                                    , LAYOUT_TB
-                                    , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
-                         }){
-                layout_module(*ab.lstring_in);
-                layout_module(*ab.rules_in);
-            }
-            CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
-                                    , LAYOUT_TB
-                                    , .padding = { .left = 8
-                                                 , .right = 8
-                                                 , .top = 4
-                                                 , .bottom = 0
-                                                 } 
-                                    , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
-                                    }
-                                
-                         }){
-                layout_valuebox(ab.valuebox, fonts, "n: ");
-                CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
-                                        , LAYOUT_TB 
-                                        , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_BOTTOM} 
-                                        }
-                             }){
-                    layout_button(ab.btn_apply);
-                };
-            };
-            CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
-                                    , LAYOUT_TB
-                                    , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
-                                    }
-                         }){
-                layout_module(*ab.lstring_out);
-            }
-        }
-    }
+void layout_applybox_max(ApplyBox ab, Font * fonts){
+  CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
+                          , LAYOUT_LR 
+                          }
+               , .border = {.color = COL_DARK, .width = {0, 0, 0, 0, 1} }
+               }){
+      CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
+                              , LAYOUT_TB
+                              , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                   }){
+          layout_module(*ab.lstring_in);
+          layout_module(*ab.rules_in);
+      }
+      CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
+                              , LAYOUT_TB
+                              , .padding = { .left = 8
+                                           , .right = 8
+                                           , .top = 4
+                                           , .bottom = 0
+                                           } 
+                              , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
+                              }
+                          
+                   }){
+          layout_valuebox(ab.valuebox, fonts, "n: ");
+          CLAY_AUTO_ID({.layout = { SIZE_GROW_XY(0)
+                                  , LAYOUT_TB 
+                                  , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_BOTTOM} 
+                                  }
+                       }){
+              layout_button(ab.btn_apply);
+          };
+      };
+      CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
+                              , LAYOUT_TB
+                              , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
+                              }
+                   }){
+          layout_module(*ab.lstring_out);
+      }
+  }
 }
+
+void layout_applybox(ApplyBox ab, Font *fonts){
+    LAYOUT_MOVE_CONTAINER(ab.container, 
+    // MAXIMIZED
+    layout_applybox_max(ab, fonts);
+    , 
+    // MINIMIZED 
+    CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
+                              , LAYOUT_TB
+                              , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                   }){
+          layout_module(*ab.lstring_in);
+          layout_module(*ab.rules_in);
+      }
+    CLAY_AUTO_ID({.layout = { SIZE_COLUMN(32)
+                              , LAYOUT_TB
+                              , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}
+                              }
+                   }){
+          layout_module(*ab.lstring_out);
+      }
+, 8, false);
+
+}
+
+

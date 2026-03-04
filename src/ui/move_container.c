@@ -78,10 +78,9 @@ void layout_move_container_sizer(Move_container cont){
 UpdateReturnValue update_move_container(Move_container * cont, bool resizable, void * user_data){
     bool ptr = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container"), cont->clay_id_idx));
     bool sizer = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-sizer"), cont->clay_id_idx));
-
     bool bar = Clay_PointerOver(Clay_GetElementIdWithIndex(CLAY_STRING("move-container-bar"), cont->clay_id_idx));
 
-    if (bar && IsMouseButtonReleased(0) ){
+    if (bar && IsMouseButtonReleased(0)){
         cont->minimized = !cont->minimized;
         return UPDATE_INTERACT;
     }
@@ -109,10 +108,9 @@ UpdateReturnValue update_move_container(Move_container * cont, bool resizable, v
             }
         }
         return UPDATE_GRAB;
-    } else {
-        cont->mouse_grabbed = false;
-        cont->state = MOVE_CONTAINER_STATE_NONE;
     }
+    cont->mouse_grabbed = false;
+    cont->state = MOVE_CONTAINER_STATE_NONE;
     return UPDATE_NONE;
 }
 

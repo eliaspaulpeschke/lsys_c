@@ -89,38 +89,28 @@ UpdateReturnValue update_main_panel(clay_ctx * ctx){
 
 static int GRAB_IDX = -1;
 
-#define MOUSEGRAB(idx, expr) if (GRAB_IDX == -1 || GRAB_IDX == idx) { \
-    res = expr; \
-    if (res.grab_mouse == true) { \
-        GRAB_IDX = idx; \
-    } else { \
-        GRAB_IDX = -1; \
-    } \
-    if (res.interacted) return res; \
-}
-
 UpdateReturnValue update_ui(clay_ctx * ctx){
     UpdateReturnValue res;
-    MOUSEGRAB(1, update_module_connections())
-    MOUSEGRAB(2, update_connection_status())
-    MOUSEGRAB(3, update_main_panel(ctx))
+    MOUSEGRAB(1, GRAB_IDX, update_module_connections())
+    MOUSEGRAB(2, GRAB_IDX, update_connection_status())
+    MOUSEGRAB(3, GRAB_IDX, update_main_panel(ctx))
 
     for (int i = 0; i < ctx->num_custom_elems; i++){
         switch (ctx->ced[i]->type) {
             case CUSTOM_ELEM_T_rulesbox:
-                MOUSEGRAB(100+i, update_lrules_box(&(ctx->ced[i]->rulesbox)))
+                MOUSEGRAB(100+i, GRAB_IDX, update_lrules_box(&(ctx->ced[i]->rulesbox)))
                 break;
             case CUSTOM_ELEM_T_turtle_box:
-                MOUSEGRAB(100+i,update_turtle_move_box(&(ctx->ced[i]->turtlebox)))
+                MOUSEGRAB(100+i, GRAB_IDX, update_turtle_move_box(&(ctx->ced[i]->turtlebox)))
                 break; 
             case CUSTOM_ELEM_T_apply_box:
-                MOUSEGRAB(100+i,update_applybox(&(ctx->ced[i]->applybox)))
+                MOUSEGRAB(100+i, GRAB_IDX, update_applybox(&(ctx->ced[i]->applybox)))
                 break; 
             case CUSTOM_ELEM_T_lstring_box:
-                MOUSEGRAB(100+i,update_lstring_box(&(ctx->ced[i]->lstringbox)))
+                MOUSEGRAB(100+i, GRAB_IDX, update_lstring_box(&(ctx->ced[i]->lstringbox)))
                 break; 
             case CUSTOM_ELEM_T_drawbox:
-                MOUSEGRAB(100+i,update_drawbox(&(ctx->ced[i]->drawbox)))
+                MOUSEGRAB(100+i, GRAB_IDX, update_drawbox(&(ctx->ced[i]->drawbox)))
                 break; 
             default:
                 break;

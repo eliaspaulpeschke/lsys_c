@@ -9,6 +9,7 @@
 
 typedef struct {
     bool error;
+    int grab_idx;
     Textbox textbox;
     Move_container movecontainer;
     Module * lsys_out;

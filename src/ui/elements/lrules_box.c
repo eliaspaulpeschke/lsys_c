@@ -14,7 +14,8 @@ LRulesBox mk_lrules_box(){
         return LRULES_BOX_ERR;
     }
     LRulesBox lb = (LRulesBox){
-        .textbox = tb 
+         .textbox = tb 
+       , .grab_idx = -1
        , .movecontainer = mk_move_container(NULL, NULL)
        , .lsys_out = lsys_out
        , .button_parse = mk_button("parse", on_click_parse_btn)
@@ -50,30 +51,41 @@ void free_lrules_box(LRulesBox lb){
 
 UpdateReturnValue update_lrules_box(LRulesBox * lb){
     UpdateReturnValue res;
-    if ((res = update_module(lb->lsys_out)).interacted) return res;
-    if ((res = update_textbox(&lb->textbox, false)).interacted) return res;
-    if ((res = update_button(&lb->button_parse, lb)).interacted) return res;
-    if ((res = update_move_container(&lb->movecontainer, true, NULL)).interacted) return res;
+    MOUSEGRAB_DEBUG(1, lb->grab_idx, update_module(lb->lsys_out), "lrules")
+    MOUSEGRAB(2, lb->grab_idx
+            ,update_textbox(&lb->textbox, false))
+    MOUSEGRAB(3, lb->grab_idx
+            ,update_button(&lb->button_parse, lb))
+    MOUSEGRAB(4, lb->grab_idx
+            ,update_move_container(&lb->movecontainer
+                , true, NULL))
     return UPDATE_NONE;
 }
 
+void layout_lrules_box_max(LRulesBox lb, Font * fonts){
+  CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                           , .layoutDirection = CLAY_LEFT_TO_RIGHT }
+               , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+      CLAY_AUTO_ID({ .layout = { .sizing = { CLAY_SIZING_FIXED(lb.movecontainer.size.x - 16 - 64)
+                                           , CLAY_SIZING_FIXED(lb.movecontainer.size.y - 16)}}}){
+          layout_textbox(lb.textbox, fonts);
+      };
+      CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
+                               , .layoutDirection = CLAY_TOP_TO_BOTTOM
+                               , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
+                   , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
+          layout_module(*lb.lsys_out);
+          layout_button(lb.button_parse);
+      };
+  }
+}
+
 void layout_lrules_box(LRulesBox lb, Font * fonts){
-    CLAY(move_cont_clay_id(lb.movecontainer), move_cont_clay_decl(lb.movecontainer)){
-            CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
-                                     , .layoutDirection = CLAY_LEFT_TO_RIGHT }
-                         , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-                CLAY_AUTO_ID({ .layout = { .sizing = { CLAY_SIZING_FIXED(lb.movecontainer.size.x - 16 - 64)
-                                                     , CLAY_SIZING_FIXED(lb.movecontainer.size.y - 16)}}}){
-                    layout_textbox(lb.textbox, fonts);
-                };
-                CLAY_AUTO_ID({ .layout = { .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)}
-                                         , .layoutDirection = CLAY_TOP_TO_BOTTOM
-                                         , .childAlignment = {CLAY_ALIGN_X_CENTER, CLAY_ALIGN_Y_TOP}}
-                             , .border = {.color = COL_DARK, .width = {0,0,0,0,1}}}){
-                    layout_module(*lb.lsys_out);
-                    layout_button(lb.button_parse);
-                };
-            }
-            layout_move_container_sizer(lb.movecontainer);
-        };
+    LAYOUT_MOVE_CONTAINER(lb.movecontainer,
+    //MAXIMIZED
+    layout_lrules_box_max(lb,fonts)
+    , 
+    //MINIMIZED
+    layout_module(*lb.lsys_out);
+    , 8, true);
 }
